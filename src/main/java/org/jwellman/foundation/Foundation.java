@@ -1,7 +1,5 @@
 package org.jwellman.foundation;
 
-import javax.swing.JPanel;
-
 /**
  * A micro-framework for Swing applications.
  *

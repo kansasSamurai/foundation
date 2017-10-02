@@ -53,12 +53,13 @@ public void init() {
 public void init(uContext c) {
 
     if (!isInitialized) {
+        isInitialized = true;
 
         // Log the application classpath for debugging purposes
         System.out.println("----- Application Classpath -----");
         final ClassLoader cl = ClassLoader.getSystemClassLoader();
         final URL[] urls = ((URLClassLoader)cl).getURLs();
-        for(URL url: urls){
+        for (URL url: urls){
             System.out.println(url.getFile());
         }
 
@@ -81,7 +82,7 @@ public void init(uContext c) {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 final String name = info.getName(); System.out.println(name);
                 if ("Nimbus".equals(name)) {
-                    final int version = 1;
+                    final int version = 2;
                     switch (version) {
                         case 1:
                             UIManager.setLookAndFeel(info.getClassName());
