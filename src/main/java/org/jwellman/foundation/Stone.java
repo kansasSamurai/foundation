@@ -82,7 +82,7 @@ public void init(uContext c) {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 final String name = info.getName(); System.out.println(name);
                 if ("Nimbus".equals(name)) {
-                    final int version = 2;
+                    final int version = 4;
                     switch (version) {
                         case 1:
                             UIManager.setLookAndFeel(info.getClassName());
@@ -97,6 +97,9 @@ public void init(uContext c) {
                             LookAndFeel laf = new NapkinLookAndFeel();
                             UIManager.setLookAndFeel(laf);
                             break;
+                        case 4:
+                            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                            break;
                     }
 
                     break;
@@ -105,6 +108,8 @@ public void init(uContext c) {
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             // If Nimbus is not available, you can set the GUI to another look and feel.
+        } finally {
+            System.out.println(UIManager.getLookAndFeel().getName());
         }
 
     }
