@@ -9,8 +9,8 @@ import java.util.List;
  *  http://www.camick.com/java/source/OverlapLayout.java
  *
  *  The <code>OverlapLayout</code> class is a layout manager that
- *  lays out a container's components in an overlapping fashion. A
- *	component can be painted "above" or "below" the previous component
+ *  lays out a container's components in an overlapping fashion.
+ *  A component can be painted "above" or "below" the previous component
  *  in the container.
  *
  *  Like the GridLayout, each component is sized to the largest width and
@@ -21,8 +21,8 @@ import java.util.List;
  *  one another. In this case the components are sized to the space available
  *  in the container.
  *
- *  A main usage for this layout might be in the creation of "card games". A
- *  few features have been added that might be handy in these cases:
+ *  A main usage for this layout might be in the creation of "card games".
+ *  A few features have been added that might be handy in these cases:
  *
  *  a) a "popup" feature - when a component is selected in can "popup" from
  *     its regular location so it visibly stands out. To accomplish this some
@@ -83,7 +83,7 @@ public class OverlapLayout implements LayoutManager2, java.io.Serializable {
      * Create an overlapping layout.
      *
      * @param overlapPosition a Point defining the relative amount of overlap
-     * @param overlayAbove when true components are painted above the previous
+     * @param overlapAbove when true components are painted above the previous
      * component, otherwise they are painted below.
      */
     public OverlapLayout(Point overlapPosition, boolean overlapAbove) {
