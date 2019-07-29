@@ -8,7 +8,7 @@ import org.jwellman.foundation.swing.XPanel;
 
 /**
  *
- * @author Rick
+ * @author rwellman
  */
 public class Bronze extends Stone {
 
@@ -28,7 +28,7 @@ public class Bronze extends Stone {
         if (this.isDesktop) {
             for (String name : panels.keySet()) {
                 final XPanel p = panels.get(name);
-                if (p == this.panel) {
+                if (p == null) { // this.panel <<< I deprecated this.panel so had to change this comparison operator
                     /* Do nothing, it already has an iframe */
                 } else {
                     final XInternalFrame f = new XInternalFrame();
