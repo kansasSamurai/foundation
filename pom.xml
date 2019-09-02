@@ -35,6 +35,32 @@
             <version>1.27</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.mgarin</groupId>
+            <artifactId>weblaf</artifactId>
+            <version>1.29</version>
+        </dependency>
+    
+        <!-- This is currently only necessary for weblaf (though I may keep) -->
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.4.7</version>
+        </dependency>
+
+        <!-- Not available in maven central; see local repo -->
+        <dependency>
+            <groupId>com.nilo.plaf</groupId>
+            <artifactId>nimrod</artifactId>
+            <version>1.2d</version>
+        </dependency>
+
+        <dependency>    
+            <groupId>com.jtattoo</groupId>  
+            <artifactId>JTattoo</artifactId>    
+            <version>1.6.11</version>   
+        </dependency>          
+        
     </dependencies>
 
 </project>
