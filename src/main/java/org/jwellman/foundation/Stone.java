@@ -4,6 +4,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
@@ -52,73 +53,89 @@ public class Stone {
 	/** The JDesktopPane used in desktop mode */
 	private JDesktopPane desktop;
 
+	// Look and Feel (LAF) identifiers
+	private static final int LAF_MATCHES_SETTING = 1;
+	private static final int LAF_WEB = 2;
+	private static final int LAF_TBD = 3;
+	private static final int LAF_SYSTEM = 4;
+	private static final int LAF_NIMROD = 5;
+	private static final int LAF_JTATTOO = 6;
+	private static final int LAF_DARCULA = 7;
 
 
 
-/**
- * This is the workhorse of initializing the graphical "environment" in Swing;
- * note that it mainly consists of initializing the Look and Feel.
- * 
- * Note also that "initializing the environment" does not consist of 
- * creating ANY actual Swing components -- that will come later
- * as you build your user interface.  i.e. this method does the
- * bootstrapping for you -- you get to focus on building the UI.
- * 
- * Finally, note that it is enforced that the initialization occurs only
- * once -- any subsequent calls will log a warning but not actually do anything else. 
- * 
- * @param c the micro context
- */
-protected final void _init(uContext c) {
-
-    if (isInitialized) {
-    	System.out.print("WARN - init() has been called more than once...");
-    	System.out.print("WARN - ... in a single app use case, this usually indicates a misuse of the API");
-    	System.out.print("WARN - ... which may often result in unexpected/undesired behavior.");
-    } else {
-        isInitialized = true;
-
-        // Log the application classpath for debugging purposes
-        System.out.println("----- Application Classpath -----");
-        final ClassLoader cl = ClassLoader.getSystemClassLoader();
-        final URL[] urls = ((URLClassLoader)cl).getURLs();
-        for (URL url: urls){
-            System.out.println(url.getFile());
-        }
-
-        // Apply anti-aliasing for better rendering (particulary fonts)
-        // The following may have some subtle system dependent behavior:
-        // http://stackoverflow.com/questions/179955/how-do-you-enable-anti-aliasing-in-arbitrary-java-apps
-        // Try System.setProperty("awt.useSystemAAFontSettings", "lcd"); and you should get ClearType
-        // as of 7/5/2019, the combination of "on"/"true" yielded inconsistent results with different
-        // look and feels (i.e. Nimbus vs. Napkin... napking actually looked better which surprised me)
-        // so, now trying off/false: 
-        System.setProperty("awt.useSystemAAFontSettings","off");
-        System.setProperty("swing.aatext", "false");
-        System.out.println("Anti-alias settings:  off/false");
-
-        // Make sure our window decorations come from the look and feel.
-        JFrame.setDefaultLookAndFeelDecorated(true);
-
-        // Save the context (or create one by default)
-        context = (c != null) ? c : uContext.createContext();
-
-        // Conditionally apply context settings...
-        if (context.getThemeProvider() != null) { 
-        	context.getThemeProvider().doTheme(); 
-        }
+	/**
+	 * This is the workhorse of initializing the graphical "environment" in Swing;
+	 * note that it mainly consists of initializing the Look and Feel.
+	 * 
+	 * Note also that "initializing the environment" does not consist of 
+	 * creating ANY actual Swing components -- that will come later
+	 * as you build your user interface.  i.e. this method does the
+	 * bootstrapping for you -- you get to focus on building the UI.
+	 * 
+	 * Finally, note that it is enforced that the initialization occurs only
+	 * once -- any subsequent calls will log a warning but not actually do anything else. 
+	 * 
+	 * @param c the micro context
+	 */
+	protected final void _init(uContext c) {
+	
+	    if (isInitialized) {
+	    	System.out.print("WARN - init() has been called more than once...");
+	    	System.out.print("WARN - ... in a single app use case, this usually indicates a misuse of the API");
+	    	System.out.print("WARN - ... which may often result in unexpected/undesired behavior.");
+	    } else {
+	        isInitialized = true;
+	
+	        // Log the application classpath for debugging purposes
+	        System.out.println("----- Application Classpath -----");
+	        final ClassLoader cl = ClassLoader.getSystemClassLoader();
+	        final URL[] urls = ((URLClassLoader)cl).getURLs();
+	        for (URL url: urls){
+	            System.out.println(url.getFile());
+	        }
+	
+	        // Apply anti-aliasing for better rendering (particulary fonts)
+	        // The following may have some subtle system dependent behavior:
+	        // http://stackoverflow.com/questions/179955/how-do-you-enable-anti-aliasing-in-arbitrary-java-apps
+	        // Try System.setProperty("awt.useSystemAAFontSettings", "lcd"); and you should get ClearType
+	        // as of 7/5/2019, the combination of "on"/"true" yielded inconsistent results with different
+	        // look and feels (i.e. Nimbus vs. Napkin... napking actually looked better which surprised me)
+	        // so, now trying off/false:
+	        boolean aasettings = false;
+	        if (aasettings) {
+		        System.setProperty("awt.useSystemAAFontSettings","off");
+		        System.setProperty("swing.aatext", "false");
+		        System.out.println("Anti-alias settings:  off/false");
+	        }
+	        
+	        // Make sure our window decorations come from the look and feel.
+	        JFrame.setDefaultLookAndFeelDecorated(true);
+	
+	        // Save the context (or create one by default)
+	        context = (c != null) ? c : uContext.createContext();
+	
+	        // Conditionally apply context settings...
+	        if (context.getThemeProvider() != null) { 
+	        	context.getThemeProvider().doTheme(); 
+	        }
 
         // Prefer Nimbus over default look and feel.
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 final String name = info.getName(); System.out.println(name);
-                if ("Nimbus".equals(name)) {
-                    final int version = 1;
+                if ("Nimbus".equals(name)) { // Metal, Nimbus, ...
+
+ 		            // Some LnF/Themes use properties (JTattoo, ...)
+		            Properties props = new Properties();
+
+		           // LAF_NIMBUS; LAF_WEB; LAF_MATCHES_SETTING;
+          			final int version = LAF_MATCHES_SETTING; 
                     switch (version) {
-                        case 1:
+                        case LAF_MATCHES_SETTING:
                             UIManager.setLookAndFeel(info.getClassName());
                             break;
-                        case 2:
+                        case LAF_WEB:
                             UIManager.setLookAndFeel("com.alee.laf.WebLookAndFeel"); // works but need to upgrade to 1.29 from 1.27
                             break;
                         case 3:
@@ -128,9 +145,12 @@ protected final void _init(uContext c) {
                             LookAndFeel laf = new NapkinLookAndFeel();
                             UIManager.setLookAndFeel(laf);
                             break;
-                        case 4:
+                        case LAF_SYSTEM:
                             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                             break;
+                        case LAF_DARCULA:
+                            UIManager.setLookAndFeel("com.bulenkov.darcula.DarculaLaf");
+                        break;
                     }
 
                     break;
@@ -261,7 +281,6 @@ protected final void _init(uContext c) {
 		if (externalFrame == null) {
 			// We have not registered a desktop/main so create one
 	        externalFrame = new XFrame(context.getDesktopTitle());	        
-	        externalFrame.setSize(context.getDimension());			
 		} else {
 			// We have registered a desktop so use it
 			
@@ -294,6 +313,7 @@ protected final void _init(uContext c) {
 	        	        
             // Display the window.
             // externalFrame.pack(); // [A] [E]
+            externalFrame.setSize(context.getDimension());			
             externalFrame.setLocationRelativeTo(null); // [C]
             externalFrame.setVisible(true);
 
