@@ -69,4 +69,15 @@ public class uContext {
 
     public Dimension getDimension() { return dimension; }
 
+    /** The look and feel class to use (will be ignored in a "desktop" environment) */
+    public String lookAndFeel;
+    
+	public String getLookAndFeel() {
+		return lookAndFeel;
+	}
+
+	public void setLookAndFeel(String laf) {
+		this.lookAndFeel = laf;
+	}
+
 }
