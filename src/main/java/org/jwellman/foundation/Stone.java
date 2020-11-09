@@ -58,13 +58,17 @@ public class Stone {
 	private JDesktopPane desktop;
 
 	// Look and Feel (LAF) identifiers
-	private static final int LAF_MATCHES_SETTING = 1;
-	private static final int LAF_WEB = 2;
-	private static final int LAF_TBD = 3;
-	private static final int LAF_SYSTEM = 4;
-	private static final int LAF_NIMROD = 5;
-	private static final int LAF_JTATTOO = 6;
-	private static final int LAF_DARCULA = 7;
+	// Design Note:  These are public to allow applications to specify
+	// the preferred look and feel via the uContext.  Remember that 
+	// this probably will not be respected in a "desktop" environment
+	// but will be in a standalone environment.
+	public static final int LAF_MATCHES_SETTING = 1;
+	public static final int LAF_WEB = 2;
+	public static final int LAF_NAPKIN = 3;
+	public static final int LAF_SYSTEM = 4;
+	public static final int LAF_NIMROD = 5;
+	public static final int LAF_JTATTOO = 6;
+	public static final int LAF_DARCULA = 7;
 
 
 
@@ -139,22 +143,22 @@ public class Stone {
         // Prefer Nimbus over default look and feel.
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                final String name = info.getName(); System.out.println(name);
+                final String name = info.getName(); System.out.println("FOUND LAF: " + name);
                 if ("Nimbus".equals(name)) { // Metal, Nimbus, ...
 
  		            // Some LnF/Themes use properties (JTattoo, ...)
 		            Properties props = new Properties();
 
 		           // LAF_NIMBUS; LAF_WEB; LAF_MATCHES_SETTING;
-          			final int version = LAF_MATCHES_SETTING;
+          			final int version = LAF_SYSTEM;
                     switch (version) {
-                        case LAF_MATCHES_SETTING:
+                        case LAF_MATCHES_SETTING: // THIS IS NIMBUS
                             UIManager.setLookAndFeel(info.getClassName());
                             break;
                         case LAF_WEB:
                             UIManager.setLookAndFeel("com.alee.laf.WebLookAndFeel"); // works but need to upgrade to 1.29 from 1.27
                             break;
-                        case 3:
+                        case LAF_NAPKIN:
                             String[] themeNames = NapkinTheme.Manager.themeNames();
                             String themeToUse = "blueprint"; // napkin | blueprint
                             NapkinTheme.Manager.setCurrentTheme(themeToUse);
@@ -166,7 +170,7 @@ public class Stone {
                             break;
                         case LAF_DARCULA:
                             UIManager.setLookAndFeel("com.bulenkov.darcula.DarculaLaf");
-                        break;
+                            break;
                     }
 
                     break;
@@ -175,8 +179,9 @@ public class Stone {
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             // If Nimbus is not available, you can set the GUI to another look and feel.
+            e.printStackTrace();
         } finally {
-            System.out.println(UIManager.getLookAndFeel().getName());
+            System.out.println("USING LAF: " + UIManager.getLookAndFeel().getName());
         }
 
     }
