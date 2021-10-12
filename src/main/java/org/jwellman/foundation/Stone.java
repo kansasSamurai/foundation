@@ -62,7 +62,7 @@ public class Stone {
 	// the preferred look and feel via the uContext.  Remember that 
 	// this probably will not be respected in a "desktop" environment
 	// but will be in a standalone environment.
-	public static final int LAF_MATCHES_SETTING = 1;
+	public static final int LAF_NIMBUS = 1;
 	public static final int LAF_WEB = 2;
 	public static final int LAF_NAPKIN = 3;
 	public static final int LAF_SYSTEM = 4;
@@ -144,22 +144,21 @@ public class Stone {
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 final String name = info.getName(); System.out.println("FOUND LAF: " + name);
-                if ("Nimbus".equals(name)) { // Metal, Nimbus, ...
+            }
 
  		            // Some LnF/Themes use properties (JTattoo, ...)
-		            Properties props = new Properties();
+		            final Properties props = new Properties();
 
-		           // LAF_NIMBUS; LAF_WEB; LAF_MATCHES_SETTING;
-          			final int version = LAF_SYSTEM;
+          			final int version = LAF_WEB;
                     switch (version) {
-                        case LAF_MATCHES_SETTING: // THIS IS NIMBUS
-                            UIManager.setLookAndFeel(info.getClassName());
+                        case LAF_NIMBUS: 
+                            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
                             break;
                         case LAF_WEB:
                             UIManager.setLookAndFeel("com.alee.laf.WebLookAndFeel"); // works but need to upgrade to 1.29 from 1.27
                             break;
                         case LAF_NAPKIN:
-                            String[] themeNames = NapkinTheme.Manager.themeNames();
+                            //String[] themeNames = NapkinTheme.Manager.themeNames();
                             String themeToUse = "blueprint"; // napkin | blueprint
                             NapkinTheme.Manager.setCurrentTheme(themeToUse);
                             LookAndFeel laf = new NapkinLookAndFeel();
@@ -173,10 +172,7 @@ public class Stone {
                             break;
                     }
 
-                    break;
-                }
 //                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             // If Nimbus is not available, you can set the GUI to another look and feel.
             e.printStackTrace();
@@ -239,7 +235,8 @@ public class Stone {
 	    final XFrame ajframe = new XFrame("Your App -- powered by the Foundation API");
 
         // ... possibly update the frame title
-        if (context.getDesktopTitle() != null) ajframe.setTitle(context.getDesktopTitle());
+        if (context.getDesktopTitle() != null) 
+            ajframe.setTitle(context.getDesktopTitle());
 
         // ... only set the close operation when not in desktop mode
         // TODO this default is only valid in a non-desktop, single window
@@ -256,7 +253,18 @@ public class Stone {
 	}
 
 	/**
-	 *
+	 * Tells Foundation that the given IWindow is the "main" desktop window.
+	 * i.e. the main window is whatever you consider the "controlling" JFrame.
+	 * p.s. Further, the main window is the one that closes/exits the application
+	 * when the window's "close" button is clicked. [1]
+	 * 
+	 * TODO There needs to be a mechanism and well defined rules for what happens
+	 *      when this is called AFTER a previous desktop window has already been defined.
+	 *      i.e. the first desktop window "wins".
+	 *      
+	 * [1] Yes, there may be a very few applications that do not use this paradigm,
+	 *     but I think you get the idea now what the "main" window is.
+	 *     
 	 * @param main
 	 */
 	public void registerDesktopWindow(IWindow main) {
@@ -308,16 +316,30 @@ public class Stone {
 
         // Create the JFrame
 		if (externalFrame == null) {
-			// We have not registered a desktop/main so create one
-	        externalFrame = new XFrame(context.getDesktopTitle());
+
+		    // This is a bit of a hack for now (12/1/2020)...
+		    // If the externalFrame has not been explicitly registered then try to decode if desktop mode should be used.
+		    if (windows.size() == 1) {
+		        if (windows.get(0) instanceof XInternalFrame) {
+		            context.setDesktopMode(true);
+		        }
+		    }
+		    
+            // We have not registered a desktop/main so create one
+            externalFrame = new XFrame("Your App -- Powered By the Foundation API");
+
+            // TODO The jPAD security manager doesn't like this line
+            // but other apps without jpad might... review this design
+            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
 		} else {
 			// We have registered a desktop so use it
 
 		}
 
-    // Start the GUI on the Event Dispatch Thread (EDT)
-    javax.swing.SwingUtilities.invokeLater(
-        new Runnable() { @Override public void run() {
+        // Start the GUI on the Event Dispatch Thread (EDT)
+        javax.swing.SwingUtilities.invokeLater(
+            new Runnable() { @Override public void run() {
 
         	if (context.isDesktopMode()) {
         		if (context.getDesktopProvider() == null) {
@@ -328,6 +350,8 @@ public class Stone {
         			desktop = context.getDesktopProvider().doCustomDesktop(externalFrame);
         		}
 
+        		// Note that this only ADDs the window to the desktop;
+        		// it is not pack(ed) nor setVisible()... that occurs later.
                 for (IWindow w : windows) {
                 	if (w != externalFrame) {
                 	    desktop.add(w.getComponent());
@@ -336,18 +360,14 @@ public class Stone {
 
         	}
 
-	        // TODO The jPAD security manager doesn't like this line
-	        // but other apps without jpad might... review this design
-	        // externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
             // Display the window.
             // externalFrame.pack(); // [A] [E]
             externalFrame.setSize(context.getDimension());
             externalFrame.setLocationRelativeTo(null); // [C]
             externalFrame.setVisible(true);
 
-        } } // end runnable / end run()
-    ); // end invokeLater()
+            } } // end runnable / end run()
+        ); // end invokeLater()
 
 	    /* All the other windows have been added to the desktop
 	     * but they have not been made visible; make them visible now.

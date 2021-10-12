@@ -24,7 +24,7 @@ public interface IWindow {
     public void setContentPane(Container c);
     
     /**
-     * This was required by Foundation ...
+     * This method is required by the Foundation architecture.
      * 
      * @return
      */
