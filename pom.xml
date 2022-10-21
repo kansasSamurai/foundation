@@ -29,16 +29,11 @@
             <version>1.2</version>
         </dependency>
 
+        <!-- Might need custom build of v1.29 instead -->
         <dependency>
             <groupId>com.mgarin</groupId>
             <artifactId>weblaf</artifactId>
             <version>1.27</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.mgarin</groupId>
-            <artifactId>weblaf</artifactId>
-            <version>1.29</version>
         </dependency>
 
         <!-- This is currently only necessary for weblaf (though I may keep) -->
