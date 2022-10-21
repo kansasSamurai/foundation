@@ -51,18 +51,18 @@ abstract public class AbstractSimpleApp implements uiThemeProvider {
      */
     protected void startup(boolean asMainFrame, String[] args) {
 
-    	// [Note 1] 
-    	// The 'asMainFrame' parameter would be used to specify whether you 
-    	// want this application to be displayed as a "main frame" i.e. as a java JFrame.
-    	
+        // [Note 1]
+        // The 'asMainFrame' parameter would be used to specify whether you
+        // want this application to be displayed as a "main frame" i.e. as a java JFrame.
+
         // Prepare - User Interface Context
-		// int uiunit = 65;
-		// final uContext context = uContext.createContext();
-		// context.setTheme(this);
-		// context.setDimension(uiunit * 5, uiunit * 9);
+        // int uiunit = 65;
+        // final uContext context = uContext.createContext();
+        // context.setTheme(this);
+        // context.setDimension(uiunit * 5, uiunit * 9);
 
         // Step 1 - Initialize Swing; if you want a non-null uContext, an example is in the comments above.
-        final Foundation f = Foundation.init(null);
+        final Foundation f = Foundation.init(Foundation.APPTYPE.STANDALONE, null);
 
         // Step 2 - Create your UIs in JPanel(s)
         mainui = f.registerUI("org.jwellman.foundation.examples.AbstractSimpleApp", this.getMainUI());

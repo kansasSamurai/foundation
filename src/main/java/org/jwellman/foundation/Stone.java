@@ -27,11 +27,21 @@ import org.jwellman.foundation.swing.XInternalFrame;
  *
  * Stone only supports a single application;
  * in either single frame or desktop mode.
+ * Oct. 2022 - I have decided that the above statement needs
+ * to be adjusted and improved.  I think that instead of the
+ * current class/inheritance model (stone, gold, platinum, etc.)
+ * that I need to create the concept of a "window manager" interface
+ * that would then be responsible for providing whatever application
+ * mode is desired. As part of that, the concept of a single uContext
+ * probably needs to be adjusted as well so that the window manager
+ * works on a list of uContext objects.
  *
  * @author rwellman
  *
  */
 public class Stone {
+
+    public static final String POWEREDBY = " -- Powered By the Foundation API";
 
 	/** The user's entry point UI in a JPanel */
 	// protected JPanel panel;
@@ -51,11 +61,19 @@ public class Stone {
 	/** The "controlling" JFrame; used in both modes */
 	protected XFrame externalFrame;
 
-	/** The "main" internal frame used in desktop mode */
-	// protected XInternalFrame internalFrame;
+	/** The "main" internal frame used in desktop mode
+	 * Oct. 2022 - I have removed this because there is no "main" internal
+	 * frame in desktop mode because there might be more than one desktop app.
+	 * (i.e. jpad) However, this concept might be applied to the context of 
+	 * a desktop compatible app.
+	 */
+// 	protected XInternalFrame internalFrame;
 
 	/** The JDesktopPane used in desktop mode */
 	private JDesktopPane desktop;
+
+	// Enable/disable development level debug features
+	private boolean debug = false;
 
 	// Look and Feel (LAF) identifiers
 	// Design Note:  These are public to allow applications to specify
@@ -86,7 +104,7 @@ public class Stone {
 	 *
 	 * @param c the micro context
 	 */
-	protected final void _init(uContext c) {
+	protected final void _init(Foundation.APPTYPE apptype, uContext c) {
 
 	    if (isInitialized) {
 	    	System.out.print("WARN - init() has been called more than once...");
@@ -94,6 +112,12 @@ public class Stone {
 	    	System.out.print("WARN - ... which may often result in unexpected/undesired behavior.");
 	    } else {
 	        isInitialized = true;
+
+            // The first app to call init gets to set the apptype.
+            // This is "redundant" for a standalone app but
+            // required so that desktop apps such as jpad can
+            // enforce a desktop paradigm.
+            Foundation.apptype = apptype;
 
 	        // Log the application classpath for debugging purposes
 	        System.out.println("----- Application Classpath -----");
@@ -105,10 +129,12 @@ public class Stone {
 
 	        // Log the system fonts available for debugging purposes
 	        final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-	        final Font[] fonts = ge.getAllFonts();
-	        for (Font font : fonts) {
-	            System.out.print("FONT: " + font.getFontName() + " : ");
-	            System.out.println(font.getFamily());
+	        if (debug) {
+	            final Font[] fonts = ge.getAllFonts();
+	            for (Font font : fonts) {
+	                System.out.print("FONT: " + font.getFontName() + " : ");
+	                System.out.println(font.getFamily());
+	            }
 	        }
 
 	        @SuppressWarnings("unused")
@@ -146,10 +172,12 @@ public class Stone {
                 final String name = info.getName(); System.out.println("FOUND LAF: " + name);
             }
 
- 		            // Some LnF/Themes use properties (JTattoo, ...)
-		            final Properties props = new Properties();
+                // Some LnF/Themes use properties (JTattoo, ...)
+                final Properties props = new Properties();
+                props.put("key", "value"); // this is just to prevent unused warning
 
-          			final int version = LAF_WEB;
+                System.out.println(">INIT LAF<");
+                final int version = LAF_SYSTEM;
                     switch (version) {
                         case LAF_NIMBUS: 
                             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -172,7 +200,6 @@ public class Stone {
                             break;
                     }
 
-//                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             // If Nimbus is not available, you can set the GUI to another look and feel.
             e.printStackTrace();
@@ -211,10 +238,7 @@ public class Stone {
         internalFrame.setMaximizable(false);
         internalFrame.setClosable(false);
 
-        // Adding this to a desktop has been moved to showGUI()
-        // desktop.add(internalFrame); // this does NOT make the internal frame visible
-
-        this.initializeOtherWindows();
+//        this.initializeOtherWindows();
 
 	    return internalFrame; // frame;
 	} // end method
@@ -314,19 +338,26 @@ public class Stone {
 			throw new RuntimeException("Cannot call showGUI() until either useWindow() or useDesktop() is called.");
 		}
 
-        // Create the JFrame
+		final IWindow firstWindow = windows.get(0);
+
+		// Create the JFrame
 		if (externalFrame == null) {
 
 		    // This is a bit of a hack for now (12/1/2020)...
 		    // If the externalFrame has not been explicitly registered then try to decode if desktop mode should be used.
+		    // I think this only exists for monoply game; it can probably go away soon.
 		    if (windows.size() == 1) {
 		        if (windows.get(0) instanceof XInternalFrame) {
 		            context.setDesktopMode(true);
 		        }
 		    }
-		    
+
             // We have not registered a desktop/main so create one
-            externalFrame = new XFrame("Your App -- Powered By the Foundation API");
+            if (firstWindow instanceof XFrame) {
+                externalFrame = (XFrame) firstWindow;
+            } else {
+                externalFrame = new XFrame("Your App" + POWEREDBY);
+            }
 
             // TODO The jPAD security manager doesn't like this line
             // but other apps without jpad might... review this design
@@ -379,8 +410,10 @@ public class Stone {
 	        // Start the GUI on the Event Dispatch Thread (EDT)
 	        javax.swing.SwingUtilities.invokeLater(
 	            new Runnable() { @Override public void run() {
-	                w.pack();
-	                w.setVisible(true);
+	                if (w != firstWindow) {
+	                    w.pack();
+	                    w.setVisible(true);
+	                }
 	            }} );
 	    }
 

@@ -15,9 +15,15 @@ package org.jwellman.foundation;
  */
 public class Foundation extends Platinum {
 
-    private Foundation() {} // private constructor to enforce singleton pattern; use get()
+    public enum APPTYPE {
+        DESKTOP, STANDALONE
+    }
+
+    protected static APPTYPE apptype;
 
     private static Foundation f; // singleton
+
+    private Foundation() {} // private constructor to enforce singleton pattern; use get()
 
     /**
      * Initialize the Java Swing graphics environment via the Foundation API.
@@ -28,7 +34,7 @@ public class Foundation extends Platinum {
      * @return
      */
     public static Foundation init() {
-        return Foundation.init(null);
+        return Foundation.init(APPTYPE.STANDALONE, null);
     }
 
     /**
@@ -42,12 +48,13 @@ public class Foundation extends Platinum {
      * 
      * @return
      */
-    public static Foundation init(uContext c) {
+    public static Foundation init(APPTYPE apptype, uContext c) {
+
         if (f == null) {
             f = new Foundation();
         }
         
-        f._init(c);
+        f._init(apptype, c);
         
         return f;
     }
