@@ -35,11 +35,13 @@
             <version>1.27</version>
         </dependency>
 
+        <!--  1.29 is my version with a fix; use if available
         <dependency>
             <groupId>com.mgarin</groupId>
             <artifactId>weblaf</artifactId>
             <version>1.29</version>
         </dependency>
+        -->
 
         <!-- This is currently only necessary for weblaf (though I may keep) -->
         <dependency>

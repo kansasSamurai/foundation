@@ -3,7 +3,8 @@ package org.jwellman.foundation.utility;
 import java.awt.Image;
 
 /**
- *
+ * https://proghammer.wordpress.com/category/chess/ 
+ * 
  * @author Rick
  */
 public interface Moveable {
