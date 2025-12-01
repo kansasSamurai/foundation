@@ -137,9 +137,35 @@ This aligns with Foundation's philosophy of interface-based, pluggable architect
 
 ## Creating Applications
 
-### Quick Start with AbstractSimpleApp
+### Recommended Pattern: Extend JPanel
 
-Extend AbstractSimpleApp (src/main/java/org/jwellman/foundation/extend/AbstractSimpleApp.java:14) to bootstrap simple single-panel applications:
+The Foundation way is to **extend JPanel directly**, not JFrame. This eliminates boilerplate and keeps your code deployment-agnostic:
+
+```java
+public class MyApp extends JPanel {
+    public MyApp() {
+        super(new BorderLayout());
+        // Build your UI here in the constructor
+    }
+
+    public static void main(String[] args) {
+        Foundation f = Foundation.init();
+        IWindow window = f.useWindow(new MyApp());  // or useDesktop()
+        window.setTitle("My Application");
+        f.showGUI(window);
+    }
+}
+```
+
+**Why extend JPanel?**
+- Your application IS a panel - Foundation handles JFrame/JInternalFrame
+- No JFrame boilerplate (setDefaultCloseOperation, pack, setVisible, etc.)
+- Same class works in window or desktop mode - just change useWindow() to useDesktop()
+- Minimal main() method with clear Foundation lifecycle
+
+### Alternative: AbstractSimpleApp
+
+For even less boilerplate, extend AbstractSimpleApp (src/main/java/org/jwellman/foundation/extend/AbstractSimpleApp.java:14):
 ```java
 public class MyApp extends AbstractSimpleApp {
     @Override

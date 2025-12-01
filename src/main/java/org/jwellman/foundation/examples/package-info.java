@@ -21,10 +21,12 @@
  *
  * <ul>
  * <li><b>SimpleWindowDemo</b> - Minimal example showing window mode (standalone JFrame).
- *     Demonstrates basic Foundation lifecycle and single-panel deployment.</li>
+ *     Demonstrates extending JPanel (not JFrame) and minimal boilerplate.
+ *     Shows basic Foundation lifecycle and single-panel deployment.</li>
  *
  * <li><b>SimpleDesktopDemo</b> - Minimal example showing desktop mode (JInternalFrame).
- *     Uses identical UI code as SimpleWindowDemo to demonstrate deployment-agnostic design.</li>
+ *     Nearly identical to SimpleWindowDemo - only useDesktop() vs useWindow() differs.
+ *     Demonstrates deployment-agnostic design principle.</li>
  *
  * <li><b>MultiPanelDesktopDemo</b> - Shows multiple panels in a desktop environment.
  *     Simulates a multi-tool desktop where each tool is a separate JPanel.
@@ -38,9 +40,11 @@
  * <h2>Key Concepts Demonstrated</h2>
  *
  * <ul>
- * <li><b>Deployment-Agnostic Applications</b> - Same JPanel code works in window or desktop mode</li>
+ * <li><b>Extend JPanel, Not JFrame</b> - Applications extend JPanel; Foundation handles JFrame boilerplate</li>
+ * <li><b>Deployment-Agnostic Applications</b> - Same JPanel class works in window or desktop mode</li>
  * <li><b>IWindow Abstraction</b> - Applications never directly reference JFrame/JInternalFrame</li>
- * <li><b>Foundation Lifecycle</b> - init() → registerUI()/useWindow()/useDesktop() → showGUI()</li>
+ * <li><b>Foundation Lifecycle</b> - init() → useWindow()/useDesktop() → showGUI()</li>
+ * <li><b>Minimal Boilerplate</b> - Clean main() methods with clear, simple Foundation API</li>
  * <li><b>Multi-Panel Support</b> - Multiple tools in a single desktop environment</li>
  * </ul>
  *

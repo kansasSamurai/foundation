@@ -12,50 +12,39 @@ import org.jwellman.foundation.swing.IWindow;
  * Minimal demonstration of Foundation in window mode (standalone JFrame).
  *
  * This demonstrates:
+ * - Application extending JPanel (not JFrame - Foundation handles that)
  * - Basic Foundation lifecycle (init, useWindow, showGUI)
- * - Single JPanel application
  * - Window mode deployment
+ * - Minimal boilerplate in main() method
  *
  * @author Foundation Framework
  */
-public class SimpleWindowDemo {
+public class SimpleWindowDemo extends JPanel {
 
-    public static void main(String[] args) {
-        // Step 1 - Initialize Foundation with no context (defaults)
-        Foundation f = Foundation.init();
-
-        // Step 2 - Create your UI in a JPanel
-        JPanel ui = createUI();
-
-        // Step 3 - Use Foundation to create a window
-        IWindow window = f.useWindow(ui);
-        window.setTitle("Foundation - Simple Window Demo");
-        window.setResizable(true);
-
-        // Step 4 - Display the UI
-        f.showGUI(window);
-    }
+    private static final long serialVersionUID = 1L;
 
     /**
-     * Creates a simple UI with a label and button.
+     * Constructor builds the UI.
+     * This is the Foundation way - your application IS a JPanel.
      */
-    private static JPanel createUI() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
+    public SimpleWindowDemo() {
+        super(new BorderLayout(10, 10));
 
         // Header
         JLabel header = new JLabel("Foundation Framework - Window Mode");
         header.setHorizontalAlignment(JLabel.CENTER);
-        panel.add(header, BorderLayout.NORTH);
+        add(header, BorderLayout.NORTH);
 
         // Content
         JLabel content = new JLabel(
             "<html><center>" +
             "This demonstrates a simple application running in window mode.<br>" +
-            "The same JPanel can be deployed in desktop mode without code changes." +
+            "Notice: This class extends JPanel, not JFrame.<br>" +
+            "Foundation handles all the JFrame boilerplate." +
             "</center></html>"
         );
         content.setHorizontalAlignment(JLabel.CENTER);
-        panel.add(content, BorderLayout.CENTER);
+        add(content, BorderLayout.CENTER);
 
         // Button
         JPanel buttonPanel = new JPanel(new FlowLayout());
@@ -64,8 +53,23 @@ public class SimpleWindowDemo {
             System.out.println("Button clicked in window mode!");
         });
         buttonPanel.add(button);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        return panel;
+        add(buttonPanel, BorderLayout.SOUTH);
     }
+
+    public static void main(String[] args) {
+        // Step 1 - Initialize Foundation
+        Foundation f = Foundation.init();
+
+        // Step 2 - Create your application (which is a JPanel)
+        SimpleWindowDemo app = new SimpleWindowDemo();
+
+        // Step 3 - Use Foundation to create a window
+        IWindow window = f.useWindow(app);
+        window.setTitle("Foundation - Simple Window Demo");
+        window.setResizable(true);
+
+        // Step 4 - Display the UI
+        f.showGUI(window);
+    }
+
 }

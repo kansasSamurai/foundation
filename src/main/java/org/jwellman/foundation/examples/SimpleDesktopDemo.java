@@ -12,54 +12,41 @@ import org.jwellman.foundation.swing.IWindow;
  * Minimal demonstration of Foundation in desktop mode (JInternalFrame in JDesktopPane).
  *
  * This demonstrates:
+ * - Application extending JPanel (not JFrame - Foundation handles that)
  * - Basic Foundation lifecycle (init, useDesktop, showGUI)
- * - Single JPanel application
  * - Desktop mode deployment
- * - Same UI code as SimpleWindowDemo, different deployment
+ * - Deployment-agnostic design - same JPanel class works in window or desktop mode
  *
  * @author Foundation Framework
  */
-public class SimpleDesktopDemo {
+public class SimpleDesktopDemo extends JPanel {
 
-    public static void main(String[] args) {
-        // Step 1 - Initialize Foundation with no context (defaults)
-        Foundation f = Foundation.init();
-
-        // Step 2 - Create your UI in a JPanel
-        JPanel ui = createUI();
-
-        // Step 3 - Use Foundation to create a desktop window (internal frame)
-        IWindow window = f.useDesktop(ui);
-        window.setTitle("Foundation - Simple Desktop Demo");
-        window.setResizable(true);
-        window.setMaximizable(true);
-
-        // Step 4 - Display the UI
-        f.showGUI(window);
-    }
+    private static final long serialVersionUID = 1L;
 
     /**
-     * Creates a simple UI with a label and button.
-     * Note: This is identical to SimpleWindowDemo - demonstrating deployment-agnostic design.
+     * Constructor builds the UI.
+     * Note: This constructor is nearly identical to SimpleWindowDemo's constructor.
+     * The only difference is the text describing the mode.
+     * This demonstrates deployment-agnostic design.
      */
-    private static JPanel createUI() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
+    public SimpleDesktopDemo() {
+        super(new BorderLayout(10, 10));
 
         // Header
         JLabel header = new JLabel("Foundation Framework - Desktop Mode");
         header.setHorizontalAlignment(JLabel.CENTER);
-        panel.add(header, BorderLayout.NORTH);
+        add(header, BorderLayout.NORTH);
 
         // Content
         JLabel content = new JLabel(
             "<html><center>" +
             "This demonstrates a simple application running in desktop mode.<br>" +
-            "Notice the UI code is identical to SimpleWindowDemo,<br>" +
-            "only the deployment mode changed (useDesktop vs useWindow)." +
+            "Notice: This class extends JPanel, not JFrame.<br>" +
+            "The only difference from SimpleWindowDemo is using useDesktop() instead of useWindow()." +
             "</center></html>"
         );
         content.setHorizontalAlignment(JLabel.CENTER);
-        panel.add(content, BorderLayout.CENTER);
+        add(content, BorderLayout.CENTER);
 
         // Button
         JPanel buttonPanel = new JPanel(new FlowLayout());
@@ -68,8 +55,24 @@ public class SimpleDesktopDemo {
             System.out.println("Button clicked in desktop mode!");
         });
         buttonPanel.add(button);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        return panel;
+        add(buttonPanel, BorderLayout.SOUTH);
     }
+
+    public static void main(String[] args) {
+        // Step 1 - Initialize Foundation
+        Foundation f = Foundation.init();
+
+        // Step 2 - Create your application (which is a JPanel)
+        SimpleDesktopDemo app = new SimpleDesktopDemo();
+
+        // Step 3 - Use Foundation to create a desktop window (internal frame)
+        IWindow window = f.useDesktop(app);
+        window.setTitle("Foundation - Simple Desktop Demo");
+        window.setResizable(true);
+        window.setMaximizable(true);
+
+        // Step 4 - Display the UI
+        f.showGUI(window);
+    }
+
 }
