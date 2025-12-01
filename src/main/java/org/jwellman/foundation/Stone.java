@@ -40,14 +40,11 @@ public class Stone {
 	/** A user interface context object */
 	private uContext context;
 
-	/** Indicates desktop mode */
-	protected boolean isDesktop;
+	/** Indicates desktop mode; null until first useWindow() or useDesktop() call */
+	protected Boolean isDesktop;
 
 	/** Guards the init() method */
 	protected boolean isInitialized;
-
-	/** Guards the useWindow() and useDesktop() methods so the first call "wins"; subsequent calls log a warning */
-	//protected boolean isAppModeChosen;
 
 	/** The "controlling" JFrame; used in both modes */
 	protected XFrame externalFrame;
@@ -209,6 +206,17 @@ public class Stone {
             throw new RuntimeException("FATAL - JPanel cannot be null");
         }
 
+        // Set desktop mode on first call
+        if (isDesktop == null) {
+            isDesktop = true;
+            context.setDesktopMode(true);
+        } else if (!isDesktop) {
+            System.err.println("WARN - useDesktop() called after useWindow() was already called.");
+            System.err.println("WARN - The first call to useWindow() or useDesktop() determines the mode.");
+            System.err.println("WARN - Ignoring this call; framework is already in window mode.");
+            throw new RuntimeException("Cannot mix useDesktop() and useWindow() modes");
+        }
+
         //panel = ui; // Store a reference to the JPanel
         // TODO may have to deprecate/remove the "panel" reference
         // because there may eventually be many panels
@@ -244,25 +252,33 @@ public class Stone {
             throw new RuntimeException("FATAL - JPanel cannot be null");
         }
 
-        // Create the JFrame
-        final XFrame ajframe = new XFrame("Your App -- powered by the Foundation API");
-
-        // ... possibly update the frame title
-        if (context.getDesktopTitle() != null) 
-            ajframe.setTitle(context.getDesktopTitle());
-
-        // ... only set the close operation when not in desktop mode
-        // TODO this default is only valid in a non-desktop, single window
-        // user interface; if this method is called for any second, third, etc.
-        // windows then this default probably doesn't apply; what to do then?
-        if (context.isDesktopMode()) {
-        } else {
-            ajframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Set window mode on first call
+        if (isDesktop == null) {
+            isDesktop = false;
+            context.setDesktopMode(false);
+        } else if (isDesktop) {
+            System.err.println("WARN - useWindow() called after useDesktop() was already called.");
+            System.err.println("WARN - The first call to useWindow() or useDesktop() determines the mode.");
+            System.err.println("WARN - Ignoring this call; framework is already in desktop mode.");
+            throw new RuntimeException("Cannot mix useWindow() and useDesktop() modes");
         }
-        // frame.setSize(450, 250); // [D]
-        ajframe.add(ui);
 
-        return ajframe;
+        // Create the JFrame if not already created
+        if (externalFrame == null) {
+            externalFrame = new XFrame("Your App -- powered by the Foundation API");
+
+            // ... possibly update the frame title
+            if (context.getDesktopTitle() != null)
+                externalFrame.setTitle(context.getDesktopTitle());
+
+            // Set default close operation for window mode
+            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        }
+
+        // Add the UI to the frame
+        externalFrame.add(ui);
+
+        return externalFrame;
     }
 
     /**

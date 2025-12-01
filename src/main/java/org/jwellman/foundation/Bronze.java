@@ -25,7 +25,7 @@ public class Bronze extends Stone {
 
     @Override
     protected void initializeOtherWindows() {
-        if (this.isDesktop) {
+        if (Boolean.TRUE.equals(this.isDesktop)) {
             for (String name : panels.keySet()) {
                 final XPanel p = panels.get(name);
                 if (p == null) { // this.panel <<< I deprecated this.panel so had to change this comparison operator
