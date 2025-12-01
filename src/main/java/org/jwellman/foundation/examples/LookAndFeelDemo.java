@@ -2,13 +2,17 @@ package org.jwellman.foundation.examples;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import javax.swing.JRadioButton;
 import javax.swing.UIManager;
+
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.Stone;
 import org.jwellman.foundation.swing.IWindow;
@@ -63,8 +67,12 @@ public class LookAndFeelDemo {
         // Note: LAF selection via context not yet implemented
         // This demonstrates current limitation and future direction
 
-        // Initialize Foundation
+        // Initialize Foundation (this will set LAF to system default)
         Foundation f = Foundation.init(context);
+
+        // Now manually set the selected LAF
+        // This is necessary because Foundation currently hardcodes LAF_SYSTEM
+        setLookAndFeel(selectedLAF);
 
         // Create UI
         JPanel ui = createUI(selectedLAF);
@@ -79,30 +87,96 @@ public class LookAndFeelDemo {
     }
 
     /**
-     * Prompts user to select a Look and Feel.
+     * Sets the Look and Feel based on the selected index.
+     * This mirrors the logic in Stone.java but allows runtime selection.
+     */
+    private static void setLookAndFeel(int selectedLAF) {
+        try {
+            switch (LAF_CONSTANTS[selectedLAF]) {
+                case Stone.LAF_NIMBUS:
+                    UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+                    break;
+                case Stone.LAF_WEB:
+                    UIManager.setLookAndFeel("com.alee.laf.WebLookAndFeel");
+                    break;
+                case Stone.LAF_NAPKIN:
+                    net.sourceforge.napkinlaf.NapkinTheme.Manager.setCurrentTheme("blueprint");
+                    UIManager.setLookAndFeel(new net.sourceforge.napkinlaf.NapkinLookAndFeel());
+                    break;
+                case Stone.LAF_SYSTEM:
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    break;
+                case Stone.LAF_NIMROD:
+                    UIManager.setLookAndFeel("com.nilo.plaf.nimrod.NimRODLookAndFeel");
+                    break;
+                case Stone.LAF_JTATTOO:
+                    UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
+                    break;
+                case Stone.LAF_DARCULA:
+                    UIManager.setLookAndFeel("com.bulenkov.darcula.DarculaLaf");
+                    break;
+            }
+            System.out.println("LAF set to: " + UIManager.getLookAndFeel().getName());
+        } catch (Exception e) {
+            System.err.println("Error setting LAF: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Prompts user to select a Look and Feel using radio buttons.
      */
     private static int promptForLAF() {
-        String selection = (String) JOptionPane.showInputDialog(
+        // Create panel with radio buttons
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+
+        // Add instruction label
+        JLabel instruction = new JLabel(
+            "<html>Select a Look and Feel to test:<br><br>" +
+            "<i>NOTE: This is a temporary approach.<br>" +
+            "Future versions will discover LAFs dynamically from a folder.</i></html>"
+        );
+        instruction.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        panel.add(instruction, BorderLayout.NORTH);
+
+        // Create radio button panel
+        JPanel radioPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+        radioPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+        ButtonGroup group = new ButtonGroup();
+        JRadioButton[] radioButtons = new JRadioButton[LAF_NAMES.length];
+
+        for (int i = 0; i < LAF_NAMES.length; i++) {
+            radioButtons[i] = new JRadioButton(LAF_NAMES[i]);
+            group.add(radioButtons[i]);
+            radioPanel.add(radioButtons[i]);
+        }
+
+        // Select first option by default
+        radioButtons[0].setSelected(true);
+
+        panel.add(radioPanel, BorderLayout.CENTER);
+
+        // Show dialog
+        int result = JOptionPane.showConfirmDialog(
             null,
-            "Select a Look and Feel to test:\n\n" +
-            "NOTE: This is a temporary approach.\n" +
-            "Future versions will discover LAFs dynamically from a folder.",
+            panel,
             "Choose Look and Feel",
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            LAF_NAMES,
-            LAF_NAMES[0]
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
         );
 
-        if (selection == null) {
+        if (result != JOptionPane.OK_OPTION) {
             System.exit(0);
         }
 
-        for (int i = 0; i < LAF_NAMES.length; i++) {
-            if (LAF_NAMES[i].equals(selection)) {
+        // Find which radio button is selected
+        for (int i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].isSelected()) {
                 return i;
             }
         }
+
         return 0; // Default to system
     }
 
