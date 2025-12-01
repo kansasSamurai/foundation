@@ -112,6 +112,23 @@ The hardcoded LAF approach is temporary. The planned architecture will support:
 - **Multiple LAF support** - If multiple LAFs detected, prompt user for selection
 - **No recompilation required** - LAFs added by dropping JARs, not code changes
 
+**LAF Discovery Implementation (LAFDiscovery.java):**
+Foundation includes `LAFDiscovery` class that discovers LAFs using multiple strategies:
+
+1. **Built-in LAFs** - Checks `UIManager.getInstalledLookAndFeels()` for Java built-ins (Metal, Nimbus, etc.)
+2. **Directory scanning** - Scans `./lafs/` folder for JAR files
+3. **Classpath scanning** - Checks for well-known LAF classes on the classpath
+
+**LAF JAR Metadata (Optional but Recommended):**
+LAF JARs can include `META-INF/foundation-laf.properties`:
+```properties
+laf.class=com.example.MyLookAndFeel
+laf.name=My Beautiful LAF
+laf.description=A modern look and feel
+```
+
+If no metadata exists, Foundation scans the JAR for classes extending `LookAndFeel` (slower but works).
+
 This aligns with Foundation's philosophy of interface-based, pluggable architecture. When implementing LAF features, design with this future direction in mind.
 
 ### Package Structure
