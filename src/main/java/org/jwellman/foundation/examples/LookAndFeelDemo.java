@@ -19,20 +19,19 @@ import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.uContext;
 
 /**
- * Demonstrates Look and Feel support in Foundation.
- *
- * NOTE: This demo shows the current hardcoded LAF approach which is TEMPORARY.
- *
- * Future Architecture Goal:
- * - LAF JARs will be discovered dynamically from a folder (e.g., ./lafs/)
- * - Framework will detect available LAFs at startup
- * - User can select LAF without recompiling
- * - LAF preference will be saved for future sessions
- *
- * This demo is useful for:
- * - Testing that all LAF dependencies are correctly configured
- * - Validating LAF integration
- * - Visualizing how Foundation UIs look across different LAFs
+ * Demonstrates Look and Feel support in Foundation. <br>
+ * <em>NOTE: This demo shows the current hardcoded LAF approach which is TEMPORARY.</em>
+ * <p>
+ * Future Architecture Goal:<br>
+ * - LAF JARs will be discovered dynamically from a folder (e.g., ./lafs/)<br>
+ * - Framework will detect available LAFs at startup<br>
+ * - User can select LAF without recompiling<br>
+ * - LAF preference will be saved for future sessions<br>
+ *<br>
+ * This demo is useful for:<br>
+ * - Testing that all LAF dependencies are correctly configured<br>
+ * - Validating LAF integration<br>
+ * - Visualizing how Foundation UIs look across different LAFs<br>
  *
  * @author Foundation Framework
  */

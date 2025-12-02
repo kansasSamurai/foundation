@@ -12,6 +12,7 @@ import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import javax.swing.JPanel;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 
@@ -303,13 +304,45 @@ public class LAFDiscovery {
     }
 
     /**
+     * Attempts to find and apply the system Look and Feel.
+     *
+     * @return LAFInfo for system LAF, or null if not found
+     */
+    public static LAFInfo getSystemLAF() {
+        try {
+            String systemLAFClassName = UIManager.getSystemLookAndFeelClassName();
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if (info.getClassName().equals(systemLAFClassName)) {
+                    return new LAFInfo(
+                        info.getClassName(),
+                        info.getName() + " (System)",
+                        "System default Look and Feel",
+                        ClassLoader.getSystemClassLoader()
+                    );
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error determining system LAF: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
      * Demo/test method.
+     *
+     * Discovers all available LAFs and prints them to console, then applies one according to priority:
+     * 1. First LAF found in ./lafs/ directory
+     * 2. System default LAF as fallback
+     *
+     * Then displays a demo window to showcase the selected LAF.
      */
     public static void main(String[] args) {
         System.out.println("Discovering Look and Feels...\n");
 
+        // Discover all LAFs using all strategies
         List<LAFInfo> lafs = discoverLookAndFeels();
 
+        // Print all discovered LAFs to console
         System.out.println("\nDiscovered " + lafs.size() + " Look and Feels:");
         for (int i = 0; i < lafs.size(); i++) {
             LAFInfo laf = lafs.get(i);
@@ -317,5 +350,124 @@ public class LAFDiscovery {
             System.out.println("   Class: " + laf.getClassName());
             System.out.println("   Description: " + laf.getDescription());
         }
+
+        // Now select which LAF to apply
+        System.out.println("\n--- Selecting LAF to Apply ---");
+
+        // Try to find LAFs in the ./lafs/ directory
+        List<LAFInfo> directoryLAFs = discoverDirectoryLAFs();
+
+        LAFInfo selectedLAF = null;
+        String selectionReason = "";
+
+        if (!directoryLAFs.isEmpty()) {
+            // Use the first LAF found in the directory
+            selectedLAF = directoryLAFs.get(0);
+            selectionReason = "Found in " + LAF_DIRECTORY + " directory";
+            System.out.println("Using LAF from directory: " + selectedLAF.getName());
+        } else {
+            // Fallback to system LAF
+            selectedLAF = getSystemLAF();
+            if (selectedLAF != null) {
+                selectionReason = "Using system default (no LAFs found in " + LAF_DIRECTORY + ")";
+                System.out.println(selectionReason);
+            } else {
+                System.err.println("ERROR: Could not determine system LAF!");
+                return;
+            }
+        }
+
+        // Apply the selected LAF
+        if (!applyLookAndFeel(selectedLAF)) {
+            System.err.println("ERROR: Failed to apply LAF. Exiting.");
+            return;
+        }
+
+        // Create and display demo window
+        final LAFInfo finalLAF = selectedLAF;
+        final String finalReason = selectionReason;
+
+        // Use Foundation to create and display the window
+        Foundation f = Foundation.init();
+        org.jwellman.foundation.swing.IWindow window = f.useWindow(showDemoWindow(finalLAF, finalReason));
+        window.setTitle("Foundation LAF Discovery - " + finalLAF.getName());
+        window.setResizable(true);
+        f.showGUI(window);
+
+    }
+
+    /**
+     * Creates and displays a demo window showing the selected LAF.
+     *
+     * @param lafInfo The LAF that was applied
+     * @param reason Why this LAF was selected
+     */
+    private static JPanel showDemoWindow(LAFInfo lafInfo, String reason) {
+
+        // Create a JPanel with demo content
+        javax.swing.JPanel demoPanel = new javax.swing.JPanel(new java.awt.BorderLayout(10, 10));
+        demoPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        // Header
+        javax.swing.JLabel header = new javax.swing.JLabel("Foundation LAF Discovery Demo");
+        header.setFont(header.getFont().deriveFont(java.awt.Font.BOLD, 18f));
+        header.setHorizontalAlignment(javax.swing.JLabel.CENTER);
+        demoPanel.add(header, java.awt.BorderLayout.NORTH);
+
+        // Content panel
+        javax.swing.JPanel contentPanel = new javax.swing.JPanel();
+        contentPanel.setLayout(new javax.swing.BoxLayout(contentPanel, javax.swing.BoxLayout.Y_AXIS));
+
+        javax.swing.JLabel lafLabel = new javax.swing.JLabel(
+            "<html><b>Selected LAF:</b> " + lafInfo.getName() + "</html>"
+        );
+        lafLabel.setAlignmentX(javax.swing.JComponent.CENTER_ALIGNMENT);
+
+        javax.swing.JLabel classLabel = new javax.swing.JLabel(
+            "<html><b>Class:</b> " + lafInfo.getClassName() + "</html>"
+        );
+        classLabel.setAlignmentX(javax.swing.JComponent.CENTER_ALIGNMENT);
+
+        javax.swing.JLabel reasonLabel = new javax.swing.JLabel(
+            "<html><b>Reason:</b> " + reason + "</html>"
+        );
+        reasonLabel.setAlignmentX(javax.swing.JComponent.CENTER_ALIGNMENT);
+
+        javax.swing.JLabel descLabel = new javax.swing.JLabel(
+            "<html><b>Description:</b> " + lafInfo.getDescription() + "</html>"
+        );
+        descLabel.setAlignmentX(javax.swing.JComponent.CENTER_ALIGNMENT);
+
+        contentPanel.add(javax.swing.Box.createVerticalStrut(10));
+        contentPanel.add(lafLabel);
+        contentPanel.add(javax.swing.Box.createVerticalStrut(5));
+        contentPanel.add(classLabel);
+        contentPanel.add(javax.swing.Box.createVerticalStrut(5));
+        contentPanel.add(reasonLabel);
+        contentPanel.add(javax.swing.Box.createVerticalStrut(5));
+        contentPanel.add(descLabel);
+        contentPanel.add(javax.swing.Box.createVerticalStrut(15));
+
+        // Sample components to showcase the LAF
+        javax.swing.JPanel samplePanel = new javax.swing.JPanel(new java.awt.FlowLayout());
+        samplePanel.add(new javax.swing.JButton("Sample Button"));
+        samplePanel.add(new javax.swing.JCheckBox("Check Box"));
+        samplePanel.add(new javax.swing.JRadioButton("Radio Button"));
+        javax.swing.JComboBox<String> combo = new javax.swing.JComboBox<>(
+            new String[]{"Combo Box", "Item 2", "Item 3"}
+        );
+        samplePanel.add(combo);
+
+        contentPanel.add(samplePanel);
+        demoPanel.add(contentPanel, java.awt.BorderLayout.CENTER);
+
+        // Button panel
+        javax.swing.JPanel buttonPanel = new javax.swing.JPanel(new java.awt.FlowLayout());
+        javax.swing.JButton closeButton = new javax.swing.JButton("Close");
+        closeButton.addActionListener(e -> System.exit(0));
+        buttonPanel.add(closeButton);
+        demoPanel.add(buttonPanel, java.awt.BorderLayout.SOUTH);
+
+        return demoPanel;
     }
 }
