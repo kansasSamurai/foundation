@@ -4,8 +4,6 @@ import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,11 +15,13 @@ import javax.swing.JPanel;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import net.sourceforge.napkinlaf.NapkinLookAndFeel;
-import net.sourceforge.napkinlaf.NapkinTheme;
+
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
+
+import net.sourceforge.napkinlaf.NapkinLookAndFeel;
+import net.sourceforge.napkinlaf.NapkinTheme;
 
 /**
  * The most basic of Swing initialization requirements.
@@ -403,8 +403,8 @@ public class Stone {
                 }
 
                         // Display the window.
-                        // externalFrame.pack(); // [A] [E]
                         externalFrame.setSize(context.getDimension());
+                        externalFrame.pack(); // [A] [E]
                         externalFrame.setLocationRelativeTo(null); // [C]
                         externalFrame.setVisible(true);
 

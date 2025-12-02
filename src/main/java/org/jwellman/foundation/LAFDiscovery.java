@@ -1,8 +1,11 @@
 package org.jwellman.foundation;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -41,6 +44,9 @@ public class LAFDiscovery {
 
     /** Metadata file path within JARs */
     private static final String METADATA_PATH = "META-INF/foundation-laf.properties";
+
+    /** Configuration file path */
+    private static final String CONFIG_FILE_PATH = LAF_DIRECTORY + "/foundation.properties";
 
     /**
      * Represents a discovered Look and Feel.
@@ -328,11 +334,101 @@ public class LAFDiscovery {
     }
 
     /**
+     * Loads the LAF configuration from the config file.
+     *
+     * @return Properties object, or null if config file doesn't exist
+     */
+    private static Properties loadConfig() {
+        File configFile = new File(CONFIG_FILE_PATH);
+        if (!configFile.exists()) {
+            return null;
+        }
+
+        Properties props = new Properties();
+        try (InputStream is = new FileInputStream(configFile)) {
+            props.load(is);
+            System.out.println("Loaded configuration from: " + CONFIG_FILE_PATH);
+            return props;
+        } catch (IOException e) {
+            System.err.println("Error loading config file: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Finds a LAF by its class name in the list of discovered LAFs.
+     *
+     * @param lafs List of discovered LAFs
+     * @param className The class name to search for
+     * @return The matching LAFInfo, or null if not found
+     */
+    private static LAFInfo findLAFByClassName(List<LAFInfo> lafs, String className) {
+        if (className == null || className.trim().isEmpty()) {
+            return null;
+        }
+
+        for (LAFInfo laf : lafs) {
+            if (laf.getClassName().equals(className.trim())) {
+                return laf;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Generates a default configuration file with all discovered LAFs listed as examples.
+     *
+     * @param lafs List of discovered LAFs to include in the config
+     */
+    private static void generateDefaultConfig(List<LAFInfo> lafs) {
+        File lafDir = new File(LAF_DIRECTORY);
+        if (!lafDir.exists()) {
+            lafDir.mkdirs();
+            System.out.println("Created directory: " + LAF_DIRECTORY);
+        }
+
+        File configFile = new File(CONFIG_FILE_PATH);
+        if (configFile.exists()) {
+            // Don't overwrite existing config
+            return;
+        }
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(configFile))) {
+            writer.println("# Foundation Look and Feel Configuration");
+            writer.println("# Specify the LAF class name you want to use");
+            writer.println("# Uncomment and set the laf.class property to your desired LAF");
+            writer.println();
+            writer.println("# Example:");
+            writer.println("# laf.class=com.formdev.flatlaf.FlatDarkLaf");
+            writer.println();
+            writer.println("laf.class=");
+            writer.println();
+            writer.println("# Available Look and Feels discovered:");
+
+            if (lafs.isEmpty()) {
+                writer.println("# (No LAFs discovered)");
+            } else {
+                for (LAFInfo laf : lafs) {
+                    writer.println();
+                    writer.println("# " + laf.getName());
+                    writer.println("# laf.class=" + laf.getClassName());
+                    writer.println("# Description: " + laf.getDescription());
+                }
+            }
+
+            System.out.println("Generated default config file: " + CONFIG_FILE_PATH);
+        } catch (IOException e) {
+            System.err.println("Error generating config file: " + e.getMessage());
+        }
+    }
+
+    /**
      * Demo/test method.
      *
      * Discovers all available LAFs and prints them to console, then applies one according to priority:
-     * 1. First LAF found in ./lafs/ directory
-     * 2. System default LAF as fallback
+     * 1. LAF specified in ./lafs/foundation.properties config file
+     * 2. First LAF found in ./lafs/ directory
+     * 3. System default LAF as fallback
      *
      * Then displays a demo window to showcase the selected LAF.
      */
@@ -341,6 +437,9 @@ public class LAFDiscovery {
 
         // Discover all LAFs using all strategies
         List<LAFInfo> lafs = discoverLookAndFeels();
+
+        // Generate default config file if it doesn't exist
+        generateDefaultConfig(lafs);
 
         // Print all discovered LAFs to console
         System.out.println("\nDiscovered " + lafs.size() + " Look and Feels:");
@@ -354,22 +453,40 @@ public class LAFDiscovery {
         // Now select which LAF to apply
         System.out.println("\n--- Selecting LAF to Apply ---");
 
-        // Try to find LAFs in the ./lafs/ directory
-        List<LAFInfo> directoryLAFs = discoverDirectoryLAFs();
-
         LAFInfo selectedLAF = null;
         String selectionReason = "";
 
-        if (!directoryLAFs.isEmpty()) {
-            // Use the first LAF found in the directory
-            selectedLAF = directoryLAFs.get(0);
-            selectionReason = "Found in " + LAF_DIRECTORY + " directory";
-            System.out.println("Using LAF from directory: " + selectedLAF.getName());
-        } else {
-            // Fallback to system LAF
+        // Priority 1: Check config file
+        Properties config = loadConfig();
+        if (config != null) {
+            String configuredClassName = config.getProperty("laf.class");
+            if (configuredClassName != null && !configuredClassName.trim().isEmpty()) {
+                selectedLAF = findLAFByClassName(lafs, configuredClassName);
+                if (selectedLAF != null) {
+                    selectionReason = "Specified in " + CONFIG_FILE_PATH;
+                    System.out.println("Using LAF from config: " + selectedLAF.getName());
+                } else {
+                    System.err.println("WARNING: Configured LAF not found: " + configuredClassName);
+                    System.out.println("Falling back to default selection...");
+                }
+            }
+        }
+
+        // Priority 2: First LAF from ./lafs/ directory (if not already selected)
+        if (selectedLAF == null) {
+            List<LAFInfo> directoryLAFs = discoverDirectoryLAFs();
+            if (!directoryLAFs.isEmpty()) {
+                selectedLAF = directoryLAFs.get(0);
+                selectionReason = "First LAF found in " + LAF_DIRECTORY + " directory";
+                System.out.println("Using LAF from directory: " + selectedLAF.getName());
+            }
+        }
+
+        // Priority 3: System default LAF (if not already selected)
+        if (selectedLAF == null) {
             selectedLAF = getSystemLAF();
             if (selectedLAF != null) {
-                selectionReason = "Using system default (no LAFs found in " + LAF_DIRECTORY + ")";
+                selectionReason = "System default (no LAFs found in " + LAF_DIRECTORY + ")";
                 System.out.println(selectionReason);
             } else {
                 System.err.println("ERROR: Could not determine system LAF!");
@@ -377,22 +494,25 @@ public class LAFDiscovery {
             }
         }
 
+        // Use Foundation to create and display the window
+        // TODO eventually we want to build discovery into init() but for now we just call init() before applyLookAndFeel()
+        Foundation f = Foundation.init();
+
         // Apply the selected LAF
         if (!applyLookAndFeel(selectedLAF)) {
             System.err.println("ERROR: Failed to apply LAF. Exiting.");
             return;
+        } else {
+            // Create and display demo window
+            final LAFInfo finalLAF = selectedLAF;
+            final String finalReason = selectionReason;
+
+            org.jwellman.foundation.swing.IWindow window = f.useWindow(showDemoWindow(finalLAF, finalReason));
+            window.setTitle("Foundation LAF Discovery - " + finalLAF.getName());
+            window.setResizable(true);
+            f.showGUI(window);
         }
 
-        // Create and display demo window
-        final LAFInfo finalLAF = selectedLAF;
-        final String finalReason = selectionReason;
-
-        // Use Foundation to create and display the window
-        Foundation f = Foundation.init();
-        org.jwellman.foundation.swing.IWindow window = f.useWindow(showDemoWindow(finalLAF, finalReason));
-        window.setTitle("Foundation LAF Discovery - " + finalLAF.getName());
-        window.setResizable(true);
-        f.showGUI(window);
 
     }
 
