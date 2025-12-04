@@ -56,8 +56,8 @@ public class uContext {
 	
 	public String getDesktopTitle() { return desktopTitle; }
 
-    /** A dimension object for the window (w/ default value) */
-    private Dimension dimension = new Dimension(450,250);
+    /** A dimension object for the window (w/ default value of 900x500, matching 9:5 ratio) */
+    private Dimension dimension = new Dimension(900, 500);
 
     public void setDimension(Dimension x) { dimension = x; }
 

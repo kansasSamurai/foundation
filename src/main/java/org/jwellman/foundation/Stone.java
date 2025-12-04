@@ -1,5 +1,6 @@
 package org.jwellman.foundation;
 
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
@@ -158,7 +159,7 @@ public class Stone {
                 @SuppressWarnings("unused")
                 final Properties props = new Properties();
 
-                final int version = LAF_SYSTEM;
+                final int version = LAF_NIMBUS;
                 switch (version) {
                     case LAF_NIMBUS:
                         UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -397,14 +398,28 @@ public class Stone {
                     for (IWindow w : windows) {
                         if (w != externalFrame) {
                             desktop.add(w.getComponent());
+                            w.pack();
                         }
                     }
 
                 }
 
                         // Display the window.
-                        externalFrame.setSize(context.getDimension());
-                        externalFrame.pack(); // [A] [E]
+                        // In desktop mode, use explicit sizing (JDesktopPane cannot calculate preferred size)
+                        // In window mode, pack() calculates size from JPanel content
+                        if (context.isDesktopMode()) {
+                            externalFrame.setSize(context.getDimension()); // [E]
+                        } else {
+                            // Window mode: Use explicit dimension if set, otherwise pack()
+                            Dimension dim = context.getDimension();
+                            if (dim != null && !dim.equals(new Dimension(900, 500))) {
+                                // User specified a custom dimension
+                                externalFrame.setSize(dim);
+                            } else {
+                                // Use default behavior: pack() sizes to content
+                                externalFrame.pack(); // [A] Let JPanel determine size
+                            }
+                        }
                         externalFrame.setLocationRelativeTo(null); // [C]
                         externalFrame.setVisible(true);
 
@@ -450,8 +465,11 @@ public class Stone {
         norm.  However, I probably need to eventually account for the developer
         who wants to setSize() instead of pack()... this option would best be
         implemented in the context.
-    [E] TODO In desktop mode, we do not want to pack the external JFrame.
-    
+    [E] In desktop mode, we do not pack the external JFrame because JDesktopPane
+        cannot calculate its preferred size from internal frames (they are positioned
+        absolutely, not laid out). Always use explicit sizing for desktop mode.
+        See: docs/architecture/jdesktoppane-sizing-behavior.md
+
     /* ========================================================================== */
 
     /**
