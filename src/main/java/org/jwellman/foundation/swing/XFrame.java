@@ -15,7 +15,12 @@ public class XFrame extends javax.swing.JFrame implements IWindow {
 
 	@Override
 	public void setMaximizable(boolean maximable) {
-		// This is a no-op for JFrames since they can always be maximized.		
+		// This is a no-op for JFrames since they can always be maximized.
+	}
+
+	@Override
+	public void close() {
+		dispose();
 	}
 
 	@Override
