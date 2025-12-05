@@ -30,7 +30,7 @@ public interface IWindow {
      *
      * @param comp the component to add
      */
-    public void add(Component comp);
+    public Component add(Component comp);
 
     /**
      * Set the size of this window.
