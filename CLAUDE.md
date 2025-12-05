@@ -71,6 +71,39 @@ Stone (base class)
 
 This tiered design allows for potential future expansion with different feature sets at each tier.
 
+### Tiered Deployment Model
+
+Foundation's tiered architecture supports a **build-once, deploy-at-complexity** model where users select the JAR matching their feature requirements:
+
+**Tier JARs:**
+- `foundation-stone.jar` - Minimal framework (single window/desktop, basic LAF)
+- `foundation-bronze.jar` - Includes Stone + multi-panel registration
+- `foundation-silver.jar` - Includes Bronze + [future: enhanced desktop manager]
+- `foundation-gold.jar` - Includes Silver + [future: advanced window management]
+- `foundation-platinum.jar` - Includes Gold + [future: plugin system, docking]
+- `foundation.jar` (full) - Complete feature set
+
+**Key Principles:**
+
+1. **Additive Only** - Upgrading tiers adds features but never breaks existing code. Going from `foundation-bronze.jar` to `foundation-silver.jar` has zero negative impact.
+
+2. **JAR Packaging** - Each tier JAR includes all lower tiers (silver.jar contains Silver + Bronze + Stone classes). Users deploy only one JAR.
+
+3. **Interface Stability** - Core interfaces (IWindow, uiThemeProvider, etc.) remain in Stone/Bronze to ensure all tiers support them.
+
+4. **Feature Selection** - Applications requiring only basic windowing use Stone; complex IDE-style desktops use Gold/Platinum.
+
+5. **Transparent Upgrading** - Code written against `foundation-bronze.jar` works identically with `foundation-platinum.jar` but gains access to additional features when needed.
+
+**Example Use Cases:**
+- Simple calculator app → `foundation-stone.jar` (minimal footprint)
+- Multi-tool desktop → `foundation-bronze.jar` (panel registration)
+- IDE-style environment → `foundation-platinum.jar` (docking, plugins, advanced desktop)
+
+This model balances simplicity for basic apps with power for complex applications, letting users pay (in JAR size/complexity) only for features they use.
+
+**For detailed tier feature roadmap, see:** `docs/roadmap/tiered-feature-roadmap.md`
+
 ### Application Lifecycle
 
 Standard Foundation application flow:

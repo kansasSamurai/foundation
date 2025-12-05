@@ -24,16 +24,16 @@ public class uContext {
     private Boolean desktopMode = null;
     
     /** An indicator that you are using desktop mode; defaults to false. */
-	public boolean isDesktopMode() {
-		return desktopMode == null ? false : desktopMode;
-	}
+    public boolean isDesktopMode() {
+        return desktopMode == null ? false : desktopMode;
+    }
 
-	/** Sets the desktop mode; this can only be done once. */
-	public void setDesktopMode(boolean mode) {
-		if (desktopMode == null) {
-			this.desktopMode = mode;			
-		}
-	}
+    /** Sets the desktop mode; this can only be done once. */
+    public void setDesktopMode(boolean mode) {
+        if (desktopMode == null) {
+            this.desktopMode = mode;
+        }
+    }
 
     /** An object that implements the themeProvider interface */
     private uiThemeProvider themeProvider;
