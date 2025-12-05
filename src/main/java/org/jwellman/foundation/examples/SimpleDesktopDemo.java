@@ -5,6 +5,8 @@ import java.awt.FlowLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.swing.IWindow;
 
@@ -32,6 +34,8 @@ public class SimpleDesktopDemo extends JPanel {
     public SimpleDesktopDemo() {
         super(new BorderLayout(10, 10));
 
+        setBorder(new EmptyBorder(5, 5, 5, 5));
+
         // Header
         JLabel header = new JLabel("Foundation Framework - Desktop Mode");
         header.setHorizontalAlignment(JLabel.CENTER);
@@ -41,7 +45,8 @@ public class SimpleDesktopDemo extends JPanel {
         JLabel content = new JLabel(
             "<html><center>" +
             "This demonstrates a simple application running in desktop mode.<br>" +
-            "Notice: This class extends JPanel, not JFrame.<br>" +
+            "Foundation handles all the JFrame boilerplate.<br>" +
+            "Notice: This class extends JPanel, not JFrame nor JInternalFrame.<br><br>" +
             "The only difference from SimpleWindowDemo is using useDesktop() instead of useWindow()." +
             "</center></html>"
         );
