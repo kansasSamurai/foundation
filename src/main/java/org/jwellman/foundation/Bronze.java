@@ -292,6 +292,15 @@ public class Bronze extends Stone {
         iframe.setTitle(reg.getFullId()); // Default title
         iframe.add(reg.getPanel());
 
+        // Configure frame properties
+        // System panels (namespace "system") are not minimizable
+        // Tool panels can be minimized
+        boolean isSystemPanel = "system".equals(reg.getNamespace());
+        iframe.setIconifiable(!isSystemPanel);
+        iframe.setResizable(true);
+        iframe.setClosable(false);
+        iframe.setMaximizable(true);
+
         // Set up bidirectional reference
         reg.getPanel().setParent(iframe);
         reg.setInternalFrame(iframe);
