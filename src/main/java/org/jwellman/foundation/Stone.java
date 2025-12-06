@@ -171,15 +171,17 @@ public class Stone {
             // Save the context (or create one by default)
             // 12/6/2025 if context is null here it is a bug so removing empty context creator
             // context = (c != null) ? c : uContext.createContext();
+            context = c;
 
             // Conditionally apply context settings...
-            if (context.getThemeProvider() != null) {
+            if (context != null && context.getThemeProvider() != null) {
                 context.getThemeProvider().doTheme();
             }
 
             // Use LAFDiscovery to select and apply Look and Feel
             // Priority: uContext.lookAndFeel -> config file -> ./lafs/ directory -> system default
-            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(context.getLookAndFeel());
+            String lafClassName = (context != null) ? context.getLookAndFeel() : null;
+            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(lafClassName);
 
             if (!lafApplied) {
                 System.err.println("WARNING: Failed to apply any Look and Feel. UI may not render correctly.");
@@ -690,12 +692,12 @@ public class Stone {
         // Determine mode (desktop vs window) from context
         // If mode hasn't been set yet, use the context setting (defaults to window mode)
         if (isDesktop == null) {
-            isDesktop = context.isDesktopMode();
+            isDesktop = (context != null) ? context.isDesktopMode() : false;
         }
 
         // Create the external frame if it doesn't exist
         if (externalFrame == null) {
-            String title = context.getDesktopTitle();
+            String title = (context != null) ? context.getDesktopTitle() : null;
             if (title == null) {
                 title = "Foundation Application";
             }
@@ -706,7 +708,7 @@ public class Stone {
         // Set up desktop mode if needed
         if (isDesktop) {
             if (desktop == null) {
-                if (context.getDesktopProvider() == null) {
+                if (context == null || context.getDesktopProvider() == null) {
                     desktop = new JDesktopPane();
                     desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
                     externalFrame.setContentPane(desktop);
@@ -721,7 +723,7 @@ public class Stone {
 
         // Show the window on the EDT
         final XFrame frameToShow = externalFrame;
-        final Dimension size = context.getDimension();
+        final Dimension size = (context != null) ? context.getDimension() : new Dimension(900, 500);
         final boolean isDesktopMode = isDesktop;
 
         javax.swing.SwingUtilities.invokeLater(new Runnable() {

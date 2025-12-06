@@ -1,19 +1,32 @@
 package org.jwellman.foundation;
 
 import java.awt.Dimension;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiThemeProvider;
 
 /**
- * A context for a Foundation application.
- * 
+ * A context for a Foundation application or tool.
+ *
+ * As of the Bronze tier redesign, each context represents a namespace (tool/application)
+ * and contains its own panel registry. This allows each tool to have multiple panels
+ * with tool-specific configuration.
+ *
  * @author rwellman
  */
 public class uContext {
 
-    /** An identifier for this context */
+    /** An identifier for this context (namespace) */
     public String namespace;
+
+    /**
+     * Panel registry for this context.
+     * Key: panelId (e.g., "main", "settings", "history")
+     * Value: PanelRegistration metadata
+     */
+    private final Map<String, PanelRegistration> panelRegistry = new HashMap<>();
 
     /** 
      * The look and feel class to use (will be ignored in 
@@ -96,6 +109,60 @@ public class uContext {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    /**
+     * Register a panel in this context's registry.
+     *
+     * @param panelId The panel identifier (e.g., "main", "settings")
+     * @param registration The panel registration
+     * @throws IllegalArgumentException if panelId is already registered
+     */
+    public void registerPanel(String panelId, PanelRegistration registration) {
+        if (panelRegistry.containsKey(panelId)) {
+            throw new IllegalArgumentException(
+                    "Panel already registered in context '" + namespace + "': " + panelId);
+        }
+        panelRegistry.put(panelId, registration);
+    }
+
+    /**
+     * Get a panel registration by panelId.
+     *
+     * @param panelId The panel identifier
+     * @return The PanelRegistration, or null if not found
+     */
+    public PanelRegistration getPanelRegistration(String panelId) {
+        return panelRegistry.get(panelId);
+    }
+
+    /**
+     * Get all panel registrations in this context.
+     *
+     * @return Map of panelId to PanelRegistration
+     */
+    public Map<String, PanelRegistration> getAllPanelRegistrations() {
+        return new HashMap<>(panelRegistry);
+    }
+
+    /**
+     * Remove a panel from this context's registry.
+     *
+     * @param panelId The panel identifier
+     * @return The removed PanelRegistration, or null if not found
+     */
+    public PanelRegistration removePanelRegistration(String panelId) {
+        return panelRegistry.remove(panelId);
+    }
+
+    /**
+     * Check if a panel is registered in this context.
+     *
+     * @param panelId The panel identifier
+     * @return true if registered, false otherwise
+     */
+    public boolean hasPanelRegistration(String panelId) {
+        return panelRegistry.containsKey(panelId);
     }
 
 }

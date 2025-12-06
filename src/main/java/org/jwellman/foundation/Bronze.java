@@ -15,7 +15,8 @@ import org.jwellman.foundation.swing.XPanel;
  * Bronze tier of Foundation framework.
  *
  * Adds multi-panel registration and window management capabilities:
- * - Panel registry with namespace:panelId identification
+ * - Hierarchical registry: namespace contexts containing panel registrations
+ * - Each namespace (tool) has its own uContext with panel registry
  * - Multiple panels per namespace (tool/application)
  * - Panel visibility management (show/hide)
  * - Window positioning strategies
@@ -26,11 +27,14 @@ import org.jwellman.foundation.swing.XPanel;
 public class Bronze extends Stone {
 
     /**
-     * The panel registry.
-     * Key: "namespace:panelId" (composite key)
-     * Value: PanelRegistration metadata
+     * The context registry.
+     * Key: namespace (e.g., "tool.calculator", "tool.editor")
+     * Value: uContext containing panel registry for that namespace
+     *
+     * This creates a drill-down structure:
+     * Bronze -> uContext (by namespace) -> PanelRegistration (by panelId)
      */
-    private final Map<String, PanelRegistration> registry = new HashMap<>();
+    private final Map<String, uContext> contextRegistry = new HashMap<>();
 
     /**
      * Register a panel with required namespace and panel ID.
@@ -82,15 +86,23 @@ public class Bronze extends Stone {
      */
     public XPanel registerUI(String namespace, String panelId, JPanel ui,
                              PanelLifecycleListener listener, WindowPosition position) {
-        String fullId = namespace + ":" + panelId;
 
-        if (registry.containsKey(fullId)) {
+        // Get or create the uContext for this namespace
+        uContext ctx = contextRegistry.get(namespace);
+        if (ctx == null) {
+            ctx = uContext.createContext(namespace);
+            contextRegistry.put(namespace, ctx);
+        }
+
+        // Check if panel already registered in this context
+        if (ctx.hasPanelRegistration(panelId)) {
             throw new IllegalArgumentException(
-                    "Panel already registered: " + fullId +
+                    "Panel already registered: " + namespace + ":" + panelId +
                     ". Each panel must have a unique namespace:panelId combination.");
         }
 
         // Create wrapped panel
+        String fullId = namespace + ":" + panelId;
         XPanel xpanel = new XPanel(ui);
         xpanel.setName(fullId);
 
@@ -102,8 +114,8 @@ public class Bronze extends Stone {
             reg.setWindowPosition(position);
         }
 
-        // Add to registry
-        registry.put(fullId, reg);
+        // Register in the context's panel registry
+        ctx.registerPanel(panelId, reg);
 
         // If we're in desktop mode and the desktop already exists (meaning init() has been called
         // and window is visible), immediately create the internal frame for this panel
@@ -122,7 +134,10 @@ public class Bronze extends Stone {
      * @return The XPanel, or null if not found
      */
     public XPanel getPanel(String namespace, String panelId) {
-        PanelRegistration reg = registry.get(namespace + ":" + panelId);
+        uContext ctx = contextRegistry.get(namespace);
+        if (ctx == null) return null;
+
+        PanelRegistration reg = ctx.getPanelRegistration(panelId);
         return reg != null ? reg.getPanel() : null;
     }
 
@@ -133,8 +148,10 @@ public class Bronze extends Stone {
      * @return List of XPanels (may be empty, never null)
      */
     public List<XPanel> getPanels(String namespace) {
-        return registry.values().stream()
-                .filter(r -> r.getNamespace().equals(namespace))
+        uContext ctx = contextRegistry.get(namespace);
+        if (ctx == null) return new ArrayList<>();
+
+        return ctx.getAllPanelRegistrations().values().stream()
                 .map(PanelRegistration::getPanel)
                 .collect(Collectors.toList());
     }
@@ -146,9 +163,10 @@ public class Bronze extends Stone {
      * @return List of PanelRegistrations (may be empty, never null)
      */
     public List<PanelRegistration> getRegistrations(String namespace) {
-        return registry.values().stream()
-                .filter(r -> r.getNamespace().equals(namespace))
-                .collect(Collectors.toList());
+        uContext ctx = contextRegistry.get(namespace);
+        if (ctx == null) return new ArrayList<>();
+
+        return new ArrayList<>(ctx.getAllPanelRegistrations().values());
     }
 
     /**
@@ -157,10 +175,7 @@ public class Bronze extends Stone {
      * @return List of unique namespaces
      */
     public List<String> getNamespaces() {
-        return registry.values().stream()
-                .map(PanelRegistration::getNamespace)
-                .distinct()
-                .collect(Collectors.toList());
+        return new ArrayList<>(contextRegistry.keySet());
     }
 
     /**
@@ -171,7 +186,20 @@ public class Bronze extends Stone {
      * @return The PanelRegistration, or null if not found
      */
     public PanelRegistration getRegistration(String namespace, String panelId) {
-        return registry.get(namespace + ":" + panelId);
+        uContext ctx = contextRegistry.get(namespace);
+        if (ctx == null) return null;
+
+        return ctx.getPanelRegistration(panelId);
+    }
+
+    /**
+     * Get a uContext by namespace.
+     *
+     * @param namespace The namespace
+     * @return The uContext, or null if not found
+     */
+    public uContext getContext(String namespace) {
+        return contextRegistry.get(namespace);
     }
 
     /**
@@ -182,7 +210,7 @@ public class Bronze extends Stone {
      * @param panelId The panel ID
      */
     public void showPanel(String namespace, String panelId) {
-        PanelRegistration reg = registry.get(namespace + ":" + panelId);
+        PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
             IWindow window = reg.getWindow();
             if (window != null && !reg.isVisible()) {
@@ -201,7 +229,7 @@ public class Bronze extends Stone {
      * @param panelId The panel ID
      */
     public void hidePanel(String namespace, String panelId) {
-        PanelRegistration reg = registry.get(namespace + ":" + panelId);
+        PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
             IWindow window = reg.getWindow();
             if (window != null && reg.isVisible()) {
@@ -219,7 +247,7 @@ public class Bronze extends Stone {
      * @param panelId The panel ID
      */
     public void togglePanel(String namespace, String panelId) {
-        PanelRegistration reg = registry.get(namespace + ":" + panelId);
+        PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
             if (reg.isVisible()) {
                 hidePanel(namespace, panelId);
@@ -237,7 +265,7 @@ public class Bronze extends Stone {
      * @return true if visible, false otherwise
      */
     public boolean isPanelVisible(String namespace, String panelId) {
-        PanelRegistration reg = registry.get(namespace + ":" + panelId);
+        PanelRegistration reg = getRegistration(namespace, panelId);
         return reg != null && reg.isVisible();
     }
 
@@ -249,7 +277,10 @@ public class Bronze extends Stone {
      * @param panelId The panel ID
      */
     public void closePanel(String namespace, String panelId) {
-        PanelRegistration reg = registry.get(namespace + ":" + panelId);
+        uContext ctx = contextRegistry.get(namespace);
+        if (ctx == null) return;
+
+        PanelRegistration reg = ctx.getPanelRegistration(panelId);
         if (reg != null) {
             // Fire lifecycle event
             reg.fireOnClose();
@@ -260,18 +291,22 @@ public class Bronze extends Stone {
                 window.close();
             }
 
-            // Remove from registry
-            registry.remove(namespace + ":" + panelId);
+            // Remove from context's registry
+            ctx.removePanelRegistration(panelId);
         }
     }
 
     /**
      * Get all registrations (for internal use).
      *
-     * @return List of all PanelRegistrations
+     * @return List of all PanelRegistrations across all contexts
      */
     protected List<PanelRegistration> getAllRegistrations() {
-        return new ArrayList<>(registry.values());
+        List<PanelRegistration> allRegs = new ArrayList<>();
+        for (uContext ctx : contextRegistry.values()) {
+            allRegs.addAll(ctx.getAllPanelRegistrations().values());
+        }
+        return allRegs;
     }
 
     /**
@@ -322,8 +357,11 @@ public class Bronze extends Stone {
     @Override
     protected void initializeOtherWindows() {
         if (Boolean.TRUE.equals(this.isDesktop)) {
-            for (PanelRegistration reg : registry.values()) {
-                createInternalFrameForPanel(reg);
+            // Iterate through all contexts and their panels
+            for (uContext ctx : contextRegistry.values()) {
+                for (PanelRegistration reg : ctx.getAllPanelRegistrations().values()) {
+                    createInternalFrameForPanel(reg);
+                }
             }
         }
     }
