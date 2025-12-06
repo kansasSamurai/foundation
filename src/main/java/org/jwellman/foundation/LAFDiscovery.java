@@ -289,6 +289,100 @@ public class LAFDiscovery {
     }
 
     /**
+     * Selects and applies a Look and Feel using Foundation's priority system.
+     *
+     * Priority order:
+     * 1. If preferredLAFClassName is specified, use that LAF
+     * 2. LAF specified in ./lafs/foundation.properties config file
+     * 3. First LAF found in ./lafs/ directory
+     * 4. Nimbus (built-in default)
+     *
+     * @param preferredLAFClassName Optional LAF class name (can be null)
+     * @return true if a LAF was successfully applied, false otherwise
+     */
+    public static boolean selectAndApplyLookAndFeel(String preferredLAFClassName) {
+        System.out.println("=== Foundation LAF Selection ===");
+
+        // Discover all available LAFs
+        List<LAFInfo> lafs = discoverLookAndFeels();
+        System.out.println("Discovered " + lafs.size() + " Look and Feels");
+
+        // Generate default config if it doesn't exist
+        generateDefaultConfig(lafs);
+
+        LAFInfo selectedLAF = null;
+        String selectionReason = "";
+
+        // Priority 1: Use preferred LAF from context if specified
+        if (preferredLAFClassName != null && !preferredLAFClassName.trim().isEmpty()) {
+            selectedLAF = findLAFByClassName(lafs, preferredLAFClassName);
+            if (selectedLAF != null) {
+                selectionReason = "Specified in uContext: " + preferredLAFClassName;
+                System.out.println("Using LAF from context: " + selectedLAF.getName());
+            } else {
+                System.err.println("WARNING: Preferred LAF not found: " + preferredLAFClassName);
+                System.out.println("Falling back to default selection...");
+            }
+        }
+
+        // Priority 2: Check config file (if not already selected)
+        if (selectedLAF == null) {
+            Properties config = loadConfig();
+            if (config != null) {
+                String configuredClassName = config.getProperty("laf.class");
+                if (configuredClassName != null && !configuredClassName.trim().isEmpty()) {
+                    selectedLAF = findLAFByClassName(lafs, configuredClassName);
+                    if (selectedLAF != null) {
+                        selectionReason = "Specified in " + CONFIG_FILE_PATH;
+                        System.out.println("Using LAF from config: " + selectedLAF.getName());
+                    } else {
+                        System.err.println("WARNING: Configured LAF not found: " + configuredClassName);
+                        System.out.println("Falling back to default selection...");
+                    }
+                }
+            }
+        }
+
+        // Priority 3: First LAF from ./lafs/ directory (if not already selected)
+        if (selectedLAF == null) {
+            List<LAFInfo> directoryLAFs = discoverDirectoryLAFs();
+            if (!directoryLAFs.isEmpty()) {
+                selectedLAF = directoryLAFs.get(0);
+                selectionReason = "First LAF found in " + LAF_DIRECTORY + " directory";
+                System.out.println("Using LAF from directory: " + selectedLAF.getName());
+            }
+        }
+
+        // Priority 4: Nimbus (built-in default - looks better than Windows Classic)
+        if (selectedLAF == null) {
+            selectedLAF = findLAFByClassName(lafs, "javax.swing.plaf.nimbus.NimbusLookAndFeel");
+            if (selectedLAF != null) {
+                selectionReason = "Nimbus (built-in default)";
+                System.out.println(selectionReason);
+            } else {
+                // Fallback to system default if Nimbus not found (shouldn't happen)
+                selectedLAF = getSystemLAF();
+                if (selectedLAF != null) {
+                    selectionReason = "System default (Nimbus not available)";
+                    System.out.println(selectionReason);
+                } else {
+                    System.err.println("ERROR: Could not determine any LAF!");
+                    return false;
+                }
+            }
+        }
+
+        // Apply the selected LAF
+        boolean success = applyLookAndFeel(selectedLAF);
+        if (success) {
+            System.out.println("LAF Applied: " + selectedLAF.getName());
+            System.out.println("Selection Reason: " + selectionReason);
+        }
+
+        return success;
+    }
+
+    /**
      * Applies a discovered LAF.
      *
      * @param lafInfo The LAF to apply

@@ -56,17 +56,45 @@ public class Stone {
 	/** The JDesktopPane used in desktop mode */
 	private JDesktopPane desktop;
 
-	// Look and Feel (LAF) identifiers
-	// Design Note:  These are public to allow applications to specify
-	// the preferred look and feel via the uContext.  Remember that 
-	// this probably will not be respected in a "desktop" environment
-	// but will be in a standalone environment.
+	// Look and Feel (LAF) identifiers - DEPRECATED
+	// These constants are deprecated in favor of using LAF class names directly.
+	// Instead of: context.setLookAndFeel(LAF_NIMBUS)
+	// Use: context.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel")
+	// or configure via ./lafs/foundation.properties
+	/**
+	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
+	 */
+	@Deprecated
 	public static final int LAF_NIMBUS = 1;
+	/**
+	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
+	 */
+	@Deprecated
 	public static final int LAF_WEB = 2;
+	/**
+	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
+	 */
+	@Deprecated
 	public static final int LAF_NAPKIN = 3;
+	/**
+	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
+	 */
+	@Deprecated
 	public static final int LAF_SYSTEM = 4;
+	/**
+	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
+	 */
+	@Deprecated
 	public static final int LAF_NIMROD = 5;
+	/**
+	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
+	 */
+	@Deprecated
 	public static final int LAF_JTATTOO = 6;
+	/**
+	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
+	 */
+	@Deprecated
 	public static final int LAF_DARCULA = 7;
 
 
@@ -148,48 +176,15 @@ public class Stone {
                 context.getThemeProvider().doTheme();
             }
 
-            // Prefer Nimbus over default look and feel.
-            try {
-                for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                    final String name = info.getName();
-                    System.out.println("FOUND LAF: " + name);
-                }
+            // Use LAFDiscovery to select and apply Look and Feel
+            // Priority: uContext.lookAndFeel -> config file -> ./lafs/ directory -> system default
+            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(context.getLookAndFeel());
 
-                // Some LnF/Themes use properties (JTattoo, ...)
-                @SuppressWarnings("unused")
-                final Properties props = new Properties();
-
-                final int version = LAF_NIMBUS;
-                switch (version) {
-                    case LAF_NIMBUS:
-                        UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-                        break;
-                    case LAF_WEB:
-                        UIManager.setLookAndFeel("com.alee.laf.WebLookAndFeel"); // works but need to upgrade to 1.29 from
-                                                                         // 1.27
-                        break;
-                    case LAF_NAPKIN:
-                        //String[] themeNames = NapkinTheme.Manager.themeNames();
-                        String themeToUse = "blueprint"; // napkin | blueprint
-                        NapkinTheme.Manager.setCurrentTheme(themeToUse);
-                        LookAndFeel laf = new NapkinLookAndFeel();
-                        UIManager.setLookAndFeel(laf);
-                        break;
-                    case LAF_SYSTEM:
-                        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                        break;
-                    case LAF_DARCULA:
-                        UIManager.setLookAndFeel("com.bulenkov.darcula.DarculaLaf");
-                        break;
-                }
-
-//                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-            // If Nimbus is not available, you can set the GUI to another look and feel.
-            e.printStackTrace();
-        } finally {
-            System.out.println("USING LAF: " + UIManager.getLookAndFeel().getName());
-        }
+            if (!lafApplied) {
+                System.err.println("WARNING: Failed to apply any Look and Feel. UI may not render correctly.");
+            } else {
+                System.out.println("USING LAF: " + UIManager.getLookAndFeel().getName());
+            }
 
     }
 

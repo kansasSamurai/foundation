@@ -127,26 +127,17 @@ Standard Foundation application flow:
 
 ### Look and Feel Support
 
-**Current Implementation (Temporary):**
-Foundation currently supports multiple Look and Feel options via hardcoded LAF constants in Stone.java:
-- `LAF_NIMBUS` (1)
-- `LAF_WEB` (2) - WebLAF
-- `LAF_NAPKIN` (3) - NapkinLAF
-- `LAF_SYSTEM` (4)
-- `LAF_NIMROD` (5)
-- `LAF_JTATTOO` (6)
-- `LAF_DARCULA` (7)
+**Current Implementation:**
+Foundation uses `LAFDiscovery` for dynamic Look and Feel discovery and selection. The framework automatically discovers LAFs from multiple sources and applies them based on a priority system.
 
-**Future Architecture Goal:**
-The hardcoded LAF approach is temporary. The planned architecture will support:
-- **Dynamic LAF discovery** - LAF JARs placed in a predefined folder (e.g., `./lafs/`) are auto-detected at startup
-- **Runtime LAF selection** - Users can specify/change LAF without recompiling
-- **User preference persistence** - Selected LAF is saved and restored across sessions
-- **Multiple LAF support** - If multiple LAFs detected, prompt user for selection
-- **No recompilation required** - LAFs added by dropping JARs, not code changes
+**LAF Selection Priority:**
+1. **uContext.lookAndFeel** - LAF class name specified in code via `context.setLookAndFeel(className)`
+2. **Config file** - LAF specified in `./lafs/foundation.properties` (`laf.class=com.example.MyLookAndFeel`)
+3. **Directory LAFs** - First LAF found in `./lafs/` directory
+4. **Nimbus (default)** - Built-in Nimbus Look and Feel (fallback if none specified)
 
-**LAF Discovery Implementation (LAFDiscovery.java):**
-Foundation includes `LAFDiscovery` class that discovers LAFs using multiple strategies:
+**LAF Discovery Strategies (LAFDiscovery.java):**
+The `LAFDiscovery` class discovers LAFs using multiple strategies:
 
 1. **Built-in LAFs** - Checks `UIManager.getInstalledLookAndFeels()` for Java built-ins (Metal, Nimbus, etc.)
 2. **Directory scanning** - Scans `./lafs/` folder for JAR files
@@ -162,7 +153,23 @@ laf.description=A modern look and feel
 
 If no metadata exists, Foundation scans the JAR for classes extending `LookAndFeel` (slower but works).
 
-This aligns with Foundation's philosophy of interface-based, pluggable architecture. When implementing LAF features, design with this future direction in mind.
+**Usage Example:**
+```java
+// Specify LAF in code
+uContext context = uContext.createContext();
+context.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+Foundation f = Foundation.init(context);
+
+// Or use config file ./lafs/foundation.properties
+// laf.class=javax.swing.plaf.nimbus.NimbusLookAndFeel
+
+// Or drop LAF JAR in ./lafs/ folder (auto-discovered)
+```
+
+**Deprecated LAF Constants:**
+The old hardcoded LAF constants (`LAF_NIMBUS`, `LAF_WEB`, etc.) in Stone.java are deprecated. Use LAF class names instead.
+
+This aligns with Foundation's philosophy of interface-based, pluggable architecture.
 
 ### Package Structure
 

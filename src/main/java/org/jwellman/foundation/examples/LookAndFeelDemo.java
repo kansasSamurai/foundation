@@ -3,6 +3,8 @@ package org.jwellman.foundation.examples;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -11,74 +13,61 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
 
 import org.jwellman.foundation.Foundation;
-import org.jwellman.foundation.Stone;
-import org.jwellman.foundation.swing.IWindow;
+import org.jwellman.foundation.LAFDiscovery;
+import org.jwellman.foundation.LAFDiscovery.LAFInfo;
 import org.jwellman.foundation.uContext;
+import org.jwellman.foundation.swing.IWindow;
 
 /**
- * Demonstrates Look and Feel support in Foundation. <br>
- * <em>NOTE: This demo shows the current hardcoded LAF approach which is TEMPORARY.</em>
+ * Demonstrates Look and Feel support in Foundation using the new LAFDiscovery system.
  * <p>
- * Future Architecture Goal:<br>
- * - LAF JARs will be discovered dynamically from a folder (e.g., ./lafs/)<br>
- * - Framework will detect available LAFs at startup<br>
- * - User can select LAF without recompiling<br>
- * - LAF preference will be saved for future sessions<br>
- *<br>
- * This demo is useful for:<br>
- * - Testing that all LAF dependencies are correctly configured<br>
- * - Validating LAF integration<br>
- * - Visualizing how Foundation UIs look across different LAFs<br>
+ * This demo showcases Foundation's dynamic LAF discovery architecture:
+ * - LAFs are discovered from built-in Java LAFs, classpath, and ./lafs/ directory
+ * - User can select from all discovered LAFs at runtime
+ * - LAF selection can be configured via uContext or ./lafs/foundation.properties
+ * - No recompilation needed to add new LAFs (just drop JAR in ./lafs/ folder)
+ * <p>
+ * This demo is useful for:
+ * - Testing that all LAF dependencies are correctly configured
+ * - Validating LAF integration and discovery
+ * - Visualizing how Foundation UIs look across different LAFs
  *
  * @author Foundation Framework
  */
 public class LookAndFeelDemo {
 
-    private static final String[] LAF_NAMES = {
-        "System Default",
-        "Nimbus",
-        "WebLAF",
-        "NapkinLAF",
-        "Nimrod",
-        "JTattoo",
-        "Darcula"
-    };
-
-    private static final int[] LAF_CONSTANTS = {
-        Stone.LAF_SYSTEM,
-        Stone.LAF_NIMBUS,
-        Stone.LAF_WEB,
-        Stone.LAF_NAPKIN,
-        Stone.LAF_NIMROD,
-        Stone.LAF_JTATTOO,
-        Stone.LAF_DARCULA
-    };
-
     public static void main(String[] args) {
+        // Discover all available LAFs
+        List<LAFInfo> discoveredLAFs = LAFDiscovery.discoverLookAndFeels();
+
+        if (discoveredLAFs.isEmpty()) {
+            System.err.println("ERROR: No Look and Feels discovered!");
+            return;
+        }
+
         // Let user choose LAF before Foundation init
-        int selectedLAF = promptForLAF();
+        LAFInfo selectedLAF = promptForLAF(discoveredLAFs);
+
+        if (selectedLAF == null) {
+            System.exit(0);
+        }
 
         // Create context with selected LAF
         uContext context = uContext.createContext();
-        // Note: LAF selection via context not yet implemented
-        // This demonstrates current limitation and future direction
+        context.setLookAndFeel(selectedLAF.getClassName());
 
-        // Initialize Foundation (this will set LAF to system default)
+        // Initialize Foundation (LAFDiscovery will apply the LAF from context)
         Foundation f = Foundation.init(context);
-
-        // Now manually set the selected LAF
-        // This is necessary because Foundation currently hardcodes LAF_SYSTEM
-        setLookAndFeel(selectedLAF);
 
         // Create UI
         JPanel ui = createUI(selectedLAF);
 
         // Use window mode
         IWindow window = f.useWindow(ui);
-        window.setTitle("Foundation - Look and Feel Demo [" + LAF_NAMES[selectedLAF] + "]");
+        window.setTitle("Foundation - Look and Feel Demo [" + selectedLAF.getName() + "]");
         window.setResizable(true);
 
         // Display
@@ -86,67 +75,44 @@ public class LookAndFeelDemo {
     }
 
     /**
-     * Sets the Look and Feel based on the selected index.
-     * This mirrors the logic in Stone.java but allows runtime selection.
-     */
-    private static void setLookAndFeel(int selectedLAF) {
-        try {
-            switch (LAF_CONSTANTS[selectedLAF]) {
-                case Stone.LAF_NIMBUS:
-                    UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-                    break;
-                case Stone.LAF_WEB:
-                    UIManager.setLookAndFeel("com.alee.laf.WebLookAndFeel");
-                    break;
-                case Stone.LAF_NAPKIN:
-                    net.sourceforge.napkinlaf.NapkinTheme.Manager.setCurrentTheme("blueprint");
-                    UIManager.setLookAndFeel(new net.sourceforge.napkinlaf.NapkinLookAndFeel());
-                    break;
-                case Stone.LAF_SYSTEM:
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                    break;
-                case Stone.LAF_NIMROD:
-                    UIManager.setLookAndFeel("com.nilo.plaf.nimrod.NimRODLookAndFeel");
-                    break;
-                case Stone.LAF_JTATTOO:
-                    UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
-                    break;
-                case Stone.LAF_DARCULA:
-                    UIManager.setLookAndFeel("com.bulenkov.darcula.DarculaLaf");
-                    break;
-            }
-            System.out.println("LAF set to: " + UIManager.getLookAndFeel().getName());
-        } catch (Exception e) {
-            System.err.println("Error setting LAF: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Prompts user to select a Look and Feel using radio buttons.
      */
-    private static int promptForLAF() {
+    private static LAFInfo promptForLAF(List<LAFInfo> lafs) {
         // Create panel with radio buttons
         JPanel panel = new JPanel(new BorderLayout(10, 10));
 
+        // Add prompt
+        JLabel prompt = new JLabel(
+            "<html>Select a Look and Feel to test:</html>"
+        );
+        // prompt.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        panel.add(prompt, BorderLayout.NORTH);
+
         // Add instruction label
         JLabel instruction = new JLabel(
-            "<html>Select a Look and Feel to test:<br><br>" +
-            "<i>NOTE: This is a temporary approach.<br>" +
-            "Future versions will discover LAFs dynamically from a folder.</i></html>"
+            "<html> <br>" +
+            "<i>Foundation discovered " + lafs.size() + " Look and Feel(s).<br>" +
+            "To add more LAFs, place JAR files in the ./lafs/ folder.</i></html>"
         );
-        instruction.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        panel.add(instruction, BorderLayout.NORTH);
+        // instruction.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        panel.add(instruction, BorderLayout.SOUTH);
 
         // Create radio button panel
         JPanel radioPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-        radioPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        // radioPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
         ButtonGroup group = new ButtonGroup();
-        JRadioButton[] radioButtons = new JRadioButton[LAF_NAMES.length];
+        JRadioButton[] radioButtons = new JRadioButton[lafs.size()];
 
-        for (int i = 0; i < LAF_NAMES.length; i++) {
-            radioButtons[i] = new JRadioButton(LAF_NAMES[i]);
+        for (int i = 0; i < lafs.size(); i++) {
+            LAFInfo laf = lafs.get(i);
+            String label = laf.getName();
+            // Add description if available and not too long
+            if (laf.getDescription() != null && !laf.getDescription().isEmpty()
+                && !laf.getDescription().equals(laf.getName())) {
+                label += " - " + laf.getDescription();
+            }
+            radioButtons[i] = new JRadioButton(label);
             group.add(radioButtons[i]);
             radioPanel.add(radioButtons[i]);
         }
@@ -160,33 +126,34 @@ public class LookAndFeelDemo {
         int result = JOptionPane.showConfirmDialog(
             null,
             panel,
-            "Choose Look and Feel",
+            "Choose Look and Feel - Foundation Discovery Demo",
             JOptionPane.OK_CANCEL_OPTION,
             JOptionPane.PLAIN_MESSAGE
         );
 
         if (result != JOptionPane.OK_OPTION) {
-            System.exit(0);
+            return null;
         }
 
         // Find which radio button is selected
         for (int i = 0; i < radioButtons.length; i++) {
             if (radioButtons[i].isSelected()) {
-                return i;
+                return lafs.get(i);
             }
         }
 
-        return 0; // Default to system
+        return lafs.get(0); // Default to first
     }
 
     /**
      * Creates the demo UI.
      */
-    private static JPanel createUI(int selectedLAF) {
+    private static JPanel createUI(LAFInfo selectedLAF) {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // Header
-        JLabel header = new JLabel("Look and Feel: " + LAF_NAMES[selectedLAF]);
+        JLabel header = new JLabel("Look and Feel: " + selectedLAF.getName());
         header.setHorizontalAlignment(JLabel.CENTER);
         header.setFont(header.getFont().deriveFont(18f));
         panel.add(header, BorderLayout.NORTH);
@@ -203,14 +170,16 @@ public class LookAndFeelDemo {
 
         // Info
         JLabel info = new JLabel(
-            "<html><center>" +
-            "<b>Current LAF Selection Method: Hardcoded Constants</b><br><br>" +
-            "<i>Future Goal: Dynamic LAF Discovery</i><br>" +
-            "- Drop LAF .jar files into ./lafs/ folder<br>" +
-            "- Framework auto-detects available LAFs<br>" +
-            "- User selects from discovered LAFs<br>" +
-            "- Preference saved for future sessions<br>" +
-            "</center></html>"
+                "<html>" // "<html><center>" +
+                + "<b>LAF Selection: Dynamic Discovery System</b><br><br>" 
+                + "<i>Current LAF:</i><br>"
+                + selectedLAF.getClassName() + "<br><br>"
+                + "<b>How to add more LAFs:</b><br>" 
+                + "1. Drop LAF .jar files into ./lafs/ folder<br>"
+                + "2. Framework auto-detects available LAFs<br>"
+                + "3. Configure default via ./lafs/foundation.properties<br>"
+                + "4. Or specify via uContext.setLookAndFeel(className)<br>" 
+                + "</html>" // + "</center></html>"
         );
         info.setHorizontalAlignment(JLabel.CENTER);
         panel.add(info, BorderLayout.SOUTH);
