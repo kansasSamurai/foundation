@@ -65,7 +65,7 @@ Stone (base class)
 ```
 
 - **Stone** (src/main/java/org/jwellman/foundation/Stone.java:35) - Core initialization logic, Look and Feel setup, and basic window/desktop management
-- **Bronze** (src/main/java/org/jwellman/foundation/Bronze.java:13) - UI registration and multi-panel management
+- **Bronze** (src/main/java/org/jwellman/foundation/Bronze.java:26) - Multi-panel registry with namespace:panelId identification, lifecycle events, window positioning, and dynamic visibility management
 - **Silver/Gold/Platinum** - Reserved for future tiered functionality (currently empty)
 - **Foundation** - The singleton public API entry point
 
@@ -106,12 +106,29 @@ This model balances simplicity for basic apps with power for complex application
 
 ### Application Lifecycle
 
-Standard Foundation application flow:
+**IMPORTANT:** As of the Bronze tier redesign, `Foundation.init()` now **automatically displays a visible window**. This provides immediate visual feedback that the framework has initialized successfully.
+
+**New Simplified Application Flow:**
+1. **Initialize**: `Foundation.init(uContext)` - Sets up Swing environment, Look and Feel, **and displays window**
+   - In window mode: Shows an empty JFrame (ready for content)
+   - In desktop mode: Shows a JFrame with empty JDesktopPane (ready for internal frames)
+2. **Register Panels**: `registerUI(String namespace, String panelId, JPanel ui)` - Register panels
+   - Panels registered after init() are immediately added to the visible desktop
+   - In desktop mode, internal frames are created and shown automatically
+3. **Interact**: Use visibility management (`showPanel()`, `hidePanel()`) and registry queries as needed
+
+**Legacy Application Flow (deprecated):**
 1. **Initialize**: `Foundation.init(uContext)` - Sets up Swing environment and Look and Feel
-2. **Register UI**: `registerUI(String name, JPanel ui)` - Register your JPanel-based UI
-3. **Choose Mode**: `useWindow(JPanel)` OR `useDesktop(JPanel)` - Returns IWindow abstraction
+2. **Register UI**: `registerUI(String namespace, String panelId, JPanel ui)` - Register your JPanel-based UI with namespace and panel ID
+3. **Choose Mode**: `useWindow(JPanel)` OR `useDesktop(JPanel)` - Returns IWindow abstraction (deprecated)
 4. **Customize**: Modify IWindow properties (title, resizable, maximizable, etc.)
-5. **Display**: `showGUI(IWindow)` - Make the UI visible
+5. **Display**: `showGUI(IWindow)` - Make the UI visible (deprecated)
+
+**Key Changes:**
+- `Foundation.init()` now shows a window automatically (unless one is already visible)
+- Mode (window vs desktop) must be set in `uContext` BEFORE calling `init()`
+- `useWindow()` and `useDesktop()` are deprecated in favor of setting mode in context
+- `showGUI()` and `launchWindow()` are deprecated since init() handles window display
 
 ### Key Abstractions
 
@@ -192,17 +209,262 @@ This aligns with Foundation's philosophy of interface-based, pluggable architect
 - Traditional single-window application
 - Simpler for basic applications
 
+### Bronze Tier: Multi-Window Management
+
+The Bronze tier provides sophisticated multi-window management capabilities essential for building complex desktop environments and tools with multiple panels.
+
+#### Panel Registry System
+
+**Core Concept:** Panels are registered using a two-part identifier:
+- **Namespace** - Tool/application identifier (e.g., "tool.calculator", "tool.editor")
+- **Panel ID** - Unique identifier within the namespace (e.g., "main", "settings", "history")
+
+This allows a single tool to have multiple windows, each uniquely identified by `namespace:panelId`.
+
+**Registration API:**
+```java
+// Basic registration
+XPanel panel = foundation.registerUI("tool.calculator", "main", new CalculatorPanel());
+
+// With lifecycle listener
+XPanel panel = foundation.registerUI("tool.calculator", "history",
+    new HistoryPanel(),
+    new PanelLifecycleListener() { /* ... */ });
+
+// With window positioning
+XPanel panel = foundation.registerUI("tool.calculator", "settings",
+    new SettingsPanel(),
+    WindowPosition.center());
+
+// With both lifecycle and positioning
+XPanel panel = foundation.registerUI("tool.editor", "main",
+    new EditorPanel(),
+    lifecycleListener,
+    WindowPosition.at(100, 100, 600, 400));
+```
+
+**Key Requirements:**
+- Both namespace and panelId are **required** (no defaults)
+- The `namespace:panelId` combination must be unique across the entire registry
+- Attempting to register a duplicate throws `IllegalArgumentException`
+
+#### Panel Lifecycle Events
+
+**PanelLifecycleListener Interface** (src/main/java/org/jwellman/foundation/interfaces/PanelLifecycleListener.java)
+
+Panels can register listeners to receive notifications for key lifecycle events:
+
+```java
+public interface PanelLifecycleListener {
+    void onCreate(IWindow window);   // Window container created
+    void onShow(IWindow window);     // Panel made visible
+    void onHide(IWindow window);     // Panel hidden
+    void onClose(IWindow window);    // Panel closed/disposed
+}
+```
+
+**Event Timing:**
+- `onCreate()` - Fired when the JFrame or JInternalFrame is created during initialization
+- `onShow()` - Fired when `showPanel()` is called (may fire multiple times)
+- `onHide()` - Fired when `hidePanel()` is called (may fire multiple times)
+- `onClose()` - Fired when `closePanel()` is called (typically once, before removal from registry)
+
+**Use Cases:**
+- Lazy loading expensive resources when panel is first shown
+- Saving state when panel is hidden
+- Cleanup when panel is closed
+- Tracking panel usage analytics
+
+#### Window Positioning
+
+**WindowPosition Class** (src/main/java/org/jwellman/foundation/WindowPosition.java)
+
+Provides strategies for positioning panels:
+
+**Positioning Strategies:**
+- `CASCADE` - Diagonal cascade (default for desktop mode)
+- `CENTER` - Center within desktop or on screen
+- `TILE` - Grid tiling (future enhancement)
+- `EXPLICIT` - Specific coordinates
+- `NONE` - No automatic positioning
+
+**Factory Methods:**
+```java
+WindowPosition.cascade()                    // Cascade positioning
+WindowPosition.center()                     // Center positioning
+WindowPosition.at(x, y)                     // Explicit position
+WindowPosition.at(x, y, width, height)      // Explicit position and size
+```
+
+**Behavior by Mode:**
+- **Desktop mode** - Positions JInternalFrame within JDesktopPane
+- **Window mode** - Positions JFrame on screen (CENTER uses `setLocationRelativeTo(null)`)
+
+#### Dynamic Panel Management
+
+**Visibility Control:**
+```java
+// Show a panel
+foundation.showPanel("tool.calculator", "history");
+
+// Hide a panel
+foundation.hidePanel("tool.calculator", "history");
+
+// Toggle visibility
+foundation.togglePanel("tool.calculator", "history");
+
+// Check visibility
+boolean visible = foundation.isPanelVisible("tool.calculator", "history");
+```
+
+**Registry Queries:**
+```java
+// Get specific panel
+XPanel panel = foundation.getPanel("tool.calculator", "main");
+
+// Get all panels for a namespace
+List<XPanel> calcPanels = foundation.getPanels("tool.calculator");
+
+// Get all registered namespaces
+List<String> namespaces = foundation.getNamespaces();
+
+// Get panel registration metadata
+PanelRegistration reg = foundation.getRegistration("tool.calculator", "main");
+```
+
+**Panel Removal:**
+```java
+// Close and remove a panel
+foundation.closePanel("tool.calculator", "history");
+// This fires onClose() event, closes the window, and removes from registry
+```
+
+#### Multi-Window Scenarios
+
+**Scenario 1: Tool with Multiple Windows**
+```java
+// Calculator tool with main window and separate history window
+foundation.registerUI("tool.calculator", "main", new CalculatorPanel());
+foundation.registerUI("tool.calculator", "history", new HistoryPanel());
+foundation.registerUI("tool.calculator", "settings", new SettingsPanel());
+
+// User can show/hide history and settings as needed
+foundation.showPanel("tool.calculator", "history");
+```
+
+**Scenario 2: Multi-Tool Desktop**
+```java
+// Multiple tools, each with their own panels
+foundation.registerUI("tool.calculator", "main", new CalculatorPanel());
+foundation.registerUI("tool.editor", "main", new EditorPanel());
+foundation.registerUI("tool.editor", "findreplace", new FindReplacePanel());
+foundation.registerUI("tool.browser", "main", new BrowserPanel());
+
+// Query all editor panels
+List<XPanel> editorPanels = foundation.getPanels("tool.editor"); // Returns 2
+```
+
+**Scenario 3: Dynamic Panel Management**
+```java
+// Control panel that manages other panels
+JButton btn = new JButton("Show Calculator History");
+btn.addActionListener(e -> {
+    if (foundation.isPanelVisible("tool.calculator", "history")) {
+        foundation.hidePanel("tool.calculator", "history");
+    } else {
+        foundation.showPanel("tool.calculator", "history");
+    }
+});
+```
+
+#### Internal Implementation
+
+**PanelRegistration Class** (src/main/java/org/jwellman/foundation/PanelRegistration.java)
+- Holds all metadata for a registered panel
+- Tracks namespace, panelId, XPanel, window container, visibility state, positioning, and lifecycle listener
+- Provides `getFullId()` method returning `"namespace:panelId"`
+
+**Bronze Registry:**
+- `Map<String, PanelRegistration>` keyed by `"namespace:panelId"`
+- Enables O(1) lookup by composite key
+- Supports efficient queries by namespace via stream filtering
+
+#### Future Enhancements (Silver/Gold/Platinum Tiers)
+
+The Bronze tier registry provides the foundation for future features:
+- **Frame type switching** - Move panel from JInternalFrame to JFrame (detach from desktop)
+- **Z-order management** - Bring panels to front, send to back
+- **Window state** - Track minimized/maximized state
+- **Position persistence** - Save/restore window positions across sessions
+- **Docking** - Dock panels to desktop edges or to each other
+- **Tabbed panels** - Multiple panels in tabbed interface
+
 ## Creating Applications
 
-### Recommended Pattern: Extend JPanel
+### Recommended Pattern (Bronze Tier and Above)
 
-The Foundation way is to **extend JPanel directly**, not JFrame. This eliminates boilerplate and keeps your code deployment-agnostic:
+**NEW SIMPLIFIED PATTERN:** With Bronze tier, Foundation handles window creation and display automatically:
 
 ```java
 public class MyApp extends JPanel {
     public MyApp() {
         super(new BorderLayout());
         // Build your UI here in the constructor
+        add(new JLabel("My Application"), BorderLayout.CENTER);
+    }
+
+    public static void main(String[] args) {
+        // Set up context (optional - defaults to window mode)
+        uContext context = uContext.createContext();
+        context.setDesktopTitle("My Application");
+        // For desktop mode: context.setDesktopMode(true);
+
+        // Initialize - this shows the window immediately
+        Foundation f = Foundation.init(context);
+
+        // Register your panel - it's added to the visible window automatically
+        f.registerUI("myapp", "main", new MyApp());
+
+        // That's it! Window is already visible with your panel
+    }
+}
+```
+
+**For Desktop Mode (Multi-Panel Applications):**
+```java
+public static void main(String[] args) {
+    // Set desktop mode in context
+    uContext context = uContext.createContext();
+    context.setDesktopMode(true);
+    context.setDesktopTitle("Multi-Tool Desktop");
+
+    // Initialize - shows desktop with empty JDesktopPane
+    Foundation f = Foundation.init(context);
+
+    // Register panels - they appear as internal frames automatically
+    f.registerUI("tool.calculator", "main", new CalculatorPanel());
+    f.registerUI("tool.editor", "main", new EditorPanel());
+    f.registerUI("tool.browser", "main", new BrowserPanel());
+
+    // Desktop is visible with all three panels as internal frames
+}
+```
+
+**Why this pattern?**
+- `Foundation.init()` shows a window immediately - instant visual feedback
+- Panels registered after init() are automatically added to the visible window
+- No need for `useWindow()`, `useDesktop()`, `showGUI()`, or `launchWindow()`
+- Clean, simple, minimal boilerplate
+
+### Legacy Pattern (Stone Tier - Deprecated)
+
+The original pattern (still supported but deprecated):
+
+```java
+public class MyApp extends JPanel {
+    public MyApp() {
+        super(new BorderLayout());
+        add(new JLabel("My Application"), BorderLayout.CENTER);
     }
 
     public static void main(String[] args) {
@@ -214,11 +476,7 @@ public class MyApp extends JPanel {
 }
 ```
 
-**Why extend JPanel?**
-- Your application IS a panel - Foundation handles JFrame/JInternalFrame
-- No JFrame boilerplate (setDefaultCloseOperation, pack, setVisible, etc.)
-- Same class works in window or desktop mode - just change useWindow() to useDesktop()
-- Minimal main() method with clear Foundation lifecycle
+This pattern still works but is deprecated in favor of the simplified Bronze tier pattern.
 
 ### Alternative: AbstractSimpleApp
 
@@ -252,10 +510,13 @@ The `org.jwellman.foundation.examples` package contains working demonstrations:
 - Demonstrates deployment-agnostic design
 - Run: `mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SimpleDesktopDemo"`
 
-**MultiPanelDesktopDemo.java** - Multiple panels in desktop
-- Shows registerUI() with multiple panels
+**MultiPanelDesktopDemo.java** - Bronze tier comprehensive demo
+- Shows namespace:panelId registration (tool.calculator has "main" and "history")
+- Demonstrates panel lifecycle events (onCreate, onShow, onHide, onClose)
+- Shows window positioning strategies (CASCADE, CENTER, EXPLICIT)
+- Includes dynamic panel management (show/hide/toggle via control panel)
+- Registry queries (getPanels by namespace, getNamespaces)
 - Simulates multi-tool desktop environment
-- Demonstrates Bronze tier functionality
 - Run: `mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.MultiPanelDesktopDemo"`
 
 **LookAndFeelDemo.java** - LAF testing utility

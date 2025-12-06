@@ -65,7 +65,7 @@ abstract public class AbstractSimpleApp implements uiThemeProvider {
         final Foundation f = Foundation.init(null);
 
         // Step 2 - Create your UIs in JPanel(s)
-        mainui = f.registerUI("org.jwellman.foundation.examples.AbstractSimpleApp", this.getMainUI());
+        mainui = f.registerUI("org.jwellman.foundation.examples.AbstractSimpleApp", "main", this.getMainUI());
 
         // Step 3 - Use Foundation to create your "window"; give it your UI.
         window = asMainFrame ? f.useWindow(mainui) : f.useDesktop(mainui);

@@ -279,7 +279,7 @@ public class Stone {
         // Adding this to a desktop has been moved to showGUI()
         // desktop.add(internalFrame); // this does NOT make the internal frame visible
 
-        this.initializeOtherWindows();
+        // this.initializeOtherWindows(); // removed 12/6/2025, since this overall method is deprecated, it shouldn't hurt
 
         return internalFrame; // frame;
     } // end method
@@ -669,6 +669,81 @@ public class Stone {
         See: docs/architecture/jdesktoppane-sizing-behavior.md
 
     /* ========================================================================== */
+
+    /**
+     * Initialize and show the main window.
+     *
+     * This method is called automatically by Foundation.init() to ensure that
+     * a visible window is always displayed when the framework initializes.
+     *
+     * If a window is already visible, this method does nothing (supports the
+     * multi-tool desktop scenario where Foundation.init() might be called
+     * multiple times as different tools are loaded).
+     */
+    protected void _initializeAndShowWindow() {
+        // If we already have a visible frame, do nothing
+        if (externalFrame != null && externalFrame.isVisible()) {
+            return;
+        }
+
+        // Determine mode (desktop vs window) from context
+        // If mode hasn't been set yet, use the context setting (defaults to window mode)
+        if (isDesktop == null) {
+            isDesktop = context.isDesktopMode();
+        }
+
+        // Create the external frame if it doesn't exist
+        if (externalFrame == null) {
+            String title = context.getDesktopTitle();
+            if (title == null) {
+                title = "Foundation Application";
+            }
+            externalFrame = new XFrame(title);
+            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        }
+
+        // Set up desktop mode if needed
+        if (isDesktop) {
+            if (desktop == null) {
+                if (context.getDesktopProvider() == null) {
+                    desktop = new JDesktopPane();
+                    desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
+                    externalFrame.setContentPane(desktop);
+                } else {
+                    desktop = context.getDesktopProvider().doCustomDesktop(externalFrame);
+                }
+            }
+
+            // Initialize other windows (Bronze tier will create internal frames here)
+            this.initializeOtherWindows();
+        }
+
+        // Show the window on the EDT
+        final XFrame frameToShow = externalFrame;
+        final Dimension size = context.getDimension();
+        final boolean isDesktopMode = isDesktop;
+
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                // Set size
+                if (isDesktopMode) {
+                    // Desktop mode: always use explicit sizing
+                    frameToShow.setSize(size);
+                } else {
+                    // Window mode: use explicit size if non-default, otherwise pack() will be called later
+                    if (size != null && !size.equals(new Dimension(900, 500))) {
+                        frameToShow.setSize(size);
+                    }
+                    // Note: If window mode has no content yet, the frame will be very small
+                    // Applications should add content after init() and call pack() if needed
+                }
+
+                frameToShow.setLocationRelativeTo(null); // Center on screen
+                frameToShow.setVisible(true);
+            }
+        });
+    }
 
     /**
      * This is basically a noop in Stone since it only supports a single
