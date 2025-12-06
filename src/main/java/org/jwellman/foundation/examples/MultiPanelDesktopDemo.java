@@ -40,8 +40,9 @@ public class MultiPanelDesktopDemo {
     private static Foundation foundation;
 
     public static void main(String[] args) {
+
         // Step 1 - Initialize Foundation with desktop mode
-        uContext context = uContext.createContext();
+        uContext context = uContext.createContext(MultiPanelDesktopDemo.class);
         context.setDesktopMode(true);
         context.setDesktopTitle("Multi-Tool Desktop - Bronze Tier Demo");
         foundation = Foundation.init(context);

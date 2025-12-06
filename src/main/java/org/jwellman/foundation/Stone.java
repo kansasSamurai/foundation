@@ -169,7 +169,8 @@ public class Stone {
             JFrame.setDefaultLookAndFeelDecorated(true);
 
             // Save the context (or create one by default)
-            context = (c != null) ? c : uContext.createContext();
+            // 12/6/2025 if context is null here it is a bug so removing empty context creator
+            // context = (c != null) ? c : uContext.createContext();
 
             // Conditionally apply context settings...
             if (context.getThemeProvider() != null) {

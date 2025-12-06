@@ -56,7 +56,7 @@ public class LookAndFeelDemo {
         }
 
         // Create context with selected LAF
-        uContext context = uContext.createContext();
+        uContext context = uContext.createContext(LookAndFeelDemo.class.getName());
         context.setLookAndFeel(selectedLAF.getClassName());
 
         // Initialize Foundation (LAFDiscovery will apply the LAF from context)

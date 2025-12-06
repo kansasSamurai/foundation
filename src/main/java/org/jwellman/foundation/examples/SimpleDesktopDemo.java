@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import org.jwellman.foundation.Foundation;
+import org.jwellman.foundation.uContext;
 import org.jwellman.foundation.swing.IWindow;
 
 /**
@@ -64,11 +65,12 @@ public class SimpleDesktopDemo extends JPanel {
     }
 
     public static void main(String[] args) {
+
         // Step 1 - Initialize Foundation with explicit desktop dimensions
         // Note: Desktop mode requires explicit sizing because JDesktopPane cannot
         //       calculate preferred size from internal frames (they are positioned
         //       absolutely, not laid out by a layout manager)
-        org.jwellman.foundation.uContext ctx = org.jwellman.foundation.uContext.createContext();
+        uContext ctx = uContext.createContext(SimpleDesktopDemo.class);
         ctx.setDimension(1000, 600);  // Explicit size for desktop mode
         ctx.setDesktopTitle("Foundation Desktop Demo");
 

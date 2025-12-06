@@ -12,12 +12,25 @@ import org.jwellman.foundation.interfaces.uiThemeProvider;
  */
 public class uContext {
 
-    public static uContext createContext() {
-        return new uContext();
+    /** An identifier for this context */
+    public String namespace;
+
+    /** 
+     * The look and feel class to use (will be ignored in 
+     * a "desktop" environment unless it is the desktop provider)
+     */
+    public String lookAndFeel;
+
+    public static uContext createContext(Class<?> clazz) {
+        return new uContext(clazz.getName());
     }
 
-    private uContext() {
-        // Empty/private constructor to enforce factory pattern
+    public static uContext createContext(String namespace) {
+        return new uContext(namespace);
+    }
+
+    private uContext(String namespace) {
+        this.namespace = namespace;
     }
 
     /** An indicator that you are using desktop mode; defaults to false. */
@@ -69,9 +82,6 @@ public class uContext {
 
     public Dimension getDimension() { return dimension; }
 
-    /** The look and feel class to use (will be ignored in a "desktop" environment) */
-    public String lookAndFeel;
-    
 	public String getLookAndFeel() {
 		return lookAndFeel;
 	}
@@ -79,5 +89,13 @@ public class uContext {
 	public void setLookAndFeel(String laf) {
 		this.lookAndFeel = laf;
 	}
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
 
 }
