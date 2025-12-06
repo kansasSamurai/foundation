@@ -191,12 +191,60 @@ public class Stone {
     } // end method
     
     /**
+     * Creates a window for the given JPanel based on the current mode (window or desktop).
+     * The mode is determined by the uContext provided during init().
+     * Convention: If no uContext provided, defaults to window mode (standalone).
+     *
+     * @param ui The JPanel to display
+     * @return IWindow abstraction (JFrame or JInternalFrame depending on mode)
+     */
+    public IWindow createWindow(JPanel ui) {
+        if (ui == null) {
+            throw new RuntimeException("FATAL - JPanel cannot be null");
+        }
+
+        // Determine mode if not already set
+        // Convention over configuration: default to window mode if not specified
+        if (isDesktop == null) {
+            isDesktop = context.isDesktopMode();
+        }
+
+        if (isDesktop) {
+            // Create internal frame for desktop mode
+            final XInternalFrame internalFrame = new XInternalFrame("Your UI", true, true, true, true);
+            internalFrame.setBounds(10, 10, 225, 125);
+            internalFrame.add(ui);
+            internalFrame.setMaximizable(false);
+            internalFrame.setClosable(false);
+
+            this.initializeOtherWindows();
+
+            return internalFrame;
+        } else {
+            // Create JFrame for window mode
+            if (externalFrame == null) {
+                externalFrame = new XFrame("Your App -- powered by the Foundation API");
+
+                if (context.getDesktopTitle() != null)
+                    externalFrame.setTitle(context.getDesktopTitle());
+
+                externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            }
+
+            externalFrame.add(ui);
+            return externalFrame;
+        }
+    }
+
+    /**
      * Given an instance of JPanel, return an IWindow object compatible with a
      * "desktop" user experience (i.e. a JInternalFrame).
      *
+     * @deprecated Use createWindow(JPanel) instead. Mode is now determined by uContext.
      * @param ui
      * @return
      */
+    @Deprecated
     public IWindow useDesktop(JPanel ui) {
         if (ui == null) {
             throw new RuntimeException("FATAL - JPanel cannot be null");
@@ -240,9 +288,11 @@ public class Stone {
      * Given an instance of JPanel, return an IWindow object compatible with a
      * window-based user experience (i.e. a JFrame).
      *
+     * @deprecated Use createWindow(JPanel) instead. Mode is now determined by uContext.
      * @param ui
      * @return
      */
+    @Deprecated
     public IWindow useWindow(JPanel ui) {
         if (ui == null) {
             throw new RuntimeException("FATAL - JPanel cannot be null");
@@ -301,11 +351,161 @@ public class Stone {
     }
 
     /**
+     * Convenience method: Creates a window for the JPanel with the specified title and immediately launches it.
+     * This is the one-step approach for simple applications.
+     *
+     * @param jpanel The JPanel to display
+     * @param title The title for the window
+     * @return The IWindow that was created and launched
+     */
+    public IWindow launchWindow(JPanel jpanel, String title) {
+        IWindow window = this.createWindow(jpanel);
+        window.setTitle(title);
+        this.launchWindow(window);
+        return window;
+    }
+
+    /**
+     * Convenience method: Creates a window for the JPanel and immediately launches it.
+     * Uses a default title: "Your App -- Powered By the Foundation API"
+     * This is the one-step approach for simple applications.
+     *
+     * @param jpanel The JPanel to display
+     * @return The IWindow that was created and launched
+     */
+    public IWindow launchWindow(JPanel jpanel) {
+        return this.launchWindow(jpanel, "Your App -- Powered By the Foundation API");
+    }
+
+    /**
+     * Launches the given window, making it visible to the user.
+     * This is the second step of the two-step approach (createWindow + launchWindow).
+     *
+     * @param window The IWindow to launch
+     */
+    public void launchWindow(IWindow window) {
+        final List<IWindow> list = new ArrayList<>();
+        if (window != externalFrame) {
+            list.add(window);
+        }
+        this.launchWindow(list);
+    }
+
+    /**
+     * Launches multiple windows, making them visible to the user.
+     * Primarily used in desktop mode to launch multiple internal frames.
+     *
+     * @param windows List of windows to launch
+     */
+    public void launchWindow(final List<IWindow> windows) {
+
+        if (!isInitialized) {
+            throw new RuntimeException("Cannot call launchWindow() until Foundation.init() is called.");
+        }
+
+        // Create the JFrame
+        if (externalFrame == null) {
+
+            // This is a bit of a hack for now (12/1/2020)...
+            // If the externalFrame has not been explicitly registered then try to decode if
+            // desktop mode should be used.
+            if (windows.size() == 1) {
+                if (windows.get(0) instanceof XInternalFrame) {
+                    context.setDesktopMode(true);
+                    isDesktop = true;
+                }
+            }
+
+            // We have not registered a desktop/main so create one
+            externalFrame = new XFrame("Your App -- Powered By the Foundation API");
+
+            // TODO The jPAD security manager doesn't like this line
+            // but other apps without jpad might... review this design
+            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        } else {
+            // We have registered a desktop so use it
+
+        }
+
+        // Start the GUI on the Event Dispatch Thread (EDT)
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+
+                if (context.isDesktopMode()) {
+                    if (context.getDesktopProvider() == null) {
+                        desktop = new JDesktopPane(); // a specialized layered pane
+                        desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE); // Make dragging a little faster but
+                                                                             // perhaps uglier.
+                        externalFrame.setContentPane(desktop);
+                    } else {
+                        desktop = context.getDesktopProvider().doCustomDesktop(externalFrame);
+                    }
+
+                    // Note that this only ADDs the window to the desktop;
+                    // it is not pack(ed) nor setVisible()... that occurs later.
+                    for (IWindow w : windows) {
+                        if (w != externalFrame) {
+                            desktop.add(w.getComponent());
+                            w.pack();
+                        }
+                    }
+
+                }
+
+                        // Display the window.
+                        // In desktop mode, use explicit sizing (JDesktopPane cannot calculate preferred size)
+                        // In window mode, pack() calculates size from JPanel content
+                        if (context.isDesktopMode()) {
+                            externalFrame.setSize(context.getDimension()); // [E]
+                        } else {
+                            // Window mode: Use explicit dimension if set, otherwise pack()
+                            Dimension dim = context.getDimension();
+                            if (dim != null && !dim.equals(new Dimension(900, 500))) {
+                                // User specified a custom dimension
+                                externalFrame.setSize(dim);
+                            } else {
+                                // Use default behavior: pack() sizes to content
+                                externalFrame.pack(); // [A] Let JPanel determine size
+                            }
+                        }
+                        externalFrame.setLocationRelativeTo(null); // [C]
+                        externalFrame.setVisible(true);
+
+                    }
+                } // end runnable / end run()
+        ); // end invokeLater()
+
+        /*
+         * All the other windows have been added to the desktop but they have not been
+         * made visible; make them visible now.
+         *
+         * For possible performance reasons, open each subwindow in a new EDT
+         */
+        for (final IWindow w : windows) {
+
+            // Start the GUI on the Event Dispatch Thread (EDT)
+            javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    w.pack();
+                    w.setVisible(true);
+                }
+            });
+        }
+
+    } // end method
+
+    /**
      * A temporary shim to use with SPAR tool while I'm considering fairly major
      * overhaul in application object design and startup.
-     * 
+     *
+     * @deprecated Use launchWindow(JPanel) instead
      * @param jpanel
      */
+    @Deprecated
     public void showGUI(JPanel jpanel) {
         this.showGUI(this.useWindow(jpanel));
     }
@@ -314,8 +514,10 @@ public class Stone {
      * A convenience method for calling showGUI() when you only have one IWindow
      * instance.
      *
+     * @deprecated Use launchWindow(IWindow) instead
      * @param window
      */
+    @Deprecated
     public void showGUI(IWindow window) {
 
         final List<IWindow> list = new ArrayList<>();
@@ -340,8 +542,9 @@ public class Stone {
      * - If the desktop mode has been chosen, create the external frame (JFrame) -
      * If the window mode has been chosen, create the external frame (JFrame)
      *
-     *
+     * @deprecated Use launchWindow(List<IWindow>) instead
      */
+    @Deprecated
     public void showGUI(final List<IWindow> windows) {
 
         if (!isInitialized) {
