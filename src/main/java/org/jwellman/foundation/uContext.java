@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
+import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.interfaces.uiThemeProvider;
 
 /**
@@ -70,10 +71,17 @@ public class uContext {
 
     /** An object that implements the desktopProvider interface */
     private uiDesktopProvider desktopProvider;
-    
+
 	public void setDesktopProvider(uiDesktopProvider x) { desktopProvider = x; }
-	
+
 	public uiDesktopProvider getDesktopProvider() { return desktopProvider; }
+
+    /** An object that implements the splashProvider interface */
+    private uiSplashProvider splashProvider;
+
+	public void setSplashProvider(uiSplashProvider x) { splashProvider = x; }
+
+	public uiSplashProvider getSplashProvider() { return splashProvider; }
 
     /** A title for the desktop frame */
     private String desktopTitle;

@@ -5,25 +5,21 @@ import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
+import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
-
-import net.sourceforge.napkinlaf.NapkinLookAndFeel;
-import net.sourceforge.napkinlaf.NapkinTheme;
 
 /**
  * The most basic of Swing initialization requirements.
@@ -56,6 +52,12 @@ public class Stone {
 
 	/** The JDesktopPane used in desktop mode */
 	private JDesktopPane desktop;
+
+	/** The splash window (JFrame in window mode, JInternalFrame in desktop mode) */
+	protected IWindow splashWindow;
+
+	/** The splash provider instance */
+	protected uiSplashProvider splashProvider;
 
 	// Look and Feel (LAF) identifiers - DEPRECATED
 	// These constants are deprecated in favor of using LAF class names directly.
@@ -123,27 +125,27 @@ public class Stone {
         } else {
             isInitialized = true;
 
-            // Log the application classpath for debugging purposes
-            System.out.println("----- Application Classpath -----");
-//            final ClassLoader cl = ClassLoader.getSystemClassLoader();
-//            final URL[] urls = ((URLClassLoader) cl).getURLs();
-//            for (URL url : urls) {
-//                System.out.println(url.getFile());
+//            // Log the application classpath for debugging purposes
+//            System.out.println("----- Application Classpath -----");
+////            final ClassLoader cl = ClassLoader.getSystemClassLoader();
+////            final URL[] urls = ((URLClassLoader) cl).getURLs();
+////            for (URL url : urls) {
+////                System.out.println(url.getFile());
+////            }
+//            // Works in all Java versions
+//            String classpath = System.getProperty("java.class.path");
+//            String[] classpathEntries = classpath.split(File.pathSeparator);
+//            for (String entry : classpathEntries) {
+//                System.out.println(entry);
 //            }
-            // Works in all Java versions
-            String classpath = System.getProperty("java.class.path");
-            String[] classpathEntries = classpath.split(File.pathSeparator);
-            for (String entry : classpathEntries) {
-                System.out.println(entry);
-            }
-
-            // Log the system fonts available for debugging purposes
-            final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            final Font[] fonts = ge.getAllFonts();
-            for (Font font : fonts) {
-                System.out.print("FONT: " + font.getFontName() + " : ");
-                System.out.println(font.getFamily());
-            }
+//
+//            // Log the system fonts available for debugging purposes
+//            final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+//            final Font[] fonts = ge.getAllFonts();
+//            for (Font font : fonts) {
+//                System.out.print("FONT: " + font.getFontName() + " : ");
+//                System.out.println(font.getFamily());
+//            }
 
             @SuppressWarnings("unused")
             Map<?, ?> desktopHints = (Map<?, ?>) Toolkit.getDefaultToolkit()
@@ -435,6 +437,7 @@ public class Stone {
         // Start the GUI on the Event Dispatch Thread (EDT)
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
 
+            @SuppressWarnings("deprecation")
             @Override
             public void run() {
 
@@ -653,6 +656,20 @@ public class Stone {
         return desktop;
     }
 
+    protected XFrame getExternalFrame() {
+        return externalFrame;
+    }
+
+    /**
+     * Get the splash provider instance.
+     * Useful for updating progress during initialization.
+     *
+     * @return The splash provider, or null if splash has been closed
+     */
+    public uiSplashProvider getSplashProvider() {
+        return splashProvider;
+    }
+
     /* ========== Footnotes =====================================================
     [A] The swing documentation says that pack() makes the frame "displayable"
         I originally thought that "displayable" meant "visible" but it doesn't
@@ -706,6 +723,16 @@ public class Stone {
             externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         }
 
+        // Get or create splash provider
+        if (context.getSplashProvider() != null) {
+            splashProvider = context.getSplashProvider();
+        } else {
+            splashProvider = new DefaultSplashProvider();
+        }
+
+        // Create splash content
+        JPanel splashContent = splashProvider.createSplashContent();
+
         // Set up desktop mode if needed
         if (isDesktop) {
             if (desktop == null) {
@@ -744,10 +771,35 @@ public class Stone {
                         finalProvider.onDesktopInitialized(finalDesktop);
                     }
                 });
+
+                // Create splash as internal frame on desktop
+                XInternalFrame splashInternalFrame = new XInternalFrame("Foundation Framework",
+                        false, false, false, false);
+                splashInternalFrame.add(splashContent);
+//                splashInternalFrame.setResizable(false);
+//                splashInternalFrame.setClosable(false);
+//                splashInternalFrame.setMaximizable(false);
+//                splashInternalFrame.setIconifiable(false);
+                splashInternalFrame.pack();
+
+                // Center on desktop
+                splashInternalFrame.setLocation(
+                    (context.getDimension().width - splashInternalFrame.getWidth()) / 2,
+                    (context.getDimension().height - splashInternalFrame.getHeight()) / 2
+                );
+
+                desktop.add(splashInternalFrame);
+                splashInternalFrame.setVisible(true);
+                splashWindow = splashInternalFrame;
             }
 
             // Initialize other windows (Bronze tier will create internal frames here)
+            // Note: These frames are created but NOT visible (will be shown via launch())
             this.initializeOtherWindows();
+        } else {
+            // Window mode: Set splash content as the frame's content pane
+            externalFrame.setContentPane(splashContent);
+            splashWindow = externalFrame;
         }
 
         // Show the window on the EDT
@@ -755,26 +807,68 @@ public class Stone {
         final Dimension size = context.getDimension();
         final boolean isDesktopMode = isDesktop;
 
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                // Set size
-                if (isDesktopMode) {
-                    // Desktop mode: always use explicit sizing
-                    frameToShow.setSize(size);
-                } else {
-                    // Window mode: use explicit size if non-default, otherwise pack() will be called later
-                    if (size != null && !size.equals(new Dimension(900, 500))) {
+        try {
+            javax.swing.SwingUtilities.invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    // Set size
+                    if (isDesktopMode) {
+                        // Desktop mode: always use explicit sizing
                         frameToShow.setSize(size);
+                    } else {
+                        // Window mode: pack to fit splash content
+                        frameToShow.pack();
                     }
-                    // Note: If window mode has no content yet, the frame will be very small
-                    // Applications should add content after init() and call pack() if needed
-                }
 
-                frameToShow.setLocationRelativeTo(null); // Center on screen
-                frameToShow.setVisible(true);
-            }
-        });
+                    frameToShow.setLocationRelativeTo(null); // Center on screen
+                    frameToShow.setVisible(true);
+
+                }
+            });
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        this.logEnvironment();
+    }
+
+    /**
+     * A convenience method for code that I want to run at startup for the
+     * forseeable future.  The return value is a bit of a hack to support
+     * some demo mode code.
+     * 
+     * @return
+     */
+    public int logEnvironment() {
+        // Log the application classpath for debugging purposes
+        System.out.println("----- Application Classpath -----");
+        // Works in all Java versions
+        String classpath = System.getProperty("java.class.path");
+        String[] classpathEntries = classpath.split(File.pathSeparator);
+        // This is the old implementation - keeping for a while
+        //      final ClassLoader cl = ClassLoader.getSystemClassLoader();
+        //      final URL[] urls = ((URLClassLoader) cl).getURLs();
+        //      for (URL url : urls) {
+        //          System.out.println(url.getFile());
+        //      }
+
+        // Log the system fonts available for debugging purposes
+        final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        final Font[] fonts = ge.getAllFonts();
+
+        for (String entry : classpathEntries) {
+            System.out.println(entry);
+        }
+        for (Font font : fonts) {
+            System.out.print("FONT: ");
+            System.out.print(font.getFontName());
+            System.out.print(" : ");
+            System.out.println(font.getFamily());
+        }
+
+        return classpathEntries.length + fonts.length;
     }
 
     /**
@@ -782,5 +876,13 @@ public class Stone {
      * application window.  Other levels will definitely override this.
      */
     protected void initializeOtherWindows() {}
+
+    public uiSplashProvider getSplashProvider() {
+        return splashProvider;
+    }
+
+    public void setSplashProvider(uiSplashProvider splashProvider) {
+        this.splashProvider = splashProvider;
+    }
 
 } // end class
