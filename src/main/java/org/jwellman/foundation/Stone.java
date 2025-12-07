@@ -101,6 +101,8 @@ public class Stone {
 	@Deprecated
 	public static final int LAF_DARCULA = 7;
 
+	/** Default application title */
+	protected static final String DEFAULT_APP_TITLE = "Your App -- Powered By the Foundation API";
 
 
 	/**
@@ -236,7 +238,7 @@ public class Stone {
         } else {
             // Create JFrame for window mode
             if (externalFrame == null) {
-                externalFrame = new XFrame("Your App -- powered by the Foundation API");
+                externalFrame = new XFrame(DEFAULT_APP_TITLE);
 
                 if (context.getDesktopTitle() != null)
                     externalFrame.setTitle(context.getDesktopTitle());
@@ -324,7 +326,7 @@ public class Stone {
 
         // Create the JFrame if not already created
         if (externalFrame == null) {
-            externalFrame = new XFrame("Your App -- powered by the Foundation API");
+            externalFrame = new XFrame(DEFAULT_APP_TITLE);
 
             // ... possibly update the frame title
             if (context.getDesktopTitle() != null)
@@ -387,7 +389,7 @@ public class Stone {
      * @return The IWindow that was created and launched
      */
     public IWindow launchWindow(JPanel jpanel) {
-        return this.launchWindow(jpanel, "Your App -- Powered By the Foundation API");
+        return this.launchWindow(jpanel, DEFAULT_APP_TITLE);
     }
 
     /**
@@ -430,7 +432,7 @@ public class Stone {
             }
 
             // We have not registered a desktop/main so create one
-            externalFrame = new XFrame("Your App -- Powered By the Foundation API");
+            externalFrame = new XFrame(DEFAULT_APP_TITLE);
 
             // TODO The jPAD security manager doesn't like this line
             // but other apps without jpad might... review this design
@@ -578,7 +580,7 @@ public class Stone {
             }
 
             // We have not registered a desktop/main so create one
-            externalFrame = new XFrame("Your App -- Powered By the Foundation API");
+            externalFrame = new XFrame(DEFAULT_APP_TITLE);
 
             // TODO The jPAD security manager doesn't like this line
             // but other apps without jpad might... review this design
