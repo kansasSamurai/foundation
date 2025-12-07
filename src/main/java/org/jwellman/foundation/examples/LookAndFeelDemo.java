@@ -60,18 +60,51 @@ public class LookAndFeelDemo {
         context.setLookAndFeel(selectedLAF.getClassName());
 
         // Initialize Foundation (LAFDiscovery will apply the LAF from context)
-        Foundation f = Foundation.init(context);
+        Foundation foundation = Foundation.init(context);
 
         // Create UI
         JPanel ui = createUI(selectedLAF);
 
         // Use window mode
-        IWindow window = f.useWindow(ui);
-        window.setTitle("Foundation - Look and Feel Demo [" + selectedLAF.getName() + "]");
-        window.setResizable(true);
+//        IWindow window = f.useWindow(ui);
+//        window.setTitle("Foundation - Look and Feel Demo [" + selectedLAF.getName() + "]");
+//        window.setResizable(true);
+//
+//        // Display
+//        f.showGUI(window);
 
-        // Display
-        f.showGUI(window);
+        new Thread(() -> {
+            // Simulate more work
+            final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;
+            final int delay = 5000 / total;
+            int percent = 0;
+            for (int i = 0; i <= total; i++) {
+
+                // Do your work here (simulated)
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                int current = (i*100)/total;
+                if (current > percent) {
+                    percent = current;
+                    foundation.getSplashProvider().updateProgress(percent, null); // "In progress...");
+                }
+            }
+
+            foundation.getSplashProvider().updateProgress(100, "Initialization complete");
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // Launch the application - splash screen closes, app appears
+            foundation.launch(ui);
+
+        }).start();
     }
 
     /**

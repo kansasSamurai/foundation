@@ -660,16 +660,6 @@ public class Stone {
         return externalFrame;
     }
 
-    /**
-     * Get the splash provider instance.
-     * Useful for updating progress during initialization.
-     *
-     * @return The splash provider, or null if splash has been closed
-     */
-    public uiSplashProvider getSplashProvider() {
-        return splashProvider;
-    }
-
     /* ========== Footnotes =====================================================
     [A] The swing documentation says that pack() makes the frame "displayable"
         I originally thought that "displayable" meant "visible" but it doesn't
@@ -877,12 +867,18 @@ public class Stone {
      */
     protected void initializeOtherWindows() {}
 
+    /**
+     * Get the splash provider instance.
+     * <p>
+     * Useful for updating progress during initialization.
+     * <p>
+     * Note: There is no setter for this property as the splash provider
+     * is defined using the uContext class.
+     * 
+     * @return The splash provider, or null if splash has been closed
+     */
     public uiSplashProvider getSplashProvider() {
         return splashProvider;
-    }
-
-    public void setSplashProvider(uiSplashProvider splashProvider) {
-        this.splashProvider = splashProvider;
     }
 
 } // end class
