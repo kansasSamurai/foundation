@@ -21,14 +21,20 @@ public class Foundation extends Platinum {
 
     /**
      * Initialize the Java Swing graphics environment via the Foundation API.
-     * 
-     * This no-args version is typically only used for demos, SCCEs, or other "simple" use cases.  
-     * Finished apps will almost always want to provide a uContext via the init(uContext c) version.
-     * 
-     * @return
+     *
+     * This no-args version creates a default uContext for simple use cases.
+     * The default context uses "foundation.app" as the namespace and window mode (not desktop).
+     *
+     * For production applications, use init(uContext) with a properly configured context.
+     *
+     * @return The Foundation singleton instance
      */
     public static Foundation init() {
-        return Foundation.init(null);
+        // Create a default context for simple use cases
+        // IMPORTANT: Foundation ALWAYS requires a valid uContext object
+        // Never pass null - if context is null, that's a fundamental framework bug
+        uContext defaultContext = uContext.createContext("foundation.app");
+        return Foundation.init(defaultContext);
     }
 
     /**
@@ -48,14 +54,19 @@ public class Foundation extends Platinum {
      * - In window mode: An empty JFrame (ready for content to be added)
      * - In desktop mode: A JFrame containing an empty JDesktopPane (ready for internal frames)
      *
-     * @param c The context (may be null for defaults)
+     * @param c The context (MUST NOT be null - use no-args init() for default context)
      * @return The Foundation singleton instance
+     * @throws NullPointerException if context is null (indicates framework bug)
      */
     public static Foundation init(uContext c) {
         if (f == null) {
             f = new Foundation();
         }
 
+        // IMPORTANT: context must NEVER be null
+        // If null, this is a fundamental framework bug - fail fast with NPE
+        // All callers should either use init() no-args (creates default context)
+        // or provide a properly configured context
         f._init(c);
         f._initializeAndShowWindow();
 

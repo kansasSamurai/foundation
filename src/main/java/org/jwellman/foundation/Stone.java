@@ -17,6 +17,7 @@ import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
@@ -168,20 +169,20 @@ public class Stone {
             // Make sure our window decorations come from the look and feel.
             JFrame.setDefaultLookAndFeelDecorated(true);
 
-            // Save the context (or create one by default)
-            // 12/6/2025 if context is null here it is a bug so removing empty context creator
-            // context = (c != null) ? c : uContext.createContext();
+            // Save the context
+            // IMPORTANT: context should NEVER be null
+            // Foundation.init() ensures a valid context is always provided
+            // If context is null here, that's a fundamental framework bug - let it NPE
             context = c;
 
-            // Conditionally apply context settings...
-            if (context != null && context.getThemeProvider() != null) {
+            // Apply context settings
+            if (context.getThemeProvider() != null) {
                 context.getThemeProvider().doTheme();
             }
 
             // Use LAFDiscovery to select and apply Look and Feel
             // Priority: uContext.lookAndFeel -> config file -> ./lafs/ directory -> system default
-            String lafClassName = (context != null) ? context.getLookAndFeel() : null;
-            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(lafClassName);
+            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(context.getLookAndFeel());
 
             if (!lafApplied) {
                 System.err.println("WARNING: Failed to apply any Look and Feel. UI may not render correctly.");
@@ -692,12 +693,12 @@ public class Stone {
         // Determine mode (desktop vs window) from context
         // If mode hasn't been set yet, use the context setting (defaults to window mode)
         if (isDesktop == null) {
-            isDesktop = (context != null) ? context.isDesktopMode() : false;
+            isDesktop = context.isDesktopMode();
         }
 
         // Create the external frame if it doesn't exist
         if (externalFrame == null) {
-            String title = (context != null) ? context.getDesktopTitle() : null;
+            String title = context.getDesktopTitle();
             if (title == null) {
                 title = "Foundation Application";
             }
@@ -708,13 +709,41 @@ public class Stone {
         // Set up desktop mode if needed
         if (isDesktop) {
             if (desktop == null) {
-                if (context == null || context.getDesktopProvider() == null) {
-                    desktop = new JDesktopPane();
-                    desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
-                    externalFrame.setContentPane(desktop);
+                // Get or create desktop provider
+                // IMPORTANT: context is never null (guaranteed by Foundation.init())
+                uiDesktopProvider provider;
+                if (context.getDesktopProvider() != null) {
+                    // Use custom provider from context
+                    provider = context.getDesktopProvider();
                 } else {
-                    desktop = context.getDesktopProvider().doCustomDesktop(externalFrame);
+                    // Use default framework provider
+                    provider = new DefaultDesktopProvider();
                 }
+
+                // Create desktop using provider (no parameters - supports nested desktops)
+                desktop = provider.createDesktop();
+
+                // Framework sets desktop as content pane
+                externalFrame.setContentPane(desktop);
+
+                // Add menu bar if provider supplies one
+                javax.swing.JMenuBar menuBar = provider.createMenuBar();
+                if (menuBar != null) {
+                    externalFrame.setJMenuBar(menuBar);
+                }
+
+                // Store provider reference for post-initialization callback
+                final uiDesktopProvider finalProvider = provider;
+                final JDesktopPane finalDesktop = desktop;
+
+                // We'll call onDesktopInitialized after the window is shown
+                // This will be done in the EDT runnable below
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        finalProvider.onDesktopInitialized(finalDesktop);
+                    }
+                });
             }
 
             // Initialize other windows (Bronze tier will create internal frames here)
@@ -723,7 +752,7 @@ public class Stone {
 
         // Show the window on the EDT
         final XFrame frameToShow = externalFrame;
-        final Dimension size = (context != null) ? context.getDimension() : new Dimension(900, 500);
+        final Dimension size = context.getDimension();
         final boolean isDesktopMode = isDesktop;
 
         javax.swing.SwingUtilities.invokeLater(new Runnable() {

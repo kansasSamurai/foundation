@@ -108,8 +108,17 @@ This model balances simplicity for basic apps with power for complex application
 
 **IMPORTANT:** As of the Bronze tier redesign, `Foundation.init()` now **automatically displays a visible window**. This provides immediate visual feedback that the framework has initialized successfully.
 
+**Critical Design Principle: uContext is NEVER null**
+- Foundation **requires** a valid uContext object at all times
+- `Foundation.init()` (no-args) creates a default uContext ("foundation.app" namespace, window mode)
+- `Foundation.init(uContext)` requires a non-null context parameter
+- **No null checks** - If context is null, that's a framework bug and should fail fast with NPE
+- This follows the "fail fast" principle - bugs should be immediately apparent
+
 **New Simplified Application Flow:**
-1. **Initialize**: `Foundation.init(uContext)` - Sets up Swing environment, Look and Feel, **and displays window**
+1. **Initialize**: `Foundation.init()` or `Foundation.init(uContext)` - Sets up Swing environment, Look and Feel, **and displays window**
+   - No-args version: Creates default context ("foundation.app", window mode)
+   - Context version: Uses your provided context (must not be null)
    - In window mode: Shows an empty JFrame (ready for content)
    - In desktop mode: Shows a JFrame with empty JDesktopPane (ready for internal frames)
 2. **Register Panels**: `registerUI(String namespace, String panelId, JPanel ui)` - Register panels
@@ -140,7 +149,133 @@ This model balances simplicity for basic apps with power for complex application
 **uContext** (src/main/java/org/jwellman/foundation/uContext.java:13)
 - Configuration object for Foundation initialization
 - Controls desktop mode, window dimensions, Look and Feel, theme providers
-- Created via factory method: `uContext.createContext()`
+- Created via factory method: `uContext.createContext(String namespace)`
+- Each context represents a namespace (tool) and contains its own panel registry
+- Hierarchical structure: Bronze → uContext (by namespace) → PanelRegistration (by panelId)
+
+**uiDesktopProvider Interface** (src/main/java/org/jwellman/foundation/interfaces/uiDesktopProvider.java)
+- Strategy interface for customizing desktop environment creation
+- Follows Strategy pattern for flexible desktop configuration
+- Framework provides `DefaultDesktopProvider` as the default implementation
+- Applications can provide custom implementations for specialized desktop environments
+- **Parameter-free methods** - Supports nested desktops (desktop within desktop)
+
+**Desktop Provider Methods:**
+```java
+JDesktopPane createDesktop()              // Create and configure desktop (no params!)
+JMenuBar createMenuBar()                  // Optional desktop-level menu bar
+void onDesktopInitialized(JDesktopPane)   // Post-initialization hook
+```
+
+**Why No Parameters?**
+- Supports nested desktops (JDesktopPane inside JInternalFrame inside another JDesktopPane)
+- Doesn't couple provider to specific container type (XFrame vs IWindow)
+- Clean separation of concerns - provider creates desktop, framework handles container
+- If provider needs context, inject via constructor (not DI framework, just regular Java)
+
+**Default Desktop Configuration:**
+- Drag mode: `OUTLINE_DRAG_MODE` (better performance)
+- Background: Light gray
+- No menu bar by default
+- No post-initialization actions
+
+**Custom Desktop Provider Example (No Context):**
+```java
+public class MyDesktopProvider implements uiDesktopProvider {
+    @Override
+    public JDesktopPane createDesktop() {
+        JDesktopPane desktop = new JDesktopPane();
+        desktop.setDragMode(JDesktopPane.LIVE_DRAG_MODE);
+        desktop.setBackground(new Color(40, 40, 60)); // Dark theme
+
+        // Add custom border
+        desktop.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Color.BLACK, 2),
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+
+        return desktop;  // Framework sets as content pane
+    }
+
+    @Override
+    public JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+        fileMenu.add(new JMenuItem("Exit"));
+        menuBar.add(fileMenu);
+
+        JMenu windowMenu = new JMenu("Window");
+        windowMenu.add(new JMenuItem("Cascade"));
+        windowMenu.add(new JMenuItem("Tile"));
+        menuBar.add(windowMenu);
+
+        return menuBar;
+    }
+
+    @Override
+    public void onDesktopInitialized(JDesktopPane desktop) {
+        // Add desktop icons, start background services, etc.
+        System.out.println("Desktop initialized with " +
+            desktop.getAllFrames().length + " frames");
+    }
+}
+
+// Usage:
+uContext context = uContext.createContext("myapp");
+context.setDesktopMode(true);
+context.setDesktopProvider(new MyDesktopProvider());
+Foundation.init(context);
+```
+
+**Custom Provider with Context (Constructor Injection):**
+```java
+public class ContextAwareDesktopProvider implements uiDesktopProvider {
+    private final IWindow containerWindow;
+    private final String appName;
+
+    // Inject context via constructor
+    public ContextAwareDesktopProvider(IWindow window, String appName) {
+        this.containerWindow = window;
+        this.appName = appName;
+    }
+
+    @Override
+    public JDesktopPane createDesktop() {
+        JDesktopPane desktop = new JDesktopPane();
+        desktop.setName(appName + " Desktop");
+        return desktop;
+    }
+
+    @Override
+    public JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+        fileMenu.add(new JMenuItem("Exit " + appName));
+        menuBar.add(fileMenu);
+        return menuBar;
+    }
+
+    @Override
+    public void onDesktopInitialized(JDesktopPane desktop) {
+        containerWindow.setTitle(appName + " - Desktop Ready");
+    }
+}
+
+// Usage:
+IWindow window = // ... obtain window reference
+uContext context = uContext.createContext("myapp");
+context.setDesktopMode(true);
+context.setDesktopProvider(new ContextAwareDesktopProvider(window, "My App"));
+```
+
+**Benefits of Desktop Provider Pattern:**
+- **Interface-based design** - Promotes flexibility and testability
+- **No framework modification** - Custom desktops without changing Foundation code
+- **Strategy pattern** - Runtime selection of desktop creation strategy
+- **Sensible defaults** - DefaultDesktopProvider works for most applications
+- **Supports nested desktops** - Parameter-free methods work with any container
+- **Clean separation** - Provider creates, framework manages
+- **Extensibility** - Easy to add custom backgrounds, menus, icons, services
 
 ### Look and Feel Support
 
