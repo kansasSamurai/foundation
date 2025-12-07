@@ -198,4 +198,17 @@ public class DefaultSplashProvider implements uiSplashProvider {
         // No cleanup needed for default implementation
     }
 
+    /**
+     * Returns the minimum display time for the splash screen.
+     * <p>
+     * Default implementation returns 3000 milliseconds (3 seconds) to ensure
+     * the splash screen is visible long enough to read.
+     *
+     * @return 3000 milliseconds
+     */
+    @Override
+    public int getMinimumDisplayTime() {
+        return 3000;
+    }
+
 }

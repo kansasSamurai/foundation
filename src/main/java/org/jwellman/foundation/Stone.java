@@ -827,6 +827,18 @@ public class Stone {
         }
 
         this.logEnvironment();
+
+        // Pause for the minimum display time specified by the splash provider
+        // This ensures the splash screen is visible long enough to read
+        if (splashProvider != null) {
+            try {
+                Thread.sleep(splashProvider.getMinimumDisplayTime());
+            } catch (InterruptedException e) {
+                // If interrupted, continue normally
+                Thread.currentThread().interrupt();
+            }
+        }
+
     }
 
     /**

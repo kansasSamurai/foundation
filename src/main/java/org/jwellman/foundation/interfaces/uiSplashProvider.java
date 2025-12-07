@@ -72,4 +72,17 @@ public interface uiSplashProvider {
      */
     void onSplashClosed();
 
+    /**
+     * Returns the minimum display time for the splash screen in milliseconds.
+     * <p>
+     * The framework will pause for this duration when the splash screen is first
+     * made visible to ensure users see it even if initialization completes quickly.
+     * This prevents the splash from flashing too briefly to read.
+     * <p>
+     * The default implementation returns 3000 (3 seconds).
+     *
+     * @return Minimum display time in milliseconds
+     */
+    int getMinimumDisplayTime();
+
 }

@@ -2,13 +2,13 @@ package org.jwellman.foundation.examples;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import org.jwellman.foundation.Foundation;
-import org.jwellman.foundation.swing.IWindow;
 
 /**
  * Minimal demonstration of Foundation in window mode (standalone JFrame).
@@ -62,19 +62,14 @@ public class SimpleWindowDemo extends JPanel {
     }
 
     public static void main(String[] args) {
+
         // Step 1 - Initialize Foundation
         Foundation f = Foundation.init();
 
         // Step 2 - Create your application (which is a JPanel)
         SimpleWindowDemo app = new SimpleWindowDemo();
 
-        // Step 3 - Use Foundation to create a window
-//        IWindow window = f.useWindow(app);
-//        window.setTitle("Foundation - Simple Window Demo");
-//        window.setResizable(true);
-
-        // Step 4 - Display the UI
-//        f.showGUI(window);
+        // Step 3 - Display the UI
         f.launch(app);
     }
 
