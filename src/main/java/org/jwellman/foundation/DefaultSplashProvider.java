@@ -208,7 +208,7 @@ public class DefaultSplashProvider implements uiSplashProvider {
      */
     @Override
     public int getMinimumDisplayTime() {
-        return 3000;
+        return 1500;
     }
 
 }

@@ -62,7 +62,7 @@ public class MultiPanelDesktopDemo {
                 "history",
                 createHistoryPanel(),
                 createLifecycleListener("Calculator History"),
-                WindowPosition.at(300, 50)  // Explicit positioning
+                WindowPosition.at(170, 20)  // Explicit positioning
         );
 
         // Step 3 - Register Text Editor tool
@@ -72,7 +72,7 @@ public class MultiPanelDesktopDemo {
                 "main",
                 createToolPanel("Text Editor", Color.WHITE),
                 createLifecycleListener("Text Editor"),
-                WindowPosition.center()
+                WindowPosition.at(20, 250)  // Explicit positioning
         );
 
         // Step 4 - Register File Browser tool
@@ -82,7 +82,7 @@ public class MultiPanelDesktopDemo {
                 "main",
                 createToolPanel("File Browser", new Color(230, 240, 255)),
                 createLifecycleListener("File Browser"),
-                WindowPosition.cascade()
+                WindowPosition.at(400, 250)  // Explicit positioning
         );
 
         // Step 5 - Create control panel for managing panels
@@ -91,7 +91,7 @@ public class MultiPanelDesktopDemo {
                 "control",
                 createControlPanel(),
                 createLifecycleListener("Control Panel"),
-                WindowPosition.at(10, 10, 250, 200)
+                WindowPosition.at(500, 10, 250, 200)
         );
 
         // Step 6 - Demonstrate querying the registry
@@ -100,7 +100,10 @@ public class MultiPanelDesktopDemo {
         System.out.println("All namespaces: " + foundation.getNamespaces());
 
         // Note: The desktop window was already created and shown by Foundation.init()
-        // All registered panels have been automatically added as internal frames
+        foundation.launch(controlPanel);
+
+        foundation.launch(calcMainPanel);
+
     }
 
     /**

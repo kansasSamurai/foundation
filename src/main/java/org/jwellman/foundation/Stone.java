@@ -866,15 +866,17 @@ public class Stone {
         final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         final Font[] fonts = ge.getAllFonts();
 
-        for (String entry : classpathEntries) {
-            System.out.println(entry);
-        }
-        for (Font font : fonts) {
-            System.out.print("FONT: ");
-            System.out.print(font.getFontName());
-            System.out.print(" : ");
-            System.out.println(font.getFamily());
-        }
+        new Thread(() -> {
+            for (String entry : classpathEntries) {
+                System.out.println(entry);
+            }
+            for (Font font : fonts) {
+                System.out.print("FONT: ");
+                System.out.print(font.getFontName());
+                System.out.print(" : ");
+                System.out.println(font.getFamily());
+            }
+        }).start();
 
         return classpathEntries.length + fonts.length;
     }

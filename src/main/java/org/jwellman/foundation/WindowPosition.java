@@ -60,7 +60,7 @@ public class WindowPosition {
     private Dimension size;      // Optional explicit size
 
     // Cascade state tracking (shared across all CASCADE positions)
-    private static int cascadeOffset = 0;
+    private static int cascadeOffset = 10;
     private static final int CASCADE_INCREMENT = 25;
 
     /**
@@ -179,7 +179,7 @@ public class WindowPosition {
 
         // Reset cascade if we've gone too far
         if (cascadeOffset > 200) {
-            cascadeOffset = 0;
+            cascadeOffset = 10;
         }
 
         window.setLocation(x, y);

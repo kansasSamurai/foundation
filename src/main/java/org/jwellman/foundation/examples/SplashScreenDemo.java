@@ -81,38 +81,38 @@ public class SplashScreenDemo extends JPanel {
         uContext context = uContext.createContext(SplashScreenDemo.class);
         Foundation foundation = Foundation.init(context);
 
-        new Thread(() -> {
-            // Simulate more work
-            final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;
-            final int delay = 4000 / total;
-            int percent = 0;
-            for (int i = 0; i <= total; i++) {
+//        new Thread(() -> {
+//        }).start();
 
-                // Do your work here (simulated)
-                try {
-                    Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        // Simulate more work
+        final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;
+        final int delay = 4000 / total;
+        int percent = 0;
+        for (int i = 0; i <= total; i++) {
 
-                int current = (i*100)/total;
-                if (current > percent) {
-                    percent = current;
-                    foundation.getSplashProvider().updateProgress(percent, null); // "In progress...");
-                }
-            }
-
-            foundation.getSplashProvider().updateProgress(100, "Initialization complete");
+            // Do your work here (simulated)
             try {
-                Thread.sleep(2000);
+                Thread.sleep(delay);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            // Launch the application - splash screen closes, app appears
-            foundation.launch(new SplashScreenDemo());
+            int current = (i*100)/total;
+            if (current > percent) {
+                percent = current;
+                foundation.getSplashProvider().updateProgress(percent, null); // "In progress...");
+            }
+        }
 
-        }).start();
+        foundation.getSplashProvider().updateProgress(100, "Initialization complete");
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Launch the application - splash screen closes, app appears
+        foundation.launch(new SplashScreenDemo());
 
     }
 

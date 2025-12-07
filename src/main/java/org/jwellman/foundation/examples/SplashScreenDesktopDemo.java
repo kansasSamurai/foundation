@@ -55,45 +55,42 @@ public class SplashScreenDesktopDemo {
             WindowPosition.cascade()
         );
 
-        new Thread(() -> {
-            // Simulate more work
-            final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;
-            final int delay = 4000 / total;
-            int percent = 0;
-            for (int i = 0; i <= total; i++) {
+        // Simulate more work
+        final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;
+        final int delay = 4000 / total;
+        int percent = 0;
+        for (int i = 0; i <= total; i++) {
 
-                // Do your work here (simulated)
-                try {
-                    Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                int current = (i*100)/total;
-                if (current > percent) {
-                    percent = current;
-                    foundation.getSplashProvider().updateProgress(percent, null); // "In progress...");
-                }
-            }
-
-            foundation.getSplashProvider().updateProgress(100, "Initialization complete");
+            // Do your work here (simulated)
             try {
-                Thread.sleep(2000);
+                Thread.sleep(delay);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            // Launch first panel - splash closes, main panel appears
-            foundation.launch(mainPanel);
 
-            // After a delay, launch the tool panel
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            int current = (i*100)/total;
+            if (current > percent) {
+                percent = current;
+                foundation.getSplashProvider().updateProgress(percent, null); // "In progress...");
             }
-            foundation.launch(toolPanel);
+        }
 
-        }).start();
+        foundation.getSplashProvider().updateProgress(100, "Initialization complete");
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // Launch first panel - splash closes, main panel appears
+        foundation.launch(mainPanel);
+
+        // After a delay, launch the tool panel
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        foundation.launch(toolPanel);
 
     }
 
