@@ -69,12 +69,13 @@ public class SimpleWindowDemo extends JPanel {
         SimpleWindowDemo app = new SimpleWindowDemo();
 
         // Step 3 - Use Foundation to create a window
-        IWindow window = f.useWindow(app);
-        window.setTitle("Foundation - Simple Window Demo");
-        window.setResizable(true);
+//        IWindow window = f.useWindow(app);
+//        window.setTitle("Foundation - Simple Window Demo");
+//        window.setResizable(true);
 
         // Step 4 - Display the UI
-        f.showGUI(window);
+//        f.showGUI(window);
+        f.launch(app);
     }
 
 }

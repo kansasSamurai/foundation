@@ -75,9 +75,9 @@ import org.jwellman.foundation.interfaces.uiSplashProvider;
  */
 public class DefaultSplashProvider implements uiSplashProvider {
 
-    private JProgressBar progressBar;
-    private JLabel messageLabel;
     private JPanel splashPanel;
+    private JLabel messageLabel;
+    private JProgressBar progressBar;
 
     /**
      * Creates the default splash screen content with gradient background,
@@ -169,7 +169,7 @@ public class DefaultSplashProvider implements uiSplashProvider {
 
     /**
      * Updates the progress bar and status message.
-     *
+     * <p>
      * This method is thread-safe and can be called from any thread.
      * UI updates are automatically dispatched to the EDT.
      *
@@ -190,6 +190,7 @@ public class DefaultSplashProvider implements uiSplashProvider {
 
     /**
      * Called when the splash screen is closed.
+     * <p>
      * No special cleanup needed for the default implementation.
      */
     @Override

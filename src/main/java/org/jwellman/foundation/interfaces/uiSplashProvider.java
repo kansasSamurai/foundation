@@ -55,7 +55,7 @@ public interface uiSplashProvider {
 
     /**
      * Update the splash screen progress.
-     *
+     * <p>
      * Called by the framework (or application code) during initialization
      * to provide visual feedback on loading progress.
      *

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JDesktopPane;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
@@ -105,14 +106,16 @@ public class Stone {
 	/**
 	 * This is the workhorse of initializing the graphical "environment" in Swing;
 	 * note that it mainly consists of initializing the Look and Feel.
-	 *
+	 * <p>
 	 * Note also that "initializing the environment" does not consist of
-	 * creating ANY actual Swing components -- that will come later
+	 * creating ANY actual Swing components so this method does not have to
+	 * occur on the EDT -- creating Swing components will come later
 	 * as you build your user interface.  i.e. this method does the
 	 * bootstrapping for you -- you get to focus on building the UI.
 	 *
-	 * Finally, note that it is enforced that the initialization occurs only
-	 * once -- any subsequent calls will log a warning but not actually do anything else.
+	 * Finally, notice the enforcement that the initialization occurs only
+	 * once -- any subsequent calls will log a warning but not actually 
+	 * do anything else.
 	 *
 	 * @param c the micro context
 	 */
@@ -125,6 +128,9 @@ public class Stone {
         } else {
             isInitialized = true;
 
+            // I haven't settled on where I want this yet but I do want it 
+            // as part of the bootstrapping process for debugging purposes.
+            // For now, I have created logEnvironment() for this.
 //            // Log the application classpath for debugging purposes
 //            System.out.println("----- Application Classpath -----");
 ////            final ClassLoader cl = ClassLoader.getSystemClassLoader();
@@ -154,22 +160,21 @@ public class Stone {
             // Apply anti-aliasing for better rendering (particulary fonts)
             // The following may have some subtle system dependent behavior:
             // http://stackoverflow.com/questions/179955/how-do-you-enable-anti-aliasing-in-arbitrary-java-apps
-            // Try System.setProperty("awt.useSystemAAFontSettings", "lcd"); and you should
-            // get ClearType
-            // as of 7/5/2019, the combination of "on"/"true" yielded inconsistent results
-            // with different
-            // look and feels (i.e. Nimbus vs. Napkin... napking actually looked better
-            // which surprised me)
+            // Try System.setProperty("awt.useSystemAAFontSettings", "lcd"); 
+            // and you should get ClearType
+            // as of 7/5/2019, the combination of "on"/"true" yielded 
+            // inconsistent results with different look and feels (i.e. Nimbus vs. Napkin... 
+            // napkin actually looked better which surprised me)
             // so, now trying off/false:
             boolean aasettings = false;
             if (aasettings) {
-                System.setProperty("awt.useSystemAAFontSettings", "off");
                 System.setProperty("swing.aatext", "false");
+                System.setProperty("awt.useSystemAAFontSettings", "off");
                 System.out.println("Anti-alias settings:  off/false");
             }
 
             // Make sure our window decorations come from the look and feel.
-            JFrame.setDefaultLookAndFeelDecorated(true);
+            // JFrame.setDefaultLookAndFeelDecorated(true); // experimentally moved below on 12/7/2025
 
             // Save the context
             // IMPORTANT: context should NEVER be null
@@ -185,6 +190,8 @@ public class Stone {
             // Use LAFDiscovery to select and apply Look and Feel
             // Priority: uContext.lookAndFeel -> config file -> ./lafs/ directory -> system default
             boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(context.getLookAndFeel());
+            JFrame.setDefaultLookAndFeelDecorated(true); 
+            JDialog.setDefaultLookAndFeelDecorated(true);
 
             if (!lafApplied) {
                 System.err.println("WARNING: Failed to apply any Look and Feel. UI may not render correctly.");
@@ -763,13 +770,9 @@ public class Stone {
                 });
 
                 // Create splash as internal frame on desktop
-                XInternalFrame splashInternalFrame = new XInternalFrame("Foundation Framework",
-                        false, false, false, false);
+                XInternalFrame splashInternalFrame = new XInternalFrame(
+                        "Foundation Framework", false, false, false, false);
                 splashInternalFrame.add(splashContent);
-//                splashInternalFrame.setResizable(false);
-//                splashInternalFrame.setClosable(false);
-//                splashInternalFrame.setMaximizable(false);
-//                splashInternalFrame.setIconifiable(false);
                 splashInternalFrame.pack();
 
                 // Center on desktop
@@ -793,11 +796,11 @@ public class Stone {
         }
 
         // Show the window on the EDT
-        final XFrame frameToShow = externalFrame;
-        final Dimension size = context.getDimension();
-        final boolean isDesktopMode = isDesktop;
-
         try {
+            final XFrame frameToShow = externalFrame;
+            final Dimension size = context.getDimension();
+            final boolean isDesktopMode = isDesktop;
+
             javax.swing.SwingUtilities.invokeAndWait(new Runnable() {
                 @Override
                 public void run() {
@@ -834,6 +837,7 @@ public class Stone {
     public int logEnvironment() {
         // Log the application classpath for debugging purposes
         System.out.println("----- Application Classpath -----");
+
         // Works in all Java versions
         String classpath = System.getProperty("java.class.path");
         String[] classpathEntries = classpath.split(File.pathSeparator);
