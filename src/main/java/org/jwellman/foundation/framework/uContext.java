@@ -1,4 +1,4 @@
-package org.jwellman.foundation;
+package org.jwellman.foundation.framework;
 
 import java.awt.Dimension;
 import java.util.HashMap;
@@ -7,6 +7,7 @@ import java.util.Map;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.interfaces.uiThemeProvider;
+import org.jwellman.foundation.model.PanelRegistration;
 
 /**
  * A context for a Foundation application or tool.

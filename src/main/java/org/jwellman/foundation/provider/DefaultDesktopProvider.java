@@ -1,4 +1,4 @@
-package org.jwellman.foundation;
+package org.jwellman.foundation.provider;
 
 import java.awt.Color;
 import javax.swing.JDesktopPane;

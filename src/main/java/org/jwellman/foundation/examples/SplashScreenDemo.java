@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import org.jwellman.foundation.Foundation;
-import org.jwellman.foundation.uContext;
+import org.jwellman.foundation.framework.uContext;
 
 /**
  * Demonstrates the splash screen functionality in Foundation framework.

@@ -1,4 +1,4 @@
-package org.jwellman.foundation;
+package org.jwellman.foundation.framework;
 
 import java.awt.Dimension;
 import java.awt.Point;

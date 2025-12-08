@@ -1,5 +1,7 @@
 package org.jwellman.foundation;
 
+import org.jwellman.foundation.framework.uContext;
+
 /**
  * A micro-framework for Swing applications.
  *

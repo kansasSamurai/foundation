@@ -6,8 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.swing.JPanel;
+
+import org.jwellman.foundation.framework.WindowPosition;
+import org.jwellman.foundation.framework.uContext;
 import org.jwellman.foundation.interfaces.PanelLifecycleListener;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
+import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XInternalFrame;
 import org.jwellman.foundation.swing.XPanel;

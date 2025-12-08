@@ -10,8 +10,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import org.jwellman.foundation.Foundation;
-import org.jwellman.foundation.WindowPosition;
-import org.jwellman.foundation.uContext;
+import org.jwellman.foundation.framework.WindowPosition;
+import org.jwellman.foundation.framework.uContext;
 import org.jwellman.foundation.swing.XPanel;
 
 /**

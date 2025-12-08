@@ -16,9 +16,9 @@ import javax.swing.JRadioButton;
 import javax.swing.border.EmptyBorder;
 
 import org.jwellman.foundation.Foundation;
-import org.jwellman.foundation.LAFDiscovery;
-import org.jwellman.foundation.LAFDiscovery.LAFInfo;
-import org.jwellman.foundation.uContext;
+import org.jwellman.foundation.framework.LAFDiscovery;
+import org.jwellman.foundation.framework.uContext;
+import org.jwellman.foundation.framework.LAFDiscovery.LAFInfo;
 import org.jwellman.foundation.swing.IWindow;
 
 /**

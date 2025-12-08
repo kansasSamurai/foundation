@@ -1,4 +1,4 @@
-package org.jwellman.foundation;
+package org.jwellman.foundation.framework;
 
 /**
  *
@@ -6,7 +6,7 @@ package org.jwellman.foundation;
  */
 public class uUtility {
 
-    public static String preferStringOverNull(String candidate, String override) {
+    public static String valueOrDefault (String candidate, String override) {
         return (candidate == null) ? override : candidate;
     }
 

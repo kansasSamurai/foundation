@@ -9,11 +9,11 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.jwellman.foundation.Foundation;
-import org.jwellman.foundation.WindowPosition;
 import org.jwellman.foundation.interfaces.PanelLifecycleListener;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XPanel;
-import org.jwellman.foundation.uContext;
+import org.jwellman.foundation.framework.WindowPosition;
+import org.jwellman.foundation.framework.uContext;
 
 /**
  * Demonstrates Foundation's enhanced multi-panel desktop capabilities.

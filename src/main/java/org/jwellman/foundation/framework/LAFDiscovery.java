@@ -1,4 +1,4 @@
-package org.jwellman.foundation;
+package org.jwellman.foundation.framework;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,6 +18,8 @@ import java.util.jar.JarFile;
 import javax.swing.JPanel;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
+
+import org.jwellman.foundation.Foundation;
 
 /**
  * Discovers Look and Feel implementations at runtime.
@@ -601,10 +603,9 @@ public class LAFDiscovery {
             final LAFInfo finalLAF = selectedLAF;
             final String finalReason = selectionReason;
 
-            org.jwellman.foundation.swing.IWindow window = f.useWindow(showDemoWindow(finalLAF, finalReason));
-            window.setTitle("Foundation LAF Discovery - " + finalLAF.getName());
-            window.setResizable(true);
-            f.showGUI(window);
+            JPanel demo = showDemoWindow(finalLAF, finalReason);
+
+            f.launch(demo);
         }
 
 

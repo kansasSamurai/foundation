@@ -1,5 +1,6 @@
-package org.jwellman.foundation;
+package org.jwellman.foundation.model;
 
+import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.PanelLifecycleListener;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
@@ -113,7 +114,7 @@ public class PanelRegistration {
     /**
      * Fire the onCreate lifecycle event.
      */
-    void fireOnCreate() {
+    public void fireOnCreate() {
         if (lifecycleListener != null) {
             IWindow window = getWindow();
             if (window != null) {
@@ -125,7 +126,7 @@ public class PanelRegistration {
     /**
      * Fire the onShow lifecycle event.
      */
-    void fireOnShow() {
+    public void fireOnShow() {
         if (lifecycleListener != null) {
             IWindow window = getWindow();
             if (window != null) {
@@ -137,7 +138,7 @@ public class PanelRegistration {
     /**
      * Fire the onHide lifecycle event.
      */
-    void fireOnHide() {
+    public void fireOnHide() {
         if (lifecycleListener != null) {
             IWindow window = getWindow();
             if (window != null) {
@@ -149,7 +150,7 @@ public class PanelRegistration {
     /**
      * Fire the onClose lifecycle event.
      */
-    void fireOnClose() {
+    public void fireOnClose() {
         if (lifecycleListener != null) {
             IWindow window = getWindow();
             if (window != null) {

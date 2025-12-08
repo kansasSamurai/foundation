@@ -16,8 +16,12 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
+import org.jwellman.foundation.framework.LAFDiscovery;
+import org.jwellman.foundation.framework.uContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
+import org.jwellman.foundation.provider.DefaultDesktopProvider;
+import org.jwellman.foundation.provider.DefaultSplashProvider;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
