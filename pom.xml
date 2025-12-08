@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.jwellman</groupId>
-    <artifactId>foundation</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <artifactId>foundation-parent</artifactId>
+    <version>1.0.2-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Foundation Framework Parent</name>
+    <description>Parent POM for Foundation micro-framework tiered artifacts</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -13,6 +18,20 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
+    <modules>
+        <module>stone</module>
+        <module>bronze</module>
+        <module>silver</module>
+        <module>gold</module>
+        <module>platinum</module>
+        <module>full</module>
+    </modules>
+
+    <!--
+        Common dependencies inherited by all modules.
+        Each tier is standalone and contains the full codebase,
+        so all dependencies are needed by all tiers.
+    -->
     <dependencies>
 
         <!-- This is for napkinlaf; may have to rollback to 1.0 -->
