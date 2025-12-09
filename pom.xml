@@ -24,7 +24,6 @@
         <module>silver</module>
         <module>gold</module>
         <module>platinum</module>
-        <module>full</module>
     </modules>
 
     <!--
