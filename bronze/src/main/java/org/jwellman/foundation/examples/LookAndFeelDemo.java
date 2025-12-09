@@ -5,7 +5,6 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.List;
 
-import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -17,9 +16,8 @@ import javax.swing.border.EmptyBorder;
 
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.LAFDiscovery;
-import org.jwellman.foundation.framework.uContext;
 import org.jwellman.foundation.framework.LAFDiscovery.LAFInfo;
-import org.jwellman.foundation.swing.IWindow;
+import org.jwellman.foundation.framework.uContext;
 
 /**
  * Demonstrates Look and Feel support in Foundation using the new LAFDiscovery system.
@@ -56,7 +54,7 @@ public class LookAndFeelDemo {
         }
 
         // Create context with selected LAF
-        uContext context = uContext.createContext(LookAndFeelDemo.class.getName());
+        uContext context = uContext.createContext(LookAndFeelDemo.class);
         context.setLookAndFeel(selectedLAF.getClassName());
 
         // Initialize Foundation (LAFDiscovery will apply the LAF from context)
@@ -65,14 +63,7 @@ public class LookAndFeelDemo {
         // Create UI
         JPanel ui = createUI(selectedLAF);
 
-        // Use window mode
-//        IWindow window = f.useWindow(ui);
-//        window.setTitle("Foundation - Look and Feel Demo [" + selectedLAF.getName() + "]");
-//        window.setResizable(true);
-//
-//        // Display
-//        f.showGUI(window);
-
+        // Display
         new Thread(() -> {
             // Simulate more work
             final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;

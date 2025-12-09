@@ -90,12 +90,12 @@ public class Bronze extends Stone {
      * @return The wrapped XPanel
      */
     public XPanel registerUI(String namespace, String panelId, JPanel ui,
-                             PanelLifecycleListener listener, WindowPosition position) {
+             PanelLifecycleListener listener, WindowPosition position) {
 
         // Get or create the uContext for this namespace
         uContext ctx = contextRegistry.get(namespace);
         if (ctx == null) {
-            ctx = uContext.createContext(namespace);
+            ctx = uContext.createContext(namespace, namespace);
             contextRegistry.put(namespace, ctx);
         }
 
@@ -439,10 +439,11 @@ public class Bronze extends Stone {
      * @return The created PanelRegistration
      */
     private PanelRegistration autoRegisterPanel(String namespace, String panelId, XPanel panel) {
+
         // Get or create context
         uContext ctx = contextRegistry.get(namespace);
         if (ctx == null) {
-            ctx = uContext.createContext(namespace);
+            ctx = uContext.createContext(namespace, namespace);
             contextRegistry.put(namespace, ctx);
         }
 

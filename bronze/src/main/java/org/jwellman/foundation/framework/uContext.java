@@ -21,10 +21,14 @@ import org.jwellman.foundation.model.PanelRegistration;
 public class uContext {
 
     /** An identifier for this context (namespace) */
-    public String namespace;
+    private String namespace;
+
+    /** A string used for branding - most often used in window frames */
+    private String brandName;
 
     /**
      * Panel registry for this context.
+     * <p>
      * Key: panelId (e.g., "main", "settings", "history")
      * Value: PanelRegistration metadata
      */
@@ -34,18 +38,36 @@ public class uContext {
      * The look and feel class to use (will be ignored in 
      * a "desktop" environment unless it is the desktop provider)
      */
-    public String lookAndFeel;
+    private String lookAndFeel;
 
     public static uContext createContext(Class<?> clazz) {
-        return new uContext(clazz.getName());
+        return new uContext(clazz.getName(), clazz.getSimpleName());
     }
 
-    public static uContext createContext(String namespace) {
-        return new uContext(namespace);
+    public static uContext createContext(Class<?> clazz, String brandName) {
+        return new uContext(clazz.getName(), brandName);
     }
 
-    private uContext(String namespace) {
+    public static uContext createContext(String namespace, String brandName) {
+        return new uContext(namespace, brandName);
+    }
+
+    /**
+     * This is really just a fallback to provide a context when the user has
+     * not created one. Except in the simplest of circumstances, this probably
+     * shouldn't be used to support any real application beyond proof of concept.
+     * 
+     * @param title
+     * @return
+     */
+    public static uContext createDefaultContext(String title) {
+        uContext defaultContext = uContext.createContext("foundation.app", title);
+        return defaultContext;
+    }
+
+    private uContext(String namespace, String brandName) {
         this.namespace = namespace;
+        this.brandName = brandName;
     }
 
     /** An indicator that you are using desktop mode; defaults to false. */
@@ -116,9 +138,10 @@ public class uContext {
         return namespace;
     }
 
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
+    // No setter - must be set during construction
+//    public void setNamespace(String namespace) {
+//        this.namespace = namespace;
+//    }
 
     /**
      * Register a panel in this context's registry.
@@ -173,5 +196,14 @@ public class uContext {
     public boolean hasPanelRegistration(String panelId) {
         return panelRegistry.containsKey(panelId);
     }
+
+    public String getBrandName() {
+        return brandName;
+    }
+
+    // No setter - this needs to be set at construction
+//    public void setBrandName(String brandName) {
+//        this.brandName = brandName;
+//    }
 
 }

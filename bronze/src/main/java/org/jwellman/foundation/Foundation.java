@@ -35,7 +35,7 @@ public class Foundation extends Platinum {
         // Create a default context for simple use cases
         // IMPORTANT: Foundation ALWAYS requires a valid uContext object
         // Never pass null - if context is null, that's a fundamental framework bug
-        uContext defaultContext = uContext.createContext("foundation.app");
+        uContext defaultContext = uContext.createDefaultContext(DEFAULT_APP_TITLE);
         return Foundation.init(defaultContext);
     }
 
