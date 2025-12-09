@@ -5,7 +5,6 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.List;
 
-import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -17,9 +16,8 @@ import javax.swing.border.EmptyBorder;
 
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.LAFDiscovery;
-import org.jwellman.foundation.framework.uContext;
 import org.jwellman.foundation.framework.LAFDiscovery.LAFInfo;
-import org.jwellman.foundation.swing.IWindow;
+import org.jwellman.foundation.interfaces.uiContext;
 
 /**
  * Demonstrates Look and Feel support in Foundation using the new LAFDiscovery system.
@@ -40,9 +38,9 @@ import org.jwellman.foundation.swing.IWindow;
 public class LookAndFeelDemo {
 
     public static void main(String[] args) {
+
         // Discover all available LAFs
         List<LAFInfo> discoveredLAFs = LAFDiscovery.discoverLookAndFeels();
-
         if (discoveredLAFs.isEmpty()) {
             System.err.println("ERROR: No Look and Feels discovered!");
             return;
@@ -50,13 +48,12 @@ public class LookAndFeelDemo {
 
         // Let user choose LAF before Foundation init
         LAFInfo selectedLAF = promptForLAF(discoveredLAFs);
-
         if (selectedLAF == null) {
             System.exit(0);
         }
 
         // Create context with selected LAF
-        uContext context = uContext.createContext(LookAndFeelDemo.class.getName());
+        uiContext context = Foundation.createContext(LookAndFeelDemo.class);
         context.setLookAndFeel(selectedLAF.getClassName());
 
         // Initialize Foundation (LAFDiscovery will apply the LAF from context)
@@ -65,46 +62,39 @@ public class LookAndFeelDemo {
         // Create UI
         JPanel ui = createUI(selectedLAF);
 
-        // Use window mode
-//        IWindow window = f.useWindow(ui);
-//        window.setTitle("Foundation - Look and Feel Demo [" + selectedLAF.getName() + "]");
-//        window.setResizable(true);
+//        new Thread(() -> {
+//            // Simulate more work
+//            final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;
+//            final int delay = 5000 / total;
+//            int percent = 0;
+//            for (int i = 0; i <= total; i++) {
 //
-//        // Display
-//        f.showGUI(window);
+//                // Do your work here (simulated)
+//                try {
+//                    Thread.sleep(delay);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//
+//                int current = (i*100)/total;
+//                if (current > percent) {
+//                    percent = current;
+//                    foundation.getSplashProvider().updateProgress(percent, null); // "In progress...");
+//                }
+//            }
+//
+//            foundation.getSplashProvider().updateProgress(100, "Initialization complete");
+//            try {
+//                Thread.sleep(2000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//
+//        }).start();
 
-        new Thread(() -> {
-            // Simulate more work
-            final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;
-            final int delay = 5000 / total;
-            int percent = 0;
-            for (int i = 0; i <= total; i++) {
+        // Launch the application - splash screen closes, app appears
+        foundation.launch(ui);
 
-                // Do your work here (simulated)
-                try {
-                    Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                int current = (i*100)/total;
-                if (current > percent) {
-                    percent = current;
-                    foundation.getSplashProvider().updateProgress(percent, null); // "In progress...");
-                }
-            }
-
-            foundation.getSplashProvider().updateProgress(100, "Initialization complete");
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            // Launch the application - splash screen closes, app appears
-            foundation.launch(ui);
-
-        }).start();
     }
 
     /**

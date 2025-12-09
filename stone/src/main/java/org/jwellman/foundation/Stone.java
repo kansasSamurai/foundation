@@ -17,7 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 
 import org.jwellman.foundation.framework.LAFDiscovery;
-import org.jwellman.foundation.framework.uContext;
+import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.provider.DefaultDesktopProvider;
@@ -41,7 +41,7 @@ public class Stone {
 	// protected JPanel panel;
 
 	/** A user interface context object */
-	private uContext context;
+	private uiContext context;
 
 	/** Indicates desktop mode; null until first useWindow() or useDesktop() call */
 	protected Boolean isDesktop;
@@ -64,50 +64,8 @@ public class Stone {
 	/** The splash provider instance */
 	protected uiSplashProvider splashProvider;
 
-	// Look and Feel (LAF) identifiers - DEPRECATED
-	// These constants are deprecated in favor of using LAF class names directly.
-	// Instead of: context.setLookAndFeel(LAF_NIMBUS)
-	// Use: context.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel")
-	// or configure via ./lafs/foundation.properties
-	/**
-	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
-	 */
-	@Deprecated
-	public static final int LAF_NIMBUS = 1;
-	/**
-	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
-	 */
-	@Deprecated
-	public static final int LAF_WEB = 2;
-	/**
-	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
-	 */
-	@Deprecated
-	public static final int LAF_NAPKIN = 3;
-	/**
-	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
-	 */
-	@Deprecated
-	public static final int LAF_SYSTEM = 4;
-	/**
-	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
-	 */
-	@Deprecated
-	public static final int LAF_NIMROD = 5;
-	/**
-	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
-	 */
-	@Deprecated
-	public static final int LAF_JTATTOO = 6;
-	/**
-	 * @deprecated Use LAFDiscovery and set LAF via class name in uContext.setLookAndFeel()
-	 */
-	@Deprecated
-	public static final int LAF_DARCULA = 7;
-
 	/** Default application title */
 	protected static final String DEFAULT_APP_TITLE = "Your App -- Powered By the Foundation API";
-
 
 	/**
 	 * This is the workhorse of initializing the graphical "environment" in Swing;
@@ -120,12 +78,12 @@ public class Stone {
 	 * bootstrapping for you -- you get to focus on building the UI.
 	 *
 	 * Finally, notice the enforcement that the initialization occurs only
-	 * once -- any subsequent calls will log a warning but not actually 
+	 * once -- any subsequent calls will log a warning but not actually
 	 * do anything else.
 	 *
 	 * @param c the micro context
 	 */
-	protected final void _init(uContext c) {
+	protected final void _init(uiContext c) {
 
         if (isInitialized) {
             System.out.print("WARN - init() has been called more than once...");

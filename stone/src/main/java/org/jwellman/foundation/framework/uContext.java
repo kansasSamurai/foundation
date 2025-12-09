@@ -4,12 +4,15 @@ import java.awt.Dimension;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.interfaces.uiThemeProvider;
 import org.jwellman.foundation.model.PanelRegistration;
 
 /**
+ * Default implementation of uiContext interface.
+ *
  * A context for a Foundation application or tool.
  *
  * As of the Bronze tier redesign, each context represents a namespace (tool/application)
@@ -18,7 +21,7 @@ import org.jwellman.foundation.model.PanelRegistration;
  *
  * @author rwellman
  */
-public class uContext {
+public class uContext implements uiContext {
 
     /** An identifier for this context (namespace) */
     public String namespace;
@@ -30,33 +33,30 @@ public class uContext {
      */
     private final Map<String, PanelRegistration> panelRegistry = new HashMap<>();
 
-    /** 
-     * The look and feel class to use (will be ignored in 
+    /**
+     * The look and feel class to use (will be ignored in
      * a "desktop" environment unless it is the desktop provider)
      */
     public String lookAndFeel;
 
-    public static uContext createContext(Class<?> clazz) {
-        return new uContext(clazz.getName());
-    }
-
-    public static uContext createContext(String namespace) {
-        return new uContext(namespace);
-    }
-
-    private uContext(String namespace) {
+    /**
+     * Public constructor for creating a context with a namespace.
+     *
+     * @param namespace The namespace identifier for this context
+     */
+    public uContext(String namespace) {
         this.namespace = namespace;
     }
 
     /** An indicator that you are using desktop mode; defaults to false. */
     private Boolean desktopMode = null;
-    
-    /** An indicator that you are using desktop mode; defaults to false. */
+
+    @Override
     public boolean isDesktopMode() {
         return desktopMode == null ? false : desktopMode;
     }
 
-    /** Sets the desktop mode; this can only be done once. */
+    @Override
     public void setDesktopMode(boolean mode) {
         if (desktopMode == null) {
             this.desktopMode = mode;
@@ -66,56 +66,73 @@ public class uContext {
     /** An object that implements the themeProvider interface */
     private uiThemeProvider themeProvider;
 
+    @Override
     public void setThemeProvider(uiThemeProvider x) { themeProvider = x; }
 
+    @Override
     public uiThemeProvider getThemeProvider() { return themeProvider; }
 
     /** An object that implements the desktopProvider interface */
     private uiDesktopProvider desktopProvider;
 
+    @Override
 	public void setDesktopProvider(uiDesktopProvider x) { desktopProvider = x; }
 
+    @Override
 	public uiDesktopProvider getDesktopProvider() { return desktopProvider; }
 
     /** An object that implements the splashProvider interface */
     private uiSplashProvider splashProvider;
 
+    @Override
 	public void setSplashProvider(uiSplashProvider x) { splashProvider = x; }
 
+    @Override
 	public uiSplashProvider getSplashProvider() { return splashProvider; }
 
     /** A title for the desktop frame */
     private String desktopTitle;
-    
+
+    @Override
 	public void setDesktopTitle(String strTitle) { this.desktopTitle = strTitle; }
-	
+
+    @Override
 	public String getDesktopTitle() { return desktopTitle; }
 
     /** A dimension object for the window (w/ default value of 900x500, matching 9:5 ratio) */
     private Dimension dimension = new Dimension(900, 500);
 
+    @Override
     public void setDimension(Dimension x) { dimension = x; }
 
+    @Override
     public void setDimension(int w, int h) { dimension = new Dimension(w,h); }
 
+    @Override
     public void setDimension(int base) { this.setDimension(base, 9, 5); }
-    
+
+    @Override
     public void setDimension(int base, int w, int h) { this.setDimension(base * w, base * h); }
 
+    @Override
     public Dimension getDimension() { return dimension; }
 
+    @Override
 	public String getLookAndFeel() {
 		return lookAndFeel;
 	}
 
+    @Override
 	public void setLookAndFeel(String laf) {
 		this.lookAndFeel = laf;
 	}
 
+    @Override
     public String getNamespace() {
         return namespace;
     }
 
+    @Override
     public void setNamespace(String namespace) {
         this.namespace = namespace;
     }
@@ -127,6 +144,7 @@ public class uContext {
      * @param registration The panel registration
      * @throws IllegalArgumentException if panelId is already registered
      */
+    @Override
     public void registerPanel(String panelId, PanelRegistration registration) {
         if (panelRegistry.containsKey(panelId)) {
             throw new IllegalArgumentException(
@@ -141,6 +159,7 @@ public class uContext {
      * @param panelId The panel identifier
      * @return The PanelRegistration, or null if not found
      */
+    @Override
     public PanelRegistration getPanelRegistration(String panelId) {
         return panelRegistry.get(panelId);
     }
@@ -150,6 +169,7 @@ public class uContext {
      *
      * @return Map of panelId to PanelRegistration
      */
+    @Override
     public Map<String, PanelRegistration> getAllPanelRegistrations() {
         return new HashMap<>(panelRegistry);
     }
@@ -160,6 +180,7 @@ public class uContext {
      * @param panelId The panel identifier
      * @return The removed PanelRegistration, or null if not found
      */
+    @Override
     public PanelRegistration removePanelRegistration(String panelId) {
         return panelRegistry.remove(panelId);
     }
@@ -170,6 +191,7 @@ public class uContext {
      * @param panelId The panel identifier
      * @return true if registered, false otherwise
      */
+    @Override
     public boolean hasPanelRegistration(String panelId) {
         return panelRegistry.containsKey(panelId);
     }

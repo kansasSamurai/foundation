@@ -1,6 +1,7 @@
 package org.jwellman.foundation;
 
 import org.jwellman.foundation.framework.uContext;
+import org.jwellman.foundation.interfaces.uiContext;
 
 /**
  * A micro-framework for Swing applications.
@@ -22,20 +23,40 @@ public class Foundation extends Platinum {
     private static Foundation f; // singleton
 
     /**
+     * Create a context for a Foundation application using a class name as namespace.
+     *
+     * @param clazz The class whose fully qualified name will be used as the namespace
+     * @return A new uiContext instance
+     */
+    public static uiContext createContext(Class<?> clazz) {
+        return new uContext(clazz.getName());
+    }
+
+    /**
+     * Create a context for a Foundation application using a string as namespace.
+     *
+     * @param namespace The namespace identifier for this context
+     * @return A new uiContext instance
+     */
+    public static uiContext createContext(String namespace) {
+        return new uContext(namespace);
+    }
+
+    /**
      * Initialize the Java Swing graphics environment via the Foundation API.
      *
-     * This no-args version creates a default uContext for simple use cases.
+     * This no-args version creates a default uiContext for simple use cases.
      * The default context uses "foundation.app" as the namespace and window mode (not desktop).
      *
-     * For production applications, use init(uContext) with a properly configured context.
+     * For production applications, use init(uiContext) with a properly configured context.
      *
      * @return The Foundation singleton instance
      */
     public static Foundation init() {
         // Create a default context for simple use cases
-        // IMPORTANT: Foundation ALWAYS requires a valid uContext object
+        // IMPORTANT: Foundation ALWAYS requires a valid uiContext object
         // Never pass null - if context is null, that's a fundamental framework bug
-        uContext defaultContext = uContext.createContext("foundation.app");
+        uiContext defaultContext = Foundation.createContext("foundation.app");
         return Foundation.init(defaultContext);
     }
 
@@ -60,7 +81,7 @@ public class Foundation extends Platinum {
      * @return The Foundation singleton instance
      * @throws NullPointerException if context is null (indicates framework bug)
      */
-    public static Foundation init(uContext c) {
+    public static Foundation init(uiContext c) {
         if (f == null) {
             f = new Foundation();
         }
