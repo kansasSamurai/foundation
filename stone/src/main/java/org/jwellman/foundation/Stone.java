@@ -17,14 +17,15 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 
 import org.jwellman.foundation.framework.LAFDiscovery;
+import org.jwellman.foundation.framework.uUtility;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.provider.DefaultDesktopProvider;
-import org.jwellman.foundation.provider.DefaultSplashProvider;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
+import org.jwellman.foundation.swing.XPanel;
 
 /**
  * The most basic of Swing initialization requirements.
@@ -40,7 +41,10 @@ public class Stone {
 	/** The user's entry point UI in a JPanel */
 	// protected JPanel panel;
 
-	/** A user interface context object */
+	/** The master application context - controls overall lifecycle */
+	private uiContext masterContext;
+
+	/** A user interface context object (for backward compatibility) */
 	private uiContext context;
 
 	/** Indicates desktop mode; null until first useWindow() or useDesktop() call */
@@ -59,7 +63,8 @@ public class Stone {
 	private JDesktopPane desktop;
 
 	/** The splash window (JFrame in window mode, JInternalFrame in desktop mode) */
-	protected IWindow splashWindow;
+	// splash window not supported in stone
+	// protected IWindow splashWindow;
 
 	/** The splash provider instance */
 	protected uiSplashProvider splashProvider;
@@ -670,93 +675,63 @@ public class Stone {
 
         // Determine mode (desktop vs window) from context
         // If mode hasn't been set yet, use the context setting (defaults to window mode)
+        // TODO this setting of desktop mode may have to occur before now
         if (isDesktop == null) {
             isDesktop = context.isDesktopMode();
         }
 
         // Create the external frame if it doesn't exist
         if (externalFrame == null) {
-            String title = context.getDesktopTitle();
-            if (title == null) {
-                title = "Foundation Application";
-            }
+            String title = uUtility.valueOrDefault(context.getDesktopTitle(), "Foundation Application");
             externalFrame = new XFrame(title);
             externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         }
 
-        // Get or create splash provider
-        if (context.getSplashProvider() != null) {
-            splashProvider = context.getSplashProvider();
-        } else {
-            splashProvider = new DefaultSplashProvider();
-        }
-
-        // Create splash content
-        JPanel splashContent = splashProvider.createSplashContent();
-
         // Set up desktop mode if needed
         if (isDesktop) {
-            if (desktop == null) {
-                // Get or create desktop provider
-                // IMPORTANT: context is never null (guaranteed by Foundation.init())
-                uiDesktopProvider provider;
-                if (context.getDesktopProvider() != null) {
-                    // Use custom provider from context
-                    provider = context.getDesktopProvider();
-                } else {
-                    // Use default framework provider
-                    provider = new DefaultDesktopProvider();
-                }
 
-                // Create desktop using provider (no parameters - supports nested desktops)
-                desktop = provider.createDesktop();
-
-                // Framework sets desktop as content pane
-                externalFrame.setContentPane(desktop);
-
-                // Add menu bar if provider supplies one
-                javax.swing.JMenuBar menuBar = provider.createMenuBar();
-                if (menuBar != null) {
-                    externalFrame.setJMenuBar(menuBar);
-                }
-
-                // Store provider reference for post-initialization callback
-                final uiDesktopProvider finalProvider = provider;
-                final JDesktopPane finalDesktop = desktop;
-
-                // We'll call onDesktopInitialized after the window is shown
-                // This will be done in the EDT runnable below
-                javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        finalProvider.onDesktopInitialized(finalDesktop);
-                    }
-                });
-
-                // Create splash as internal frame on desktop
-                XInternalFrame splashInternalFrame = new XInternalFrame(
-                        "Foundation Framework", false, false, false, false);
-                splashInternalFrame.add(splashContent);
-                splashInternalFrame.pack();
-
-                // Center on desktop
-                splashInternalFrame.setLocation(
-                    (context.getDimension().width - splashInternalFrame.getWidth()) / 2,
-                    (context.getDimension().height - splashInternalFrame.getHeight()) / 2
-                );
-
-                desktop.add(splashInternalFrame);
-                splashInternalFrame.setVisible(true);
-                splashWindow = splashInternalFrame;
+            // Get or create desktop provider
+            // IMPORTANT: context is never null (guaranteed by Foundation.init())
+            uiDesktopProvider provider;
+            if (context.getDesktopProvider() != null) {
+                // Use custom provider from context
+                provider = context.getDesktopProvider();
+            } else {
+                // Use default framework provider
+                provider = new DefaultDesktopProvider();
             }
+
+            // Create desktop using provider (no parameters - supports nested desktops)
+            desktop = provider.createDesktop();
+
+            // Framework sets desktop as content pane
+            externalFrame.setContentPane(desktop);
+
+            // Add menu bar if provider supplies one
+            javax.swing.JMenuBar menuBar = provider.createMenuBar();
+            if (menuBar != null) {
+                externalFrame.setJMenuBar(menuBar);
+            }
+
+            // Store provider reference for post-initialization callback
+            final uiDesktopProvider finalProvider = provider;
+            final JDesktopPane finalDesktop = desktop;
+
+            // We'll call onDesktopInitialized after the window is shown
+            // This will be done in the EDT runnable below
+            javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    finalProvider.onDesktopInitialized(finalDesktop);
+                }
+            });
 
             // Initialize other windows (Bronze tier will create internal frames here)
             // Note: These frames are created but NOT visible (will be shown via launch())
             this.initializeOtherWindows();
         } else {
-            // Window mode: Set splash content as the frame's content pane
-            externalFrame.setContentPane(splashContent);
-            splashWindow = externalFrame;
+            XPanel master = masterContext.getPanelRegistration("master").getPanel();
+            externalFrame.setContentPane(master);
         }
 
         // Show the window on the EDT
@@ -789,17 +764,6 @@ public class Stone {
         }
 
         this.logEnvironment();
-
-        // Pause for the minimum display time specified by the splash provider
-        // This ensures the splash screen is visible long enough to read
-        if (splashProvider != null) {
-            try {
-                Thread.sleep(splashProvider.getMinimumDisplayTime());
-            } catch (InterruptedException e) {
-                // If interrupted, continue normally
-                Thread.currentThread().interrupt();
-            }
-        }
 
     }
 
@@ -856,11 +820,70 @@ public class Stone {
      * <p>
      * Note: There is no setter for this property as the splash provider
      * is defined using the uContext class.
-     * 
+     *
      * @return The splash provider, or null if splash has been closed
      */
     public uiSplashProvider getSplashProvider() {
         return splashProvider;
+    }
+
+    /* ========== Stone Tier Public API (called via Foundation static methods) ========== */
+
+    /**
+     * Initialize the Stone tier with the given context.
+     *
+     * This performs Look and Feel initialization only.
+     * The provided context becomes the "master" context - it controls overall application
+     * lifecycle including shutdown behavior.
+     *
+     * @param c The master context (MUST NOT be null)
+     * @return The master uiContext (same instance that was passed in)
+     */
+    public uiContext initStone(uiContext c) {
+        // IMPORTANT: context must NEVER be null
+        // If null, this is a fundamental framework bug - fail fast with NPE
+        if (c == null) {
+            throw new NullPointerException("Context cannot be null");
+        }
+
+        // Set the master context
+        masterContext = c;
+        context = c; // backward compatibility
+
+        // Initialize Look and Feel
+        _init(c);
+
+        // Return the master context
+        return masterContext;
+    }
+
+    /**
+     * Launch the application with the given context.
+     *
+     * This creates and displays the main window based on the context configuration.
+     * The context determines window mode vs desktop mode, dimensions, title, etc.
+     *
+     * For Stone tier: This displays a single JFrame (window or desktop mode).
+     *
+     * @param ctx The uiContext to launch
+     */
+    public void launchStone(uiContext ctx) {
+        if (!isInitialized) {
+            throw new IllegalStateException(
+                "Foundation must be initialized (call init()) before calling launch()");
+        }
+
+        // For Stone tier: Show the main window
+        _initializeAndShowWindow();
+    }
+
+    /**
+     * Get the master application context.
+     *
+     * @return The master uiContext, or null if not initialized
+     */
+    public uiContext getMasterContext() {
+        return masterContext;
     }
 
 } // end class

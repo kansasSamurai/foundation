@@ -6,21 +6,29 @@ import org.jwellman.foundation.interfaces.uiContext;
 /**
  * A micro-framework for Swing applications.
  *
+ * Foundation is the public API that exposes all tier functionality via static methods.
+ * It inherits from all tiers (Stone -> Bronze -> Silver -> Gold -> Platinum -> Foundation).
+ *
+ * Foundation has three primary responsibilities:
+ * 1) Discover Look and Feel and initialize the Swing UIManager
+ * 2) Manage application context objects (uiContext implementations)
+ *    - One context must always be the "master" (controls app lifecycle/shutdown)
+ * 3) Create all IWindow objects (JFrame vs JInternalFrame based on master context state)
+ *
  * Usage:
- * (1) init() - initializes the Swing framework
- * (2) useWindow()/useDesktop() - supply your user interface within a JPanel
- *     and instantiate the supporting Swing containers (JFrame/JInternalFrame).
- * (3) showGUI() - make your user interface/JPanel visible;
- *     most applications will have initialized all data models
- *     and this will usually be the last method called in your startup() code.
+ * (1) createContext() - create a uiContext for your application
+ * (2) init() - initializes Look and Feel, returns the master uiContext
+ * (3) launch() - launches the application with the given uiContext
  *
  * @author Rick Wellman
  */
 public class Foundation extends Platinum {
 
-    private Foundation() {} // private constructor to enforce singleton pattern; use get()
+    /** private constructor to enforce singleton pattern */
+    private Foundation() {}
 
-    private static Foundation f; // singleton
+    /** The singleton instance - never exposed outside this class */
+    private static Foundation instance;
 
     /**
      * Create a context for a Foundation application using a class name as namespace.
@@ -50,9 +58,9 @@ public class Foundation extends Platinum {
      *
      * For production applications, use init(uiContext) with a properly configured context.
      *
-     * @return The Foundation singleton instance
+     * @return The master uiContext that was initialized
      */
-    public static Foundation init() {
+    public static uiContext init() {
         // Create a default context for simple use cases
         // IMPORTANT: Foundation ALWAYS requires a valid uiContext object
         // Never pass null - if context is null, that's a fundamental framework bug
@@ -66,34 +74,42 @@ public class Foundation extends Platinum {
      * The main and most important thing this does is initialize the Java Look and Feel;
      * see the _init() method for details on what few other initialization tasks are done.
      *
-     * Because this framework is intended to support a desktop/multi-app environment,
-     * the Foundation instance is a singleton and this method returns that single instance.
-     *
-     * IMPORTANT: As of the Bronze tier redesign, calling init() ALWAYS results in a visible
-     * window being displayed (unless a window is already visible). This provides immediate
-     * visual feedback that the framework has initialized successfully.
-     *
-     * The displayed window will be:
-     * - In window mode: An empty JFrame (ready for content to be added)
-     * - In desktop mode: A JFrame containing an empty JDesktopPane (ready for internal frames)
+     * The provided context becomes the "master" context - it controls overall application
+     * lifecycle including shutdown behavior.
      *
      * @param c The context (MUST NOT be null - use no-args init() for default context)
-     * @return The Foundation singleton instance
+     * @return The master uiContext (same instance that was passed in)
      * @throws NullPointerException if context is null (indicates framework bug)
      */
-    public static Foundation init(uiContext c) {
-        if (f == null) {
-            f = new Foundation();
+    public static uiContext init(uiContext c) {
+        // Ensure singleton exists
+        if (instance == null) {
+            instance = new Foundation();
         }
 
-        // IMPORTANT: context must NEVER be null
-        // If null, this is a fundamental framework bug - fail fast with NPE
-        // All callers should either use init() no-args (creates default context)
-        // or provide a properly configured context
-        f._init(c);
-        f._initializeAndShowWindow();
+        // Delegate to Stone tier implementation
+        return instance.initStone(c);
+    }
 
-        return f;
+    /**
+     * Launch the application with the given context.
+     *
+     * This creates and displays the main window based on the context configuration.
+     * The context determines window mode vs desktop mode, dimensions, title, etc.
+     *
+     * For Stone tier: This displays a single JFrame (window or desktop mode).
+     * For Bronze+ tiers: This can manage multiple panels/windows.
+     *
+     * @param context The uiContext to launch (typically the master context from init())
+     */
+    public static void launch(uiContext context) {
+        if (instance == null) {
+            throw new IllegalStateException(
+                "Foundation must be initialized (call init()) before calling launch()");
+        }
+
+        // Delegate to Stone tier implementation
+        instance.launchStone(context);
     }
 
 }

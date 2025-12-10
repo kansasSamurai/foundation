@@ -57,10 +57,10 @@ public class LookAndFeelDemo {
         context.setLookAndFeel(selectedLAF.getClassName());
 
         // Initialize Foundation (LAFDiscovery will apply the LAF from context)
-        Foundation foundation = Foundation.init(context);
+        Foundation.init(context);
 
         // Create UI
-        JPanel ui = createUI(selectedLAF);
+        context.registerMasterPanel("master", createUI(selectedLAF));
 
 //        new Thread(() -> {
 //            // Simulate more work
@@ -92,8 +92,8 @@ public class LookAndFeelDemo {
 //
 //        }).start();
 
-        // Launch the application - splash screen closes, app appears
-        foundation.launch(ui);
+        // Launch the application
+        Foundation.launch(context);
 
     }
 

@@ -3,20 +3,22 @@ package org.jwellman.foundation.interfaces;
 import java.awt.Dimension;
 import java.util.Map;
 
+import javax.swing.JPanel;
+
 import org.jwellman.foundation.model.PanelRegistration;
 
 /**
- * Strategy interface for Foundation application context.
- *
+ * Strategy interface for a Foundation application context.
+ * <p>
  * This interface defines the contract for context objects that configure
  * and manage Foundation applications. Each context represents a namespace
  * (tool/application) and contains configuration for Look and Feel, desktop mode,
  * providers, and panel registry.
- *
- * Design Pattern: Strategy pattern
- * - Allows different context implementations with varying behavior
- * - Framework works with the interface, not concrete implementations
- * - Enables testing with mock contexts
+ * <p>
+ * Design Pattern: Strategy pattern<br>
+ * - Allows different context implementations with varying behavior<br>
+ * - Framework works with the interface, not concrete implementations<br>
+ * - Enables testing with mock contexts<br>
  *
  * @author rwellman
  */
@@ -161,13 +163,21 @@ public interface uiContext {
     void setLookAndFeel(String lookAndFeel);
 
     /**
-     * Register a panel in this context's registry.
+     * Register a panel in this application context's registry.
      *
      * @param panelId The panel identifier (e.g., "main", "settings")
      * @param registration The panel registration
      * @throws IllegalArgumentException if panelId is already registered
      */
     void registerPanel(String panelId, PanelRegistration registration);
+
+    /**
+     * Register the "master" panel of an application context.
+     * 
+     * @param string
+     * @param createUI
+     */
+    void registerMasterPanel(String string, JPanel createUI);
 
     /**
      * Get a panel registration by panelId.
