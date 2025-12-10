@@ -1,7 +1,9 @@
 package org.jwellman.foundation.extend;
 
 import javax.swing.JPanel;
+
 import org.jwellman.foundation.Foundation;
+import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiThemeProvider;
 import org.jwellman.foundation.swing.IWindow;
 
@@ -51,27 +53,29 @@ abstract public class AbstractSimpleApp implements uiThemeProvider {
      */
     protected void startup(boolean asMainFrame, String[] args) {
 
-    	// [Note 1] 
-    	// The 'asMainFrame' parameter would be used to specify whether you 
-    	// want this application to be displayed as a "main frame" i.e. as a java JFrame.
-    	
+        // [Note 1]
+        // The 'asMainFrame' parameter would be used to specify whether you want 
+        // this application to be displayed as a "main frame" i.e. as a java JFrame.
+
         // Prepare - User Interface Context
-		// int uiunit = 65;
-		// final uContext context = uContext.createContext();
-		// context.setTheme(this);
-		// context.setDimension(uiunit * 5, uiunit * 9);
+        // int uiunit = 65;
+        // final uContext context = uContext.createContext();
+        // context.setTheme(this);
+        // context.setDimension(uiunit * 5, uiunit * 9);
 
         // Step 1 - Initialize Swing; if you want a non-null uContext, an example is in the comments above.
-        final Foundation f = Foundation.init(null);
+        final uiContext f = Foundation.init();
 
         // Step 2 - Create your UIs in JPanel(s)
-        mainui = f.registerUI("org.jwellman.foundation.examples.AbstractSimpleApp", "main", this.getMainUI());
+       // mainui = f.registerUI("org.jwellman.foundation.examples.AbstractSimpleApp", "main", this.getMainUI());
+        // Step 2 - Create your application (which is a JPanel)
+        f.registerMasterPanel("master", this.getMainUI());
 
-        // Step 3 - Use Foundation to create your "window"; give it your UI.
-        window = asMainFrame ? f.useWindow(mainui) : f.useDesktop(mainui);
-        window.setTitle(this.getTitle()); // Step 3a (optional) - Customize your window
-        window.setResizable(true); // Step 3a (optional) - Customize your window
-        window.setMaximizable(true); // Step 3a (optional) - Customize your window
+//        // Step 3 - Use Foundation to create your "window"; give it your UI.
+//        window = asMainFrame ? f.useWindow(mainui) : f.useDesktop(mainui);
+//        window.setTitle(this.getTitle()); // Step 3a (optional) - Customize your window
+//        window.setResizable(true); // Step 3a (optional) - Customize your window
+//        window.setMaximizable(true); // Step 3a (optional) - Customize your window
 
         // Step 4a - Create data models, controllers, and other non-UI objects
         // n/a
@@ -79,7 +83,8 @@ abstract public class AbstractSimpleApp implements uiThemeProvider {
         // n/a
 
         // Step 5 - Display your User Interface
-        f.showGUI(window);
+        Foundation.launch(f);
+
     }
 
     /**

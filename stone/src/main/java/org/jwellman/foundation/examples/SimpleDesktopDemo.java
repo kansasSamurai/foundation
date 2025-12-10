@@ -2,18 +2,18 @@ package org.jwellman.foundation.examples;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import org.jwellman.foundation.Foundation;
-import org.jwellman.foundation.framework.uContext;
-import org.jwellman.foundation.swing.IWindow;
+import org.jwellman.foundation.interfaces.uiContext;
 
 /**
  * Minimal demonstration of Foundation in desktop mode (JInternalFrame in JDesktopPane).
- *
+ * <p>
  * This demonstrates:
  * - Application extending JPanel (not JFrame - Foundation handles that)
  * - Basic Foundation lifecycle (init, useDesktop, showGUI)
@@ -70,23 +70,16 @@ public class SimpleDesktopDemo extends JPanel {
         // Note: Desktop mode requires explicit sizing because JDesktopPane cannot
         //       calculate preferred size from internal frames (they are positioned
         //       absolutely, not laid out by a layout manager)
-        uContext ctx = uContext.createContext(SimpleDesktopDemo.class);
-        ctx.setDimension(1000, 600);  // Explicit size for desktop mode
-        ctx.setDesktopTitle("Foundation Desktop Demo");
-
-        Foundation f = Foundation.init(ctx);
+        uiContext app = Foundation.createContext(SimpleDesktopDemo.class);
+        app.setDimension(1000, 600);  // Explicit size for desktop mode
+        app.setDesktopTitle("Foundation Desktop Demo");
+        Foundation.init(app);
 
         // Step 2 - Create your application (which is a JPanel)
-        SimpleDesktopDemo app = new SimpleDesktopDemo();
+        app.registerMasterPanel("master", new SimpleDesktopDemo());
 
-        // Step 3 - Use Foundation to create a desktop window (internal frame)
-        IWindow window = f.useDesktop(app);
-        window.setTitle("Foundation - Simple Desktop Demo");
-        window.setResizable(true);
-        window.setMaximizable(true);
-
-        // Step 4 - Display the UI
-        f.showGUI(window);
+        // Step 3 - Display the UI
+        Foundation.launch(app);
     }
 
 }

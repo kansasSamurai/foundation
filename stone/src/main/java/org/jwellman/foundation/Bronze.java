@@ -11,7 +11,6 @@ import javax.swing.JPanel;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.PanelLifecycleListener;
 import org.jwellman.foundation.interfaces.uiContext;
-import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XInternalFrame;
@@ -315,12 +314,6 @@ public class Bronze extends Stone {
         return allRegs;
     }
 
-    // Track whether launch() has been called in window mode (single-call enforcement)
-    private boolean windowModeLaunched = false;
-
-    // Counter for auto-registration of launched panels
-    private int autoRegistrationCounter = 0;
-
     /**
      * Launch a panel (make it visible).
      * Auto-wraps JPanel in XPanel if needed.
@@ -330,135 +323,6 @@ public class Bronze extends Stone {
     public void launch(JPanel panel) {
         XPanel xpanel = (panel instanceof XPanel) ? (XPanel) panel : new XPanel(panel);
         launch(xpanel);
-    }
-
-    /**
-     * Launch a panel (make it visible).
-     *
-     * If the panel is not already registered, it will be auto-registered
-     * with namespace "app.main" and auto-generated panel ID.
-     *
-     * In window mode, launch() can only be called once.
-     * In desktop mode, launch() can be called multiple times.
-     *
-     * The first call to launch() closes the splash screen.
-     *
-     * @param panel The XPanel to launch
-     * @throws IllegalStateException if called more than once in window mode
-     */
-    public void launch(XPanel panel) {
-        // Find existing registration
-        PanelRegistration reg = findRegistrationByPanel(panel);
-
-        // Auto-register if not registered
-        if (reg == null) {
-            String namespace = "app.main";
-            String panelId = "panel" + autoRegistrationCounter++;
-            reg = autoRegisterPanel(namespace, panelId, panel);
-        }
-
-        // Window mode: enforce single launch
-        if (Boolean.FALSE.equals(this.isDesktop)) {
-            if (windowModeLaunched) {
-                throw new IllegalStateException(
-                    "launch() can only be called once in window mode. " +
-                    "Already launched: " + reg.getFullId());
-            }
-            windowModeLaunched = true;
-
-            // Window mode: Close splash by replacing content pane
-            if (splashWindow != null && splashProvider != null) {
-                // Replace splash content with the actual panel
-                javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        getExternalFrame().setContentPane(panel);
-                        getExternalFrame().pack();
-                        getExternalFrame().setLocationRelativeTo(null);
-
-                        // Fire splash closed event
-                        splashProvider.onSplashClosed();
-                        splashWindow = null;
-                        splashProvider = null;
-                    }
-                });
-            }
-        } else {
-            // Desktop mode: Close splash internal frame on first launch
-            if (splashWindow != null && splashProvider != null) {
-                final IWindow splashToClose = splashWindow;
-                final uiSplashProvider providerToNotify = splashProvider;
-
-                javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        splashToClose.setVisible(false);
-                        splashToClose.close();
-
-                        // Fire splash closed event
-                        providerToNotify.onSplashClosed();
-                    }
-                });
-
-                splashWindow = null;
-                splashProvider = null;
-            }
-
-            // Make the launched panel's internal frame visible
-            IWindow window = reg.getWindow();
-            if (window != null) {
-                window.setVisible(true);
-                reg.setVisible(true);
-                reg.fireOnShow();
-            }
-        }
-    }
-
-    /**
-     * Find a panel registration by XPanel reference.
-     *
-     * @param panel The XPanel to search for
-     * @return The PanelRegistration, or null if not found
-     */
-    private PanelRegistration findRegistrationByPanel(XPanel panel) {
-        for (uiContext ctx : contextRegistry.values()) {
-            for (PanelRegistration reg : ctx.getAllPanelRegistrations().values()) {
-                if (reg.getPanel() == panel) {
-                    return reg;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Auto-register a panel that was launched without prior registration.
-     *
-     * @param namespace The namespace to use
-     * @param panelId The panel ID to use
-     * @param panel The XPanel to register
-     * @return The created PanelRegistration
-     */
-    private PanelRegistration autoRegisterPanel(String namespace, String panelId, XPanel panel) {
-        // Get or create context
-        uiContext ctx = contextRegistry.get(namespace);
-        if (ctx == null) {
-            ctx = Foundation.createContext(namespace);
-            contextRegistry.put(namespace, ctx);
-        }
-
-        // Create registration
-        String fullId = namespace + ":" + panelId;
-        panel.setName(fullId);
-        PanelRegistration reg = new PanelRegistration(namespace, panelId, panel, null);
-        ctx.registerPanel(panelId, reg);
-
-        // Create frame immediately if in desktop mode and desktop exists
-        if (Boolean.TRUE.equals(this.isDesktop) && this.getDesktop() != null) {
-            createInternalFrameForPanel(reg);
-        }
-
-        return reg;
     }
 
     /**
