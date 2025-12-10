@@ -20,7 +20,6 @@ import org.jwellman.foundation.framework.LAFDiscovery;
 import org.jwellman.foundation.framework.uUtility;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
-import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.provider.DefaultDesktopProvider;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
@@ -28,24 +27,24 @@ import org.jwellman.foundation.swing.XInternalFrame;
 import org.jwellman.foundation.swing.XPanel;
 
 /**
- * The most basic of Swing initialization requirements.
- *
+ * The most basic of Swing application requirements.
+ * <p>
  * Stone only supports a single application;
- * in either single frame or desktop mode.
+ * in either single frame or desktop mode.<br>
+ * The use of extra frames is left to the application programmer;<br>
+ * However, it is recommended to use Foundation - Bronze (or above)
+ * to provide a ready made API.
  *
  * @author rwellman
  *
  */
 public class Stone {
 
-	/** The user's entry point UI in a JPanel */
-	// protected JPanel panel;
-
 	/** The master application context - controls overall lifecycle */
-	private uiContext masterContext;
+	protected uiContext masterContext;
 
 	/** A user interface context object (for backward compatibility) */
-	private uiContext context;
+	protected uiContext context;
 
 	/** Indicates desktop mode; null until first useWindow() or useDesktop() call */
 	protected Boolean isDesktop;
@@ -57,17 +56,11 @@ public class Stone {
 	protected XFrame externalFrame;
 
 	/** The "main" internal frame used in desktop mode */
+	// Removed because probably not necessary - can now be accessed via masterContext
 	// protected XInternalFrame internalFrame;
 
 	/** The JDesktopPane used in desktop mode */
 	private JDesktopPane desktop;
-
-	/** The splash window (JFrame in window mode, JInternalFrame in desktop mode) */
-	// splash window not supported in stone
-	// protected IWindow splashWindow;
-
-	/** The splash provider instance */
-	protected uiSplashProvider splashProvider;
 
 	/** Default application title */
 	protected static final String DEFAULT_APP_TITLE = "Your App -- Powered By the Foundation API";
@@ -99,28 +92,8 @@ public class Stone {
 
             // I haven't settled on where I want this yet but I do want it 
             // as part of the bootstrapping process for debugging purposes.
-            // For now, I have created logEnvironment() for this.
-//            // Log the application classpath for debugging purposes
-//            System.out.println("----- Application Classpath -----");
-////            final ClassLoader cl = ClassLoader.getSystemClassLoader();
-////            final URL[] urls = ((URLClassLoader) cl).getURLs();
-////            for (URL url : urls) {
-////                System.out.println(url.getFile());
-////            }
-//            // Works in all Java versions
-//            String classpath = System.getProperty("java.class.path");
-//            String[] classpathEntries = classpath.split(File.pathSeparator);
-//            for (String entry : classpathEntries) {
-//                System.out.println(entry);
-//            }
-//
-//            // Log the system fonts available for debugging purposes
-//            final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-//            final Font[] fonts = ge.getAllFonts();
-//            for (Font font : fonts) {
-//                System.out.print("FONT: " + font.getFontName() + " : ");
-//                System.out.println(font.getFamily());
-//            }
+            // For now, I have created logEnvironment() for this:
+            // logEnvironment();
 
             @SuppressWarnings("unused")
             Map<?, ?> desktopHints = (Map<?, ?>) Toolkit.getDefaultToolkit()
@@ -158,9 +131,9 @@ public class Stone {
 
             // Use LAFDiscovery to select and apply Look and Feel
             // Priority: uContext.lookAndFeel -> config file -> ./lafs/ directory -> system default
-            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(context.getLookAndFeel());
             JFrame.setDefaultLookAndFeelDecorated(true); 
             JDialog.setDefaultLookAndFeelDecorated(true);
+            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(context.getLookAndFeel());
 
             if (!lafApplied) {
                 System.err.println("WARNING: Failed to apply any Look and Feel. UI may not render correctly.");
@@ -168,10 +141,10 @@ public class Stone {
                 System.out.println("USING LAF: " + UIManager.getLookAndFeel().getName());
             }
 
-    }
+        }
 
     } // end method
-    
+
     /**
      * Creates a window for the given JPanel based on the current mode (window or desktop).
      * The mode is determined by the uContext provided during init().
@@ -180,7 +153,7 @@ public class Stone {
      * @param ui The JPanel to display
      * @return IWindow abstraction (JFrame or JInternalFrame depending on mode)
      */
-    public IWindow createWindow(JPanel ui) {
+    protected IWindow createWindow(JPanel ui) {
         if (ui == null) {
             throw new RuntimeException("FATAL - JPanel cannot be null");
         }
@@ -195,9 +168,9 @@ public class Stone {
             // Create internal frame for desktop mode
             final XInternalFrame internalFrame = new XInternalFrame("Your UI", true, true, true, true);
             internalFrame.setBounds(10, 10, 225, 125);
-            internalFrame.add(ui);
             internalFrame.setMaximizable(false);
             internalFrame.setClosable(false);
+            internalFrame.add(ui);
 
             this.initializeOtherWindows();
 
@@ -775,7 +748,13 @@ public class Stone {
      * @return
      */
     public int logEnvironment() {
-        // Log the application classpath for debugging purposes
+
+        // Log the directory from which the JVM was launched (working directory) 
+        String currentDir = System.getProperty("user.dir");
+        System.out.println("----- Current Directory -----");
+        System.out.println(currentDir);
+
+        // Log the application classpath 
         System.out.println("----- Application Classpath -----");
 
         // Works in all Java versions
@@ -812,20 +791,6 @@ public class Stone {
      * application window.  Other levels will definitely override this.
      */
     protected void initializeOtherWindows() {}
-
-    /**
-     * Get the splash provider instance.
-     * <p>
-     * Useful for updating progress during initialization.
-     * <p>
-     * Note: There is no setter for this property as the splash provider
-     * is defined using the uContext class.
-     *
-     * @return The splash provider, or null if splash has been closed
-     */
-    public uiSplashProvider getSplashProvider() {
-        return splashProvider;
-    }
 
     /* ========== Stone Tier Public API (called via Foundation static methods) ========== */
 
@@ -867,7 +832,7 @@ public class Stone {
      *
      * @param ctx The uiContext to launch
      */
-    public void launchStone(uiContext ctx) {
+    protected void launchStone(uiContext ctx) {
         if (!isInitialized) {
             throw new IllegalStateException(
                 "Foundation must be initialized (call init()) before calling launch()");
@@ -875,15 +840,6 @@ public class Stone {
 
         // For Stone tier: Show the main window
         _initializeAndShowWindow();
-    }
-
-    /**
-     * Get the master application context.
-     *
-     * @return The master uiContext, or null if not initialized
-     */
-    public uiContext getMasterContext() {
-        return masterContext;
     }
 
 } // end class

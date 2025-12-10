@@ -72,6 +72,7 @@ public class SimpleDesktopDemo extends JPanel {
         //       absolutely, not laid out by a layout manager)
         uiContext app = Foundation.createContext(SimpleDesktopDemo.class);
         app.setDimension(1000, 600);  // Explicit size for desktop mode
+        app.setDesktopMode(true);
         app.setDesktopTitle("Foundation Desktop Demo");
         Foundation.init(app);
 
@@ -80,6 +81,7 @@ public class SimpleDesktopDemo extends JPanel {
 
         // Step 3 - Display the UI
         Foundation.launch(app);
+
     }
 
 }

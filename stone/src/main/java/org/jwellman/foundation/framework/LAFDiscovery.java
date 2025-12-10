@@ -380,6 +380,9 @@ public class LAFDiscovery {
         if (success) {
             System.out.println("LAF Applied: " + selectedLAF.getName());
             System.out.println("Selection Reason: " + selectionReason);
+            System.out.println("=== Foundation LAF Selection - applied ===");
+        } else {
+            System.out.println("=== Foundation LAF Selection - not applied ===");
         }
 
         return success;

@@ -1,5 +1,10 @@
 package org.jwellman.foundation;
 
+import java.awt.BorderLayout;
+
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+
 import org.jwellman.foundation.framework.uContext;
 import org.jwellman.foundation.interfaces.uiContext;
 
@@ -110,6 +115,46 @@ public class Foundation extends Platinum {
 
         // Delegate to Stone tier implementation
         instance.launchStone(context);
+    }
+
+    /**
+     * Get the master application context.
+     *
+     * @return The master uiContext, or null if not initialized
+     */
+    public static uiContext getMasterContext() {
+        return instance.masterContext;
+    }
+
+    /**
+     * Demonstrate a user interface in a JFrame.
+     * <p>
+     * This is the simplest of a Foundation startup sequence and, as its name states,
+     * is intended for demonstration/SCCE applications only.
+     * <p>
+     * This satisfies 99% of demonstration mode requirements - probably the only
+     * exceptions are those that are custom frame implementations and/or want
+     * to modify typical application startup/shutdown.
+     * 
+     * @param c The JComponent to be displayed as part of the demo.
+     */
+    public static void demo(JComponent c) {
+
+        // Step 1 - Initialize Foundation
+        uiContext app = Foundation.init();
+
+        // Step 2 - Create your application (which is a JPanel)
+        if (c instanceof JPanel) {
+            app.registerMasterPanel("master", (JPanel)c);
+        } else {
+            JPanel x = new JPanel(new BorderLayout());
+            x.add(c, BorderLayout.CENTER);
+            app.registerMasterPanel("master", x);
+        }
+
+        // Step 3 - Display the UI - this occurs properly on the EDT
+        Foundation.launch(app);
+
     }
 
 }

@@ -64,14 +64,16 @@ public class SimpleWindowDemo extends JPanel {
 
     public static void main(String[] args) {
 
-        // Step 1 - Initialize Foundation
-        uiContext app = Foundation.init();
+        Foundation.demo(new SimpleWindowDemo());
 
-        // Step 2 - Create your application (which is a JPanel)
-        app.registerMasterPanel("master", new SimpleWindowDemo());
-
-        // Step 3 - Display the UI
-        Foundation.launch(app);
+//        // Step 1 - Initialize Foundation
+//        uiContext app = Foundation.init();
+//
+//        // Step 2 - Create your application (which is a JPanel)
+//        app.registerMasterPanel("master", new SimpleWindowDemo());
+//
+//        // Step 3 - Display the UI - this occurs properly on the EDT
+//        Foundation.launch(app);
 
     }
 
