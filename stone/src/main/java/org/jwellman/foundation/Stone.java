@@ -273,8 +273,7 @@ public class Stone {
      * @param masterPanel
      */
     protected IWindow launchWindow(PanelRegistration reg) {
-        // TODO PanelRegistration needs a title; using getPanelID as a stopgap.
-        return this.launchWindow(reg.getPanel(), reg.getPanelId());
+        return this.launchWindow(reg.getPanel(), reg.getWindowTitle());
     }
 
     /**
