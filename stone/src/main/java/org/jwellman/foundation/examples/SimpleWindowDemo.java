@@ -64,16 +64,34 @@ public class SimpleWindowDemo extends JPanel {
 
     public static void main(String[] args) {
 
-        Foundation.demo(new SimpleWindowDemo());
+        // Demonstrate how to startup an application using Foundation.
+        // For quick and simple use cases, the demo() method can be used.
+        boolean demo = true;
+        if (demo) {
+            Foundation.demo(SimpleWindowDemo.class);
+        } else {
 
-//        // Step 1 - Initialize Foundation
-//        uiContext app = Foundation.init();
-//
-//        // Step 2 - Create your application (which is a JPanel)
-//        app.registerMasterPanel("master", new SimpleWindowDemo());
-//
-//        // Step 3 - Display the UI - this occurs properly on the EDT
-//        Foundation.launch(app);
+            /* The use of the demo method is equivalent to the following 
+             * required minimal startup sequence.  However, you will note that 
+             * the demo() method takes a class as a parameter instead of an actual object.  
+             * This is because init() MUST be called BEFORE any Swing components 
+             * are created. [because init() eventually calls UIManager.setLookAndFeel()] 
+             * Therefore, the demo method takes the class object to construct 
+             * the object AFTER it calls init().  It is worth noting that not
+             * all LookAndFeel's exhibit anomalies if initialized incorrectly, 
+             * which can make this a difficult situation to diagnose.
+             */
+
+            // Step 1 - Initialize Foundation
+            uiContext app = Foundation.init();
+
+            // Step 2 - Create your application (which is a JPanel)
+            app.registerMasterPanel("master", new SimpleWindowDemo());
+
+            // Step 3 - Display the UI - this occurs properly on the EDT
+            Foundation.launch(app);
+
+        }
 
     }
 

@@ -138,18 +138,23 @@ public class Foundation extends Platinum {
      * 
      * @param c The JComponent to be displayed as part of the demo.
      */
-    public static void demo(JComponent c) {
+    public static void demo(Class<? extends JComponent> c) {
 
         // Step 1 - Initialize Foundation
         uiContext app = Foundation.init();
 
         // Step 2 - Create your application (which is a JPanel)
-        if (c instanceof JPanel) {
-            app.registerMasterPanel("master", (JPanel)c);
-        } else {
-            JPanel x = new JPanel(new BorderLayout());
-            x.add(c, BorderLayout.CENTER);
-            app.registerMasterPanel("master", x);
+        try {
+            Object o = c.newInstance();
+            if (o instanceof JPanel) {
+                app.registerMasterPanel("master", (JPanel)o);
+            } else {
+                JPanel x = new JPanel(new BorderLayout());
+                x.add((JComponent)o, BorderLayout.CENTER);
+                app.registerMasterPanel("master", x);
+            }
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
         }
 
         // Step 3 - Display the UI - this occurs properly on the EDT

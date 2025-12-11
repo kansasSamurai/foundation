@@ -180,6 +180,13 @@ public interface uiContext {
     void registerMasterPanel(String string, JPanel createUI);
 
     /**
+     * Retrieve the "master" panel of an application context.
+     * 
+     * @return The master PanelRegistration
+     */
+    PanelRegistration getMasterPanel();
+
+    /**
      * Get a panel registration by panelId.
      *
      * @param panelId The panel identifier

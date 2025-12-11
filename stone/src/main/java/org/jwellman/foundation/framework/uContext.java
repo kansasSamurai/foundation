@@ -178,6 +178,14 @@ public class uContext implements uiContext {
     }
 
     /**
+     * 
+     */
+    @Override
+    public PanelRegistration getMasterPanel() {
+        return masterPanel;
+    }
+
+    /**
      * Get a panel registration by panelId.
      *
      * @param panelId The panel identifier

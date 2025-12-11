@@ -703,7 +703,7 @@ public class Stone {
             // Note: These frames are created but NOT visible (will be shown via launch())
             this.initializeOtherWindows();
         } else {
-            XPanel master = masterContext.getPanelRegistration("master").getPanel();
+            XPanel master = masterContext.getMasterPanel().getPanel();
             externalFrame.setContentPane(master);
         }
 
