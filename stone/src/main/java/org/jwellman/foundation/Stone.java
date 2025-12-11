@@ -20,6 +20,7 @@ import org.jwellman.foundation.framework.LAFDiscovery;
 import org.jwellman.foundation.framework.uUtility;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
+import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.provider.DefaultDesktopProvider;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
@@ -44,7 +45,7 @@ public class Stone {
 	protected uiContext masterContext;
 
 	/** A user interface context object (for backward compatibility) */
-	protected uiContext context;
+	//protected final uiContext context;
 
 	/** Indicates desktop mode; null until first useWindow() or useDesktop() call */
 	protected Boolean isDesktop;
@@ -60,7 +61,7 @@ public class Stone {
 	// protected XInternalFrame internalFrame;
 
 	/** The JDesktopPane used in desktop mode */
-	private JDesktopPane desktop;
+	protected JDesktopPane desktop;
 
 	/** Default application title */
 	protected static final String DEFAULT_APP_TITLE = "Your App -- Powered By the Foundation API";
@@ -88,6 +89,9 @@ public class Stone {
             System.out.print("WARN - ... in a single app use case, this usually indicates a misuse of the API");
             System.out.print("WARN - ... which may often result in unexpected/undesired behavior.");
         } else {
+
+            // Set the master context & mark initialized as true
+            masterContext = c;
             isInitialized = true;
 
             // I haven't settled on where I want this yet but I do want it 
@@ -122,19 +126,19 @@ public class Stone {
             // IMPORTANT: context should NEVER be null
             // Foundation.init() ensures a valid context is always provided
             // If context is null here, that's a fundamental framework bug - let it NPE
-            context = c;
+            // remove this eventually... already saved in initStone
+            // masterContext = c;
 
             // Apply context settings
-            if (context.getThemeProvider() != null) {
-                context.getThemeProvider().doTheme();
+            if (masterContext.getThemeProvider() != null) {
+                masterContext.getThemeProvider().doTheme();
             }
 
             // Use LAFDiscovery to select and apply Look and Feel
             // Priority: uContext.lookAndFeel -> config file -> ./lafs/ directory -> system default
             JFrame.setDefaultLookAndFeelDecorated(true); 
             JDialog.setDefaultLookAndFeelDecorated(true);
-            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(context.getLookAndFeel());
-
+            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(masterContext.getLookAndFeel());
             if (!lafApplied) {
                 System.err.println("WARNING: Failed to apply any Look and Feel. UI may not render correctly.");
             } else {
@@ -161,7 +165,7 @@ public class Stone {
         // Determine mode if not already set
         // Convention over configuration: default to window mode if not specified
         if (isDesktop == null) {
-            isDesktop = context.isDesktopMode();
+            isDesktop = masterContext.isDesktopMode();
         }
 
         if (isDesktop) {
@@ -180,8 +184,8 @@ public class Stone {
             if (externalFrame == null) {
                 externalFrame = new XFrame(DEFAULT_APP_TITLE);
 
-                if (context.getDesktopTitle() != null)
-                    externalFrame.setTitle(context.getDesktopTitle());
+                if (masterContext.getDesktopTitle() != null)
+                    externalFrame.setTitle(masterContext.getDesktopTitle());
 
                 externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             }
@@ -208,7 +212,7 @@ public class Stone {
         // Set desktop mode on first call
         if (isDesktop == null) {
             isDesktop = true;
-            context.setDesktopMode(true);
+            masterContext.setDesktopMode(true);
         } else if (!isDesktop) {
             System.err.println("WARN - useDesktop() called after useWindow() was already called.");
             System.err.println("WARN - The first call to useWindow() or useDesktop() determines the mode.");
@@ -231,82 +235,12 @@ public class Stone {
         internalFrame.setMaximizable(false);
         internalFrame.setClosable(false);
 
-        // Adding this to a desktop has been moved to showGUI()
-        // desktop.add(internalFrame); // this does NOT make the internal frame visible
-
-        // this.initializeOtherWindows(); // removed 12/6/2025, since this overall method is deprecated, it shouldn't hurt
-
         return internalFrame; // frame;
     } // end method
 
     /**
-     * Given an instance of JPanel, return an IWindow object compatible with a
-     * window-based user experience (i.e. a JFrame).
-     *
-     * @deprecated Use createWindow(JPanel) instead. Mode is now determined by uContext.
-     * @param ui
-     * @return
-     */
-    @Deprecated
-    public IWindow useWindow(JPanel ui) {
-        if (ui == null) {
-            throw new RuntimeException("FATAL - JPanel cannot be null");
-        }
-
-        // Set window mode on first call
-        if (isDesktop == null) {
-            isDesktop = false;
-            context.setDesktopMode(false);
-        } else if (isDesktop) {
-            System.err.println("WARN - useWindow() called after useDesktop() was already called.");
-            System.err.println("WARN - The first call to useWindow() or useDesktop() determines the mode.");
-            System.err.println("WARN - Ignoring this call; framework is already in desktop mode.");
-            throw new RuntimeException("Cannot mix useWindow() and useDesktop() modes");
-        }
-
-        // Create the JFrame if not already created
-        if (externalFrame == null) {
-            externalFrame = new XFrame(DEFAULT_APP_TITLE);
-
-            // ... possibly update the frame title
-            if (context.getDesktopTitle() != null)
-                externalFrame.setTitle(context.getDesktopTitle());
-
-            // Set default close operation for window mode
-            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        }
-
-        // Add the UI to the frame
-        externalFrame.add(ui);
-
-        return externalFrame;
-    }
-
-    /**
-     * Tells Foundation that the given IWindow is the "main" desktop window. i.e.
-     * the main window is whatever you consider the "controlling" JFrame. p.s.
-     * Further, the main window is the one that closes/exits the application when
-     * the window's "close" button is clicked. [1]
-     * 
-     * TODO There needs to be a mechanism and well defined rules for what happens
-     * when this is called AFTER a previous desktop window has already been defined.
-     * i.e. the first desktop window "wins".
-     * 
-     * [1] Yes, there may be a very few applications that do not use this paradigm,
-     * but I think you get the idea now what the "main" window is.
-     * 
-     * @param main
-     */
-    public void registerDesktopWindow(IWindow main) {
-        if (main instanceof XFrame) {
-            externalFrame = (XFrame) main;
-        } else {
-            throw new RuntimeException("Invalid window registered as desktop; must be an instance of XFrame");
-        }
-    }
-
-    /**
-     * Convenience method: Creates a window for the JPanel with the specified title and immediately launches it.
+     * Convenience method: 
+     * Creates a window for the JPanel with the specified title and immediately launches it.
      * This is the one-step approach for simple applications.
      *
      * @param jpanel The JPanel to display
@@ -321,7 +255,8 @@ public class Stone {
     }
 
     /**
-     * Convenience method: Creates a window for the JPanel and immediately launches it.
+     * Convenience method: 
+     * Creates a window for the JPanel and immediately launches it.
      * Uses a default title: "Your App -- Powered By the Foundation API"
      * This is the one-step approach for simple applications.
      *
@@ -330,6 +265,16 @@ public class Stone {
      */
     public IWindow launchWindow(JPanel jpanel) {
         return this.launchWindow(jpanel, DEFAULT_APP_TITLE);
+    }
+
+    /**
+     * Overloaded launchWindow that takes PanelRegistration object.
+     * 
+     * @param masterPanel
+     */
+    protected IWindow launchWindow(PanelRegistration reg) {
+        // TODO PanelRegistration needs a title; using getPanelID as a stopgap.
+        return this.launchWindow(reg.getPanel(), reg.getPanelId());
     }
 
     /**
@@ -366,7 +311,7 @@ public class Stone {
             // desktop mode should be used.
             if (windows.size() == 1) {
                 if (windows.get(0) instanceof XInternalFrame) {
-                    context.setDesktopMode(true);
+                    masterContext.setDesktopMode(true);
                     isDesktop = true;
                 }
             }
@@ -390,14 +335,14 @@ public class Stone {
             @Override
             public void run() {
 
-                if (context.isDesktopMode()) {
-                    if (context.getDesktopProvider() == null) {
+                if (masterContext.isDesktopMode()) {
+                    if (masterContext.getDesktopProvider() == null) {
                         desktop = new JDesktopPane(); // a specialized layered pane
                         desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE); // Make dragging a little faster but
                                                                              // perhaps uglier.
                         externalFrame.setContentPane(desktop);
                     } else {
-                        desktop = context.getDesktopProvider().doCustomDesktop(externalFrame);
+                        desktop = masterContext.getDesktopProvider().doCustomDesktop(externalFrame);
                     }
 
                     // Note that this only ADDs the window to the desktop;
@@ -414,158 +359,11 @@ public class Stone {
                         // Display the window.
                         // In desktop mode, use explicit sizing (JDesktopPane cannot calculate preferred size)
                         // In window mode, pack() calculates size from JPanel content
-                        if (context.isDesktopMode()) {
-                            externalFrame.setSize(context.getDimension()); // [E]
+                        if (masterContext.isDesktopMode()) {
+                            externalFrame.setSize(masterContext.getDimension()); // [E]
                         } else {
                             // Window mode: Use explicit dimension if set, otherwise pack()
-                            Dimension dim = context.getDimension();
-                            if (dim != null && !dim.equals(new Dimension(900, 500))) {
-                                // User specified a custom dimension
-                                externalFrame.setSize(dim);
-                            } else {
-                                // Use default behavior: pack() sizes to content
-                                externalFrame.pack(); // [A] Let JPanel determine size
-                            }
-                        }
-                        externalFrame.setLocationRelativeTo(null); // [C]
-                        externalFrame.setVisible(true);
-
-                    }
-                } // end runnable / end run()
-        ); // end invokeLater()
-
-        /*
-         * All the other windows have been added to the desktop but they have not been
-         * made visible; make them visible now.
-         *
-         * For possible performance reasons, open each subwindow in a new EDT
-         */
-        for (final IWindow w : windows) {
-
-            // Start the GUI on the Event Dispatch Thread (EDT)
-            javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    w.pack();
-                    w.setVisible(true);
-                }
-            });
-        }
-
-    } // end method
-
-    /**
-     * A temporary shim to use with SPAR tool while I'm considering fairly major
-     * overhaul in application object design and startup.
-     *
-     * @deprecated Use launchWindow(JPanel) instead
-     * @param jpanel
-     */
-    @Deprecated
-    public void showGUI(JPanel jpanel) {
-        this.showGUI(this.useWindow(jpanel));
-    }
-
-    /**
-     * A convenience method for calling showGUI() when you only have one IWindow
-     * instance.
-     *
-     * @deprecated Use launchWindow(IWindow) instead
-     * @param window
-     */
-    @Deprecated
-    public void showGUI(IWindow window) {
-
-        final List<IWindow> list = new ArrayList<>();
-        if (window != externalFrame) {
-            list.add(window);
-        }
-
-        this.showGUI(list);
-    }
-
-    /**
-     * This is where your application is finally "visible" to the user.
-     *
-     * The logic of this method follows two entry conditions: 1) Has this been
-     * called already? which should only be valid if you are purposely running in a
-     * desktop mode.
-     *
-     * 2) Has this **not** been called already? which should only be valid if your
-     * are either just running a standalone application **or** if you are creating a
-     * generic desktop to host multiple applications (such as jPAD).
-     *
-     * - If the desktop mode has been chosen, create the external frame (JFrame) -
-     * If the window mode has been chosen, create the external frame (JFrame)
-     *
-     * @deprecated Use launchWindow(List<IWindow>) instead
-     */
-    @Deprecated
-    public void showGUI(final List<IWindow> windows) {
-
-        if (!isInitialized) {
-            throw new RuntimeException("Cannot call showGUI() until either useWindow() or useDesktop() is called.");
-        }
-
-        // Create the JFrame
-        if (externalFrame == null) {
-
-            // This is a bit of a hack for now (12/1/2020)...
-            // If the externalFrame has not been explicitly registered then try to decode if
-            // desktop mode should be used.
-            if (windows.size() == 1) {
-                if (windows.get(0) instanceof XInternalFrame) {
-                    context.setDesktopMode(true);
-                }
-            }
-
-            // We have not registered a desktop/main so create one
-            externalFrame = new XFrame(DEFAULT_APP_TITLE);
-
-            // TODO The jPAD security manager doesn't like this line
-            // but other apps without jpad might... review this design
-            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        } else {
-            // We have registered a desktop so use it
-
-        }
-
-        // Start the GUI on the Event Dispatch Thread (EDT)
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-
-                if (context.isDesktopMode()) {
-                    if (context.getDesktopProvider() == null) {
-                        desktop = new JDesktopPane(); // a specialized layered pane
-                        desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE); // Make dragging a little faster but
-                                                                             // perhaps uglier.
-                        externalFrame.setContentPane(desktop);
-                    } else {
-                        desktop = context.getDesktopProvider().doCustomDesktop(externalFrame);
-                    }
-
-                    // Note that this only ADDs the window to the desktop;
-                    // it is not pack(ed) nor setVisible()... that occurs later.
-                    for (IWindow w : windows) {
-                        if (w != externalFrame) {
-                            desktop.add(w.getComponent());
-                            w.pack();
-                        }
-                    }
-
-                }
-
-                        // Display the window.
-                        // In desktop mode, use explicit sizing (JDesktopPane cannot calculate preferred size)
-                        // In window mode, pack() calculates size from JPanel content
-                        if (context.isDesktopMode()) {
-                            externalFrame.setSize(context.getDimension()); // [E]
-                        } else {
-                            // Window mode: Use explicit dimension if set, otherwise pack()
-                            Dimension dim = context.getDimension();
+                            Dimension dim = masterContext.getDimension();
                             if (dim != null && !dim.equals(new Dimension(900, 500))) {
                                 // User specified a custom dimension
                                 externalFrame.setSize(dim);
@@ -650,12 +448,12 @@ public class Stone {
         // If mode hasn't been set yet, use the context setting (defaults to window mode)
         // TODO this setting of desktop mode may have to occur before now
         if (isDesktop == null) {
-            isDesktop = context.isDesktopMode();
+            isDesktop = masterContext.isDesktopMode();
         }
 
         // Create the external frame if it doesn't exist
         if (externalFrame == null) {
-            String title = uUtility.valueOrDefault(context.getDesktopTitle(), "Foundation Application");
+            String title = uUtility.valueOrDefault(masterContext.getDesktopTitle(), "Foundation Application");
             externalFrame = new XFrame(title);
             externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         }
@@ -666,9 +464,9 @@ public class Stone {
             // Get or create desktop provider
             // IMPORTANT: context is never null (guaranteed by Foundation.init())
             uiDesktopProvider provider;
-            if (context.getDesktopProvider() != null) {
+            if (masterContext.getDesktopProvider() != null) {
                 // Use custom provider from context
-                provider = context.getDesktopProvider();
+                provider = masterContext.getDesktopProvider();
             } else {
                 // Use default framework provider
                 provider = new DefaultDesktopProvider();
@@ -710,7 +508,7 @@ public class Stone {
         // Show the window on the EDT
         try {
             final XFrame frameToShow = externalFrame;
-            final Dimension size = context.getDimension();
+            final Dimension size = masterContext.getDimension();
             final boolean isDesktopMode = isDesktop;
 
             javax.swing.SwingUtilities.invokeAndWait(new Runnable() {
@@ -727,6 +525,11 @@ public class Stone {
 
                     frameToShow.setLocationRelativeTo(null); // Center on screen
                     frameToShow.setVisible(true);
+
+                    if (isDesktopMode) {
+                        // Desktop mode: always use explicit sizing
+                        launchWindow(masterContext.getMasterPanel());
+                    }
 
                 }
             });
@@ -810,10 +613,6 @@ public class Stone {
         if (c == null) {
             throw new NullPointerException("Context cannot be null");
         }
-
-        // Set the master context
-        masterContext = c;
-        context = c; // backward compatibility
 
         // Initialize Look and Feel
         _init(c);
