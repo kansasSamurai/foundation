@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import org.jwellman.foundation.Foundation;
-import org.jwellman.foundation.framework.uContext;
+import org.jwellman.foundation.interfaces.uiContext;
 
 /**
  * Demonstrates the splash screen functionality in Foundation framework.
@@ -78,14 +78,11 @@ public class SplashScreenDemo extends JPanel {
     public static void main(String[] args) {
 
         // Initialize Foundation - splash screen appears here
-        uContext context = uContext.createContext(SplashScreenDemo.class);
-        Foundation foundation = Foundation.init(context);
-
-//        new Thread(() -> {
-//        }).start();
+        uiContext app = Foundation.createContext(SplashScreenDemo.class);
+        Foundation.init(app);
 
         // Simulate more work
-        final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;
+        final int total = 500; // foundation.logEnvironment(); // classpathEntries.length + fonts.length;
         final int delay = 4000 / total;
         int percent = 0;
         for (int i = 0; i <= total; i++) {
@@ -100,11 +97,11 @@ public class SplashScreenDemo extends JPanel {
             int current = (i*100)/total;
             if (current > percent) {
                 percent = current;
-                foundation.getSplashProvider().updateProgress(percent, null); // "In progress...");
+                app.getSplashProvider().updateProgress(percent, null); // "In progress...");
             }
         }
 
-        foundation.getSplashProvider().updateProgress(100, "Initialization complete");
+        app.getSplashProvider().updateProgress(100, "Initialization complete");
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -112,7 +109,7 @@ public class SplashScreenDemo extends JPanel {
         }
 
         // Launch the application - splash screen closes, app appears
-        foundation.launch(new SplashScreenDemo());
+        Foundation.launch(app);
 
     }
 

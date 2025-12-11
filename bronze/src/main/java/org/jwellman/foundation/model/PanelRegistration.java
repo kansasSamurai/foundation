@@ -31,6 +31,9 @@ public class PanelRegistration {
     /** Unique panel ID within namespace (e.g., "main", "settings", "history") */
     private final String panelId;
 
+    /** The title to display in the window decoration */
+    private String windowTitle;
+
     /** The wrapped panel */
     private final XPanel panel;
 
@@ -167,6 +170,14 @@ public class PanelRegistration {
 
     public String getPanelId() {
         return panelId;
+    }
+
+    public String getWindowTitle() {
+        return windowTitle;
+    }
+
+    public void setWindowTitle(String windowTitle) {
+        this.windowTitle = windowTitle;
     }
 
     public XPanel getPanel() {

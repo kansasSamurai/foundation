@@ -20,6 +20,7 @@ import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 
 import org.jwellman.foundation.Foundation;
+import org.jwellman.foundation.interfaces.uiContext;
 
 /**
  * Discovers Look and Feel implementations at runtime.
@@ -592,7 +593,7 @@ public class LAFDiscovery {
 
         // Use Foundation to create and display the window
         // TODO eventually we want to build discovery into init() but for now we just call init() before applyLookAndFeel()
-        Foundation f = Foundation.init();
+        uiContext f = Foundation.init();
 
         // Apply the selected LAF
         if (!applyLookAndFeel(selectedLAF)) {
@@ -603,9 +604,10 @@ public class LAFDiscovery {
             final LAFInfo finalLAF = selectedLAF;
             final String finalReason = selectionReason;
 
-            JPanel demo = showDemoWindow(finalLAF, finalReason);
+            JPanel demo = createDemoWindow(finalLAF, finalReason);
+            f.registerMasterPanel("master", demo);
 
-            f.launch(demo);
+            Foundation.launch(f);
         }
 
 
@@ -617,7 +619,7 @@ public class LAFDiscovery {
      * @param lafInfo The LAF that was applied
      * @param reason Why this LAF was selected
      */
-    private static JPanel showDemoWindow(LAFInfo lafInfo, String reason) {
+    private static JPanel createDemoWindow(LAFInfo lafInfo, String reason) {
 
         // Create a JPanel with demo content
         javax.swing.JPanel demoPanel = new javax.swing.JPanel(new java.awt.BorderLayout(10, 10));

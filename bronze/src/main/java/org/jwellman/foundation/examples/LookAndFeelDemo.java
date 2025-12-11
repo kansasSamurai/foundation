@@ -17,7 +17,8 @@ import javax.swing.border.EmptyBorder;
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.LAFDiscovery;
 import org.jwellman.foundation.framework.LAFDiscovery.LAFInfo;
-import org.jwellman.foundation.framework.uContext;
+import org.jwellman.foundation.interfaces.uiContext;
+import org.jwellman.foundation.provider.DefaultSplashProvider;
 
 /**
  * Demonstrates Look and Feel support in Foundation using the new LAFDiscovery system.
@@ -48,54 +49,56 @@ public class LookAndFeelDemo {
 
         // Let user choose LAF before Foundation init
         LAFInfo selectedLAF = promptForLAF(discoveredLAFs);
-
         if (selectedLAF == null) {
             System.exit(0);
         }
 
         // Create context with selected LAF
-        uContext context = uContext.createContext(LookAndFeelDemo.class);
+        uiContext context = Foundation.createContext(LookAndFeelDemo.class);
+        context.setSplashProvider(new DefaultSplashProvider());
         context.setLookAndFeel(selectedLAF.getClassName());
 
         // Initialize Foundation (LAFDiscovery will apply the LAF from context)
-        Foundation foundation = Foundation.init(context);
+        Foundation.init(context);
 
         // Create UI
         JPanel ui = createUI(selectedLAF);
+        context.registerMasterPanel("master", ui);
 
         // Display
-        new Thread(() -> {
-            // Simulate more work
-            final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;
-            final int delay = 5000 / total;
-            int percent = 0;
-            for (int i = 0; i <= total; i++) {
+//        new Thread(() -> {
+//        }).start();
 
-                // Do your work here (simulated)
-                try {
-                    Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        // Simulate more work
+        final int total = 1000; // foundation.logEnvironment(); // classpathEntries.length + fonts.length;
+        final int delay = 5000 / total;
+        int percent = 0;
+        for (int i = 0; i <= total; i++) {
 
-                int current = (i*100)/total;
-                if (current > percent) {
-                    percent = current;
-                    foundation.getSplashProvider().updateProgress(percent, null); // "In progress...");
-                }
-            }
-
-            foundation.getSplashProvider().updateProgress(100, "Initialization complete");
+            // Do your work here (simulated)
             try {
-                Thread.sleep(2000);
+                Thread.sleep(delay);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            // Launch the application - splash screen closes, app appears
-            foundation.launch(ui);
+            int current = (i*100)/total;
+            if (current > percent) {
+                percent = current;
+                context.getSplashProvider().updateProgress(percent, null); // "In progress...");
+            }
+        }
 
-        }).start();
+        context.getSplashProvider().updateProgress(100, "Initialization complete");
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Launch the application - splash screen closes, app appears
+        Foundation.launch(context);
+
     }
 
     /**

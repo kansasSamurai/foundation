@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.framework.uContext;
 import org.jwellman.foundation.interfaces.PanelLifecycleListener;
+import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.IWindow;
@@ -39,7 +40,7 @@ public class Bronze extends Stone {
      * This creates a drill-down structure:
      * Bronze -> uContext (by namespace) -> PanelRegistration (by panelId)
      */
-    private final Map<String, uContext> contextRegistry = new HashMap<>();
+    private final Map<String, uiContext> contextRegistry = new HashMap<>();
 
     /**
      * Register a panel with required namespace and panel ID.
@@ -93,9 +94,9 @@ public class Bronze extends Stone {
              PanelLifecycleListener listener, WindowPosition position) {
 
         // Get or create the uContext for this namespace
-        uContext ctx = contextRegistry.get(namespace);
+        uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) {
-            ctx = uContext.createContext(namespace, namespace);
+            ctx = Foundation.createContext(namespace);
             contextRegistry.put(namespace, ctx);
         }
 
@@ -139,7 +140,7 @@ public class Bronze extends Stone {
      * @return The XPanel, or null if not found
      */
     public XPanel getPanel(String namespace, String panelId) {
-        uContext ctx = contextRegistry.get(namespace);
+        uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) return null;
 
         PanelRegistration reg = ctx.getPanelRegistration(panelId);
@@ -153,7 +154,7 @@ public class Bronze extends Stone {
      * @return List of XPanels (may be empty, never null)
      */
     public List<XPanel> getPanels(String namespace) {
-        uContext ctx = contextRegistry.get(namespace);
+        uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) return new ArrayList<>();
 
         return ctx.getAllPanelRegistrations().values().stream()
@@ -168,7 +169,7 @@ public class Bronze extends Stone {
      * @return List of PanelRegistrations (may be empty, never null)
      */
     public List<PanelRegistration> getRegistrations(String namespace) {
-        uContext ctx = contextRegistry.get(namespace);
+        uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) return new ArrayList<>();
 
         return new ArrayList<>(ctx.getAllPanelRegistrations().values());
@@ -191,7 +192,7 @@ public class Bronze extends Stone {
      * @return The PanelRegistration, or null if not found
      */
     public PanelRegistration getRegistration(String namespace, String panelId) {
-        uContext ctx = contextRegistry.get(namespace);
+        uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) return null;
 
         return ctx.getPanelRegistration(panelId);
@@ -203,7 +204,7 @@ public class Bronze extends Stone {
      * @param namespace The namespace
      * @return The uContext, or null if not found
      */
-    public uContext getContext(String namespace) {
+    public uiContext getContext(String namespace) {
         return contextRegistry.get(namespace);
     }
 
@@ -282,7 +283,7 @@ public class Bronze extends Stone {
      * @param panelId The panel ID
      */
     public void closePanel(String namespace, String panelId) {
-        uContext ctx = contextRegistry.get(namespace);
+        uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) return;
 
         PanelRegistration reg = ctx.getPanelRegistration(panelId);
@@ -308,7 +309,7 @@ public class Bronze extends Stone {
      */
     protected List<PanelRegistration> getAllRegistrations() {
         List<PanelRegistration> allRegs = new ArrayList<>();
-        for (uContext ctx : contextRegistry.values()) {
+        for (uiContext ctx : contextRegistry.values()) {
             allRegs.addAll(ctx.getAllPanelRegistrations().values());
         }
         return allRegs;
@@ -420,7 +421,7 @@ public class Bronze extends Stone {
      * @return The PanelRegistration, or null if not found
      */
     private PanelRegistration findRegistrationByPanel(XPanel panel) {
-        for (uContext ctx : contextRegistry.values()) {
+        for (uiContext ctx : contextRegistry.values()) {
             for (PanelRegistration reg : ctx.getAllPanelRegistrations().values()) {
                 if (reg.getPanel() == panel) {
                     return reg;
@@ -441,9 +442,9 @@ public class Bronze extends Stone {
     private PanelRegistration autoRegisterPanel(String namespace, String panelId, XPanel panel) {
 
         // Get or create context
-        uContext ctx = contextRegistry.get(namespace);
+        uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) {
-            ctx = uContext.createContext(namespace, namespace);
+            ctx = Foundation.createContext(namespace);
             contextRegistry.put(namespace, ctx);
         }
 
@@ -476,7 +477,11 @@ public class Bronze extends Stone {
 
         // Create internal frame
         final XInternalFrame iframe = new XInternalFrame();
-        iframe.setTitle(reg.getFullId()); // Default title
+
+        // Use windowTitle if set, otherwise fallback to fullId
+        String title = reg.getWindowTitle() != null ? reg.getWindowTitle() : reg.getFullId();
+        iframe.setTitle(title);
+
         iframe.add(reg.getPanel());
 
         // Configure frame properties
@@ -511,7 +516,7 @@ public class Bronze extends Stone {
     protected void initializeOtherWindows() {
         if (Boolean.TRUE.equals(this.isDesktop)) {
             // Iterate through all contexts and their panels
-            for (uContext ctx : contextRegistry.values()) {
+            for (uiContext ctx : contextRegistry.values()) {
                 for (PanelRegistration reg : ctx.getAllPanelRegistrations().values()) {
                     createInternalFrameForPanel(reg);
                 }
