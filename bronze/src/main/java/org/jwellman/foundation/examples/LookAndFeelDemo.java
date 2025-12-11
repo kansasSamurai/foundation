@@ -18,6 +18,7 @@ import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.LAFDiscovery;
 import org.jwellman.foundation.framework.LAFDiscovery.LAFInfo;
 import org.jwellman.foundation.interfaces.uiContext;
+import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.provider.DefaultSplashProvider;
 
 /**
@@ -39,72 +40,45 @@ import org.jwellman.foundation.provider.DefaultSplashProvider;
 public class LookAndFeelDemo {
 
     public static void main(String[] args) {
-        // Discover all available LAFs
-        List<LAFInfo> discoveredLAFs = LAFDiscovery.discoverLookAndFeels();
-
-        if (discoveredLAFs.isEmpty()) {
-            System.err.println("ERROR: No Look and Feels discovered!");
-            return;
-        }
 
         // Let user choose LAF before Foundation init
-        LAFInfo selectedLAF = promptForLAF(discoveredLAFs);
+        LAFInfo selectedLAF = promptForLAF();
         if (selectedLAF == null) {
             System.exit(0);
         }
 
         // Create context with selected LAF
-        uiContext context = Foundation.createContext(LookAndFeelDemo.class);
-        context.setSplashProvider(new DefaultSplashProvider());
-        context.setLookAndFeel(selectedLAF.getClassName());
+        uiContext app = Foundation.createContext(LookAndFeelDemo.class);
+        app.setSplashProvider(new DefaultSplashProvider());
+        app.setLookAndFeel(selectedLAF.getClassName());
 
         // Initialize Foundation (LAFDiscovery will apply the LAF from context)
-        Foundation.init(context);
+        Foundation.init(app);
 
         // Create UI
         JPanel ui = createUI(selectedLAF);
-        context.registerMasterPanel("master", ui);
+        app.registerMasterPanel("master", ui);
 
-        // Display
-//        new Thread(() -> {
-//        }).start();
-
-        // Simulate more work
-        final int total = 1000; // foundation.logEnvironment(); // classpathEntries.length + fonts.length;
-        final int delay = 5000 / total;
-        int percent = 0;
-        for (int i = 0; i <= total; i++) {
-
-            // Do your work here (simulated)
-            try {
-                Thread.sleep(delay);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            int current = (i*100)/total;
-            if (current > percent) {
-                percent = current;
-                context.getSplashProvider().updateProgress(percent, null); // "In progress...");
-            }
-        }
-
-        context.getSplashProvider().updateProgress(100, "Initialization complete");
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        // Display splash screen while initializing the app (data, database, network, whatever)
+        initAppWithSplashScreen(app.getSplashProvider());
 
         // Launch the application - splash screen closes, app appears
-        Foundation.launch(context);
+        Foundation.launch(app);
 
     }
 
     /**
      * Prompts user to select a Look and Feel using radio buttons.
      */
-    private static LAFInfo promptForLAF(List<LAFInfo> lafs) {
+    private static LAFInfo promptForLAF() {
+
+        // Discover all available LAFs
+        List<LAFInfo> lafs = LAFDiscovery.discoverLookAndFeels();
+        if (lafs.isEmpty()) {
+            System.err.println("ERROR: No Look and Feels discovered!");
+            System.exit(0);
+        }
+
         // Create panel with radio buttons
         JPanel panel = new JPanel(new BorderLayout(10, 10));
 
@@ -213,4 +187,42 @@ public class LookAndFeelDemo {
 
         return panel;
     }
+
+    /**
+     * 
+     * @param splasher
+     */
+    private static void initAppWithSplashScreen(uiSplashProvider splasher) {
+
+        splasher.createSplashContent();
+
+        // Simulate more work
+        final int total = 1000; // foundation.logEnvironment(); // classpathEntries.length + fonts.length;
+        final int delay = 5000 / total;
+        int percent = 0;
+        for (int i = 0; i <= total; i++) {
+
+            // Do your work here (simulated)
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            int current = (i*100)/total;
+            if (current > percent) {
+                percent = current;
+                splasher.updateProgress(percent, null); // "In progress...");
+            }
+        }
+
+        splasher.updateProgress(100, "Initialization complete");
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 }

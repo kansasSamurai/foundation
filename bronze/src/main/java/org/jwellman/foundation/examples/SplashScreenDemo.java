@@ -11,6 +11,7 @@ import javax.swing.SwingConstants;
 
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.interfaces.uiContext;
+import org.jwellman.foundation.provider.DefaultSplashProvider;
 
 /**
  * Demonstrates the splash screen functionality in Foundation framework.
@@ -79,6 +80,7 @@ public class SplashScreenDemo extends JPanel {
 
         // Initialize Foundation - splash screen appears here
         uiContext app = Foundation.createContext(SplashScreenDemo.class);
+        app.setSplashProvider(new DefaultSplashProvider());
         Foundation.init(app);
 
         // Simulate more work
