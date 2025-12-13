@@ -78,7 +78,7 @@ public class uContext implements uiContext {
      *
      * @return The Foundation instance
      */
-    public Foundation getFoundation() {
+    private Foundation getFoundation() {
         return foundation;
     }
 
@@ -334,7 +334,12 @@ public class uContext implements uiContext {
         // If we're in desktop mode and the desktop already exists (meaning init() has been called
         // and window is visible), immediately create the internal frame for this panel
         if (Boolean.TRUE.equals(this.isDesktopMode()) ) {
-            Foundation.get(). createInternalFrameForPanel(reg);
+            getFoundation().createInternalFrameForPanel(reg);
+            // NEW: Make the frame visible immediately since we're post-init
+            // 12/13 didn't work
+//            reg.getInternalFrame().setVisible(true);
+//            reg.setVisible(true);
+//            reg.fireOnShow();
         }
 
         return xpanel;

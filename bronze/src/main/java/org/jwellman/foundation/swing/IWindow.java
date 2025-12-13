@@ -73,6 +73,13 @@ public interface IWindow {
     public Point getLocation();
 
     /**
+     * Get the title of this window.
+     * 
+     * @return the window title
+     */
+    public String getTitle();
+
+    /**
      * Close this window. For JFrame, this calls dispose().
      * For JInternalFrame, this calls setClosed(true).
      */

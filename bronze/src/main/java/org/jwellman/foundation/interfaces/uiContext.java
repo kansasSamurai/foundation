@@ -5,7 +5,6 @@ import java.util.Map;
 
 import javax.swing.JPanel;
 
-import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.XPanel;
@@ -26,14 +25,6 @@ import org.jwellman.foundation.swing.XPanel;
  * @author rwellman
  */
 public interface uiContext {
-
-    /**
-     * Get the Foundation singleton reference.
-     * This allows the context to interact with application lifecycle operations.
-     *
-     * @return The Foundation instance
-     */
-    Foundation getFoundation();
 
     /**
      * Get the namespace identifier for this context.
