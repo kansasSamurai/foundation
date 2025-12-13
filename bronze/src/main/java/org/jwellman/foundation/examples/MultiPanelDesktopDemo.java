@@ -101,13 +101,11 @@ public class MultiPanelDesktopDemo {
         System.out.println("Calculator panels: " + Foundation.get().getPanels("tool.calculator").size());
         System.out.println("All namespaces: " + Foundation.get().getNamespaces());
 
+        // Note: The desktop window was already created and shown by Foundation.init()
         context.registerMasterPanel("master", controlPanel);
         Foundation.launch(context);
 
-        // Note: The desktop window was already created and shown by Foundation.init()
-//        Foundation.get().launch(controlPanel);
-//
-//        Foundation.get().launch(calcMainPanel);
+        Foundation.get().showWindow(browserPanel);
 
     }
 

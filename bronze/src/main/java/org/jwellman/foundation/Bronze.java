@@ -230,33 +230,30 @@ public class Bronze extends Stone {
     }
 
     /**
-     * Launch a panel (make it visible).
-     * <p>
+     * Make a panel visible.<br>
      * Auto-wraps JPanel in XPanel if needed.
-     *
-     * @param panel The JPanel to launch
-     */
-    public void launch(JPanel panel) {
-        XPanel xpanel = (panel instanceof XPanel) 
-                ? (XPanel) panel : new XPanel(panel);
-        launch(xpanel);
-    }
-
-    /**
-     * Launch a panel (make it visible).
      * <p>
      * If the panel is not already registered, it will be auto-registered
      * with namespace "app.main" and auto-generated panel ID.
-     *
-     * In window mode, launch() can only be called once.
-     * In desktop mode, launch() can be called multiple times.
-     *
-     * The first call to launch() closes the splash screen.
-     *
+     * 
+     * @param panel The JPanel to launch
+     */
+    public void showWindow(JPanel panel) {
+        XPanel xpanel = (panel instanceof XPanel) ? (XPanel) panel 
+                : new XPanel(panel);
+        showWindow(xpanel);
+    }
+
+    /**
+     * Make a panel visible.
+     * <p>
+     * If the panel is not already registered, it will be auto-registered
+     * with namespace "app.main" and auto-generated panel ID.
+     * 
      * @param panel The XPanel to launch
      * @throws IllegalStateException if called more than once in window mode
      */
-    public void launch(XPanel panel) {
+    public void showWindow(XPanel panel) {
 
         // Find existing registration
         PanelRegistration reg = findRegistrationByPanel(panel);
