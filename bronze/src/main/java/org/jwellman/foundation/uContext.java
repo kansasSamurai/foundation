@@ -1,4 +1,4 @@
-package org.jwellman.foundation.framework;
+package org.jwellman.foundation;
 
 import java.awt.Dimension;
 import java.util.HashMap;
@@ -6,6 +6,8 @@ import java.util.Map;
 
 import javax.swing.JPanel;
 
+import org.jwellman.foundation.framework.WindowPosition;
+import org.jwellman.foundation.interfaces.PanelLifecycleListener;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
@@ -26,11 +28,15 @@ import org.jwellman.foundation.swing.XPanel;
  */
 public class uContext implements uiContext {
 
-    /** An identifier for this context (namespace) */
+    /** Reference to the Foundation singleton for application lifecycle operations */
+    private final Foundation foundation;
+
+    /** An identifier for this application context (namespace) */
     public String namespace;
 
     /**
      * Panel registry for this context.
+     * <p>
      * Key: panelId (e.g., "main", "settings", "history")
      * Value: PanelRegistration metadata
      */
@@ -52,12 +58,28 @@ public class uContext implements uiContext {
     public String lookAndFeel;
 
     /**
-     * Public constructor for creating a context with a namespace.
+     * Package-private constructor for creating a context with a namespace.
+     * This should only be called by Foundation.createContext() methods.
      *
+     * @param foundation The Foundation singleton instance
      * @param namespace The namespace identifier for this context
      */
-    public uContext(String namespace) {
+    uContext(Foundation foundation, String namespace) {
+        if (foundation == null) {
+            throw new IllegalArgumentException("Foundation reference cannot be null");
+        }
+        this.foundation = foundation;
         this.namespace = namespace;
+    }
+
+    /**
+     * Get the Foundation singleton reference.
+     * This allows the context to interact with application lifecycle operations.
+     *
+     * @return The Foundation instance
+     */
+    public Foundation getFoundation() {
+        return foundation;
     }
 
     /** An indicator that you are using desktop mode; defaults to false. */
@@ -226,6 +248,96 @@ public class uContext implements uiContext {
     @Override
     public boolean hasPanelRegistration(String panelId) {
         return panelRegistry.containsKey(panelId);
+    }
+
+    /**
+     * Register a panel with required namespace and panel ID.
+     *
+     * @param namespace Tool/application identifier (e.g., "tool.calculator")
+     * @param panelId Unique ID within namespace (e.g., "main", "settings", "history")
+     * @param ui The JPanel to register
+     * @return The wrapped XPanel
+     */
+    public XPanel registerUI(String namespace, String panelId, JPanel ui) {
+        return registerUI(namespace, panelId, ui, null, null);
+    }
+
+    /**
+     * Register a panel with lifecycle listener.
+     *
+     * @param namespace Tool/application identifier
+     * @param panelId Unique ID within namespace
+     * @param ui The JPanel to register
+     * @param listener Lifecycle event listener
+     * @return The wrapped XPanel
+     */
+    public XPanel registerUI(String namespace, String panelId, JPanel ui, PanelLifecycleListener listener) {
+        return registerUI(namespace, panelId, ui, listener, null);
+    }
+
+    /**
+     * Register a panel with window positioning.
+     *
+     * @param namespace Tool/application identifier
+     * @param panelId Unique ID within namespace
+     * @param ui The JPanel to register
+     * @param position Window positioning strategy
+     * @return The wrapped XPanel
+     */
+    public XPanel registerUI(String namespace, String panelId, JPanel ui, WindowPosition position) {
+        return registerUI(namespace, panelId, ui, null, position);
+    }
+
+    /**
+     * Register a panel with lifecycle listener and window positioning.
+     *
+     * @param namespace Tool/application identifier
+     * @param panelId Unique ID within namespace
+     * @param ui The JPanel to register
+     * @param listener Lifecycle event listener (may be null)
+     * @param position Window positioning strategy (may be null, defaults to CASCADE)
+     * @return The wrapped XPanel
+     */
+    public XPanel registerUI(String namespace, String panelId, JPanel ui,
+             PanelLifecycleListener listener, WindowPosition position) {
+
+        // Get or create the uContext for this namespace
+        uiContext ctx = Foundation.get().getContextRegistry() .get(namespace);
+        if (ctx == null) {
+            ctx = Foundation.createContext(namespace);
+            Foundation.get().getContextRegistry() .put(namespace, ctx);
+        }
+
+        // Check if panel already registered in this context
+        if (ctx.hasPanelRegistration(panelId)) {
+            throw new IllegalArgumentException(
+                    "Panel already registered: " + namespace + ":" + panelId +
+                    ". Each panel must have a unique namespace:panelId combination.");
+        }
+
+        // Create wrapped panel
+        String fullId = namespace + ":" + panelId;
+        XPanel xpanel = new XPanel(ui);
+        xpanel.setName(fullId);
+
+        // Create registration
+        PanelRegistration reg = new PanelRegistration(namespace, panelId, xpanel, listener);
+
+        // Set positioning (or use default CASCADE)
+        if (position != null) {
+            reg.setWindowPosition(position);
+        }
+
+        // Register in the context's panel registry
+        ctx.registerPanel(panelId, reg);
+
+        // If we're in desktop mode and the desktop already exists (meaning init() has been called
+        // and window is visible), immediately create the internal frame for this panel
+        if (Boolean.TRUE.equals(this.isDesktopMode()) ) {
+            Foundation.get(). createInternalFrameForPanel(reg);
+        }
+
+        return xpanel;
     }
 
 }

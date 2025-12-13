@@ -10,8 +10,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import org.jwellman.foundation.Foundation;
+import org.jwellman.foundation.uContext;
 import org.jwellman.foundation.framework.WindowPosition;
-import org.jwellman.foundation.framework.uContext;
+import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.swing.XPanel;
 
 /**
@@ -35,10 +36,10 @@ public class SplashScreenDesktopDemo {
     public static void main(String[] args) {
 
         // Initialize Foundation in desktop mode - splash screen appears
-        uContext context = uContext.createContext(SplashScreenDesktopDemo.class);
+        uiContext context = Foundation.createContext(SplashScreenDesktopDemo.class);
         context.setDesktopMode(true);
         context.setDesktopTitle("Splash Screen Desktop Demo");
-        foundation = Foundation.init(context);
+        Foundation.init(context);
 
         // Register panels (frames created but not visible)
         XPanel mainPanel = foundation.registerUI(
@@ -71,18 +72,19 @@ public class SplashScreenDesktopDemo {
             int current = (i*100)/total;
             if (current > percent) {
                 percent = current;
-                foundation.getSplashProvider().updateProgress(percent, null); // "In progress...");
+                context.getSplashProvider().updateProgress(percent, null); // "In progress...");
             }
         }
 
-        foundation.getSplashProvider().updateProgress(100, "Initialization complete");
+        context.getSplashProvider().updateProgress(100, "Initialization complete");
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         // Launch first panel - splash closes, main panel appears
-        foundation.launch(mainPanel);
+        Foundation.launch(context);
 
         // After a delay, launch the tool panel
         try {
@@ -90,7 +92,7 @@ public class SplashScreenDesktopDemo {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        foundation.launch(toolPanel);
+        foundation._launch(toolPanel);
 
     }
 

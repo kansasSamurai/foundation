@@ -74,15 +74,6 @@ public interface uiDesktopProvider {
      */
     void onDesktopInitialized(JDesktopPane desktop);
 
-    /**
-     * Legacy method for backward compatibility.
-     *
-     * @deprecated Use {@link #createDesktop()} instead.
-     *             This method delegates to createDesktop() and ignores the parameter.
-     */
-    @Deprecated
-    default JDesktopPane doCustomDesktop(org.jwellman.foundation.swing.IWindow w) {
-        return createDesktop();
-    }
+    JDesktopPane getDesktop();
 
 }

@@ -5,7 +5,6 @@ import java.awt.BorderLayout;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
-import org.jwellman.foundation.framework.uContext;
 import org.jwellman.foundation.interfaces.uiContext;
 
 /**
@@ -42,7 +41,8 @@ public class Foundation extends Platinum {
      * @return A new uiContext instance
      */
     public static uiContext createContext(Class<?> clazz) {
-        return new uContext(clazz.getName());
+        ensureInstance();
+        return new uContext(instance, clazz.getName());
     }
 
     /**
@@ -52,7 +52,18 @@ public class Foundation extends Platinum {
      * @return A new uiContext instance
      */
     public static uiContext createContext(String namespace) {
-        return new uContext(namespace);
+        ensureInstance();
+        return new uContext(instance, namespace);
+    }
+
+    /**
+     * Ensure the singleton instance exists.
+     * This is called by createContext() methods to allow context creation before init().
+     */
+    private static void ensureInstance() {
+        if (instance == null) {
+            instance = new Foundation();
+        }
     }
 
     /**
@@ -88,9 +99,7 @@ public class Foundation extends Platinum {
      */
     public static uiContext init(uiContext c) {
         // Ensure singleton exists
-        if (instance == null) {
-            instance = new Foundation();
-        }
+        ensureInstance();
 
         // Delegate to Stone tier implementation
         return instance.initStone(c);
@@ -114,7 +123,7 @@ public class Foundation extends Platinum {
         }
 
         // Delegate to Stone tier implementation
-        instance.launchStone(context);
+        instance._launch(context);
     }
 
     /**
@@ -124,6 +133,31 @@ public class Foundation extends Platinum {
      */
     public static uiContext getMasterContext() {
         return instance.masterContext;
+    }
+
+    public static void showPanel(String namespace, String panelId) {
+        instance._showPanel(namespace, panelId);
+    }
+
+    public static void hidePanel(String namespace, String panelId) {
+        instance._hidePanel(namespace, panelId);
+    }
+
+    public static void togglePanel(String namespace, String panelId) {
+        instance._togglePanel(namespace, panelId);
+    }
+
+    /**
+     * This is a temporary workaround to get code working in Bronze.
+     * <p>
+     * Use of this method indicates an area in the code that needs to be
+     * altered/improved in order to NOT need direct access to the
+     * Foundation singleton.
+     * 
+     * @return
+     */
+    public static Foundation get() {
+        return instance;
     }
 
     /**

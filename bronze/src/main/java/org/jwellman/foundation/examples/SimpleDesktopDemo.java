@@ -2,13 +2,14 @@ package org.jwellman.foundation.examples;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import org.jwellman.foundation.Foundation;
-import org.jwellman.foundation.framework.uContext;
+import org.jwellman.foundation.interfaces.uiContext;
 
 /**
  * Minimal demonstration of Foundation Bronze tier in desktop mode (JInternalFrame in JDesktopPane).
@@ -70,23 +71,24 @@ public class SimpleDesktopDemo extends JPanel {
         // Note: Desktop mode requires explicit sizing because JDesktopPane cannot
         //       calculate preferred size from internal frames (they are positioned
         //       absolutely, not laid out by a layout manager)
-        uContext ctx = uContext.createContext(SimpleDesktopDemo.class);
+        uiContext ctx = Foundation.createContext(SimpleDesktopDemo.class);
         ctx.setDesktopMode(true);  // Enable desktop mode
         ctx.setDimension(1000, 600);  // Explicit size for desktop mode
         ctx.setDesktopTitle("Foundation Desktop Demo");
 
         // Step 2 - Initialize Foundation
-        Foundation f = Foundation.init(ctx);
+        Foundation.init(ctx);
 
         // Step 3 - Register the panel using Bronze's registerUI() API
         // The panel is identified by namespace:panelId ("demo.simple:main")
-        f.registerUI("demo.simple", "main", new SimpleDesktopDemo());
+        ctx.registerMasterPanel("main", new SimpleDesktopDemo());
 
         // Step 4 - Set a custom window title using the windowTitle property
-        f.getRegistration("demo.simple", "main").setWindowTitle("Foundation - Simple Desktop Demo");
+        ctx.getMasterPanel().setWindowTitle("Foundation - Simple Desktop Demo");
 
         // Step 5 - Show the panel
-        f.showPanel("demo.simple", "main");
+        Foundation.launch(ctx);
+
     }
 
 }

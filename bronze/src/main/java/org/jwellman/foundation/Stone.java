@@ -44,9 +44,6 @@ public class Stone {
 	/** The master application context - controls overall lifecycle */
 	protected uiContext masterContext;
 
-	/** A user interface context object (for backward compatibility) */
-	//protected final uiContext context;
-
 	/** Indicates desktop mode; null until first useWindow() or useDesktop() call */
 	protected Boolean isDesktop;
 
@@ -122,6 +119,17 @@ public class Stone {
             // Make sure our window decorations come from the look and feel.
             // JFrame.setDefaultLookAndFeelDecorated(true); // experimentally moved below on 12/7/2025
 
+            // Use LAFDiscovery to select and apply Look and Feel
+            // Priority: uContext.lookAndFeel -> config file -> ./lafs/ directory -> system default
+            JFrame.setDefaultLookAndFeelDecorated(true); 
+            JDialog.setDefaultLookAndFeelDecorated(true);
+            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(masterContext.getLookAndFeel());
+            if (!lafApplied) {
+                System.err.println("WARNING: Failed to apply any Look and Feel. UI may not render correctly.");
+            } else {
+                System.out.println("USING LAF: " + UIManager.getLookAndFeel().getName());
+            }
+
             // Save the context
             // IMPORTANT: context should NEVER be null
             // Foundation.init() ensures a valid context is always provided
@@ -134,16 +142,16 @@ public class Stone {
                 masterContext.getThemeProvider().doTheme();
             }
 
-            // Use LAFDiscovery to select and apply Look and Feel
-            // Priority: uContext.lookAndFeel -> config file -> ./lafs/ directory -> system default
-            JFrame.setDefaultLookAndFeelDecorated(true); 
-            JDialog.setDefaultLookAndFeelDecorated(true);
-            boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(masterContext.getLookAndFeel());
-            if (!lafApplied) {
-                System.err.println("WARNING: Failed to apply any Look and Feel. UI may not render correctly.");
-            } else {
-                System.out.println("USING LAF: " + UIManager.getLookAndFeel().getName());
+            // This may have to move again but it is done here so 
+            // that desktop mode code has a desktop provider after init().
+            
+            // Get or create desktop provider
+            // IMPORTANT: context is never null (guaranteed by Foundation.init())
+            if (masterContext.getDesktopProvider() == null) {
+                // Use default framework provider
+                masterContext.setDesktopProvider(new DefaultDesktopProvider());
             }
+            this.desktop = masterContext.getDesktopProvider().createDesktop();
 
         }
 
@@ -341,42 +349,42 @@ public class Stone {
                                                                              // perhaps uglier.
                         externalFrame.setContentPane(desktop);
                     } else {
-                        desktop = masterContext.getDesktopProvider().doCustomDesktop(externalFrame);
+                        desktop = masterContext.getDesktopProvider().getDesktop();
                     }
 
                     // Note that this only ADDs the window to the desktop;
                     // it is not pack(ed) nor setVisible()... that occurs later.
                     for (IWindow w : windows) {
                         if (w != externalFrame) {
-                            desktop.add(w.getComponent());
                             w.pack();
+                            w.setVisible(true);
                         }
                     }
 
                 }
 
-                        // Display the window.
-                        // In desktop mode, use explicit sizing (JDesktopPane cannot calculate preferred size)
-                        // In window mode, pack() calculates size from JPanel content
-                        if (masterContext.isDesktopMode()) {
-                            externalFrame.setSize(masterContext.getDimension()); // [E]
-                        } else {
-                            // Window mode: Use explicit dimension if set, otherwise pack()
-                            Dimension dim = masterContext.getDimension();
-                            if (dim != null && !dim.equals(new Dimension(900, 500))) {
-                                // User specified a custom dimension
-                                externalFrame.setSize(dim);
-                            } else {
-                                // Use default behavior: pack() sizes to content
-                                externalFrame.pack(); // [A] Let JPanel determine size
-                            }
-                        }
-                        externalFrame.setLocationRelativeTo(null); // [C]
-                        externalFrame.setVisible(true);
+                // Display the window.
+                // In desktop mode, use explicit sizing (JDesktopPane cannot calculate preferred size)
+                // In window mode, pack() calculates size from JPanel content
+//                if (masterContext.isDesktopMode()) { // TODO this has already occurred in desktop mode so research and fix code
+//                    externalFrame.setSize(masterContext.getDimension()); // [E]
+//                } else {
+//                    // Window mode: Use explicit dimension if set, otherwise pack()
+//                    Dimension dim = masterContext.getDimension();
+//                    if (dim != null && !dim.equals(new Dimension(900, 500))) {
+//                        // User specified a custom dimension
+//                        externalFrame.setSize(dim);
+//                    } else {
+//                        // Use default behavior: pack() sizes to content
+//                        externalFrame.pack(); // [A] Let JPanel determine size
+//                    }
+//                }
+//                externalFrame.setLocationRelativeTo(null); // [C]
+//                externalFrame.setVisible(true);
 
-                    }
-                } // end runnable / end run()
-        ); // end invokeLater()
+               } // end run()
+
+        } ); // end runnable / invokeLater()
 
         /*
          * All the other windows have been added to the desktop but they have not been
@@ -390,7 +398,12 @@ public class Stone {
             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+//                    w.pack();
+//                    w.setVisible(true);
+                    w.setLocation(50, 50);
                     w.pack();
+                    desktop.add(w.getComponent());
+                    desktop.setPosition(w.getComponent(), 0);
                     w.setVisible(true);
                 }
             });
@@ -460,16 +473,7 @@ public class Stone {
         // Set up desktop mode if needed
         if (isDesktop) {
 
-            // Get or create desktop provider
-            // IMPORTANT: context is never null (guaranteed by Foundation.init())
-            uiDesktopProvider provider;
-            if (masterContext.getDesktopProvider() != null) {
-                // Use custom provider from context
-                provider = masterContext.getDesktopProvider();
-            } else {
-                // Use default framework provider
-                provider = new DefaultDesktopProvider();
-            }
+            uiDesktopProvider provider = masterContext.getDesktopProvider();
 
             // Create desktop using provider (no parameters - supports nested desktops)
             desktop = provider.createDesktop();
@@ -630,7 +634,7 @@ public class Stone {
      *
      * @param ctx The uiContext to launch
      */
-    protected void launchStone(uiContext ctx) {
+    protected void _launch(uiContext ctx) {
         if (!isInitialized) {
             throw new IllegalStateException(
                 "Foundation must be initialized (call init()) before calling launch()");

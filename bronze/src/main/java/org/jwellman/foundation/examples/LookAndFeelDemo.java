@@ -76,7 +76,7 @@ public class LookAndFeelDemo {
         List<LAFInfo> lafs = LAFDiscovery.discoverLookAndFeels();
         if (lafs.isEmpty()) {
             System.err.println("ERROR: No Look and Feels discovered!");
-            System.exit(0);
+            return null;
         }
 
         // Create panel with radio buttons

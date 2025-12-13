@@ -5,13 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import javax.swing.JPanel;
 
-import org.jwellman.foundation.framework.WindowPosition;
-import org.jwellman.foundation.framework.uContext;
-import org.jwellman.foundation.interfaces.PanelLifecycleListener;
 import org.jwellman.foundation.interfaces.uiContext;
-import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XInternalFrame;
@@ -41,96 +38,6 @@ public class Bronze extends Stone {
      * Bronze -> uContext (by namespace) -> PanelRegistration (by panelId)
      */
     private final Map<String, uiContext> contextRegistry = new HashMap<>();
-
-    /**
-     * Register a panel with required namespace and panel ID.
-     *
-     * @param namespace Tool/application identifier (e.g., "tool.calculator")
-     * @param panelId Unique ID within namespace (e.g., "main", "settings", "history")
-     * @param ui The JPanel to register
-     * @return The wrapped XPanel
-     */
-    public XPanel registerUI(String namespace, String panelId, JPanel ui) {
-        return registerUI(namespace, panelId, ui, null, null);
-    }
-
-    /**
-     * Register a panel with lifecycle listener.
-     *
-     * @param namespace Tool/application identifier
-     * @param panelId Unique ID within namespace
-     * @param ui The JPanel to register
-     * @param listener Lifecycle event listener
-     * @return The wrapped XPanel
-     */
-    public XPanel registerUI(String namespace, String panelId, JPanel ui, PanelLifecycleListener listener) {
-        return registerUI(namespace, panelId, ui, listener, null);
-    }
-
-    /**
-     * Register a panel with window positioning.
-     *
-     * @param namespace Tool/application identifier
-     * @param panelId Unique ID within namespace
-     * @param ui The JPanel to register
-     * @param position Window positioning strategy
-     * @return The wrapped XPanel
-     */
-    public XPanel registerUI(String namespace, String panelId, JPanel ui, WindowPosition position) {
-        return registerUI(namespace, panelId, ui, null, position);
-    }
-
-    /**
-     * Register a panel with lifecycle listener and window positioning.
-     *
-     * @param namespace Tool/application identifier
-     * @param panelId Unique ID within namespace
-     * @param ui The JPanel to register
-     * @param listener Lifecycle event listener (may be null)
-     * @param position Window positioning strategy (may be null, defaults to CASCADE)
-     * @return The wrapped XPanel
-     */
-    public XPanel registerUI(String namespace, String panelId, JPanel ui,
-             PanelLifecycleListener listener, WindowPosition position) {
-
-        // Get or create the uContext for this namespace
-        uiContext ctx = contextRegistry.get(namespace);
-        if (ctx == null) {
-            ctx = Foundation.createContext(namespace);
-            contextRegistry.put(namespace, ctx);
-        }
-
-        // Check if panel already registered in this context
-        if (ctx.hasPanelRegistration(panelId)) {
-            throw new IllegalArgumentException(
-                    "Panel already registered: " + namespace + ":" + panelId +
-                    ". Each panel must have a unique namespace:panelId combination.");
-        }
-
-        // Create wrapped panel
-        String fullId = namespace + ":" + panelId;
-        XPanel xpanel = new XPanel(ui);
-        xpanel.setName(fullId);
-
-        // Create registration
-        PanelRegistration reg = new PanelRegistration(namespace, panelId, xpanel, listener);
-
-        // Set positioning (or use default CASCADE)
-        if (position != null) {
-            reg.setWindowPosition(position);
-        }
-
-        // Register in the context's panel registry
-        ctx.registerPanel(panelId, reg);
-
-        // If we're in desktop mode and the desktop already exists (meaning init() has been called
-        // and window is visible), immediately create the internal frame for this panel
-        if (Boolean.TRUE.equals(this.isDesktop) && this.getDesktop() != null) {
-            createInternalFrameForPanel(reg);
-        }
-
-        return xpanel;
-    }
 
     /**
      * Get a specific panel by namespace and ID.
@@ -215,7 +122,7 @@ public class Bronze extends Stone {
      * @param namespace The namespace
      * @param panelId The panel ID
      */
-    public void showPanel(String namespace, String panelId) {
+    protected void _showPanel(String namespace, String panelId) {
         PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
             IWindow window = reg.getWindow();
@@ -234,7 +141,7 @@ public class Bronze extends Stone {
      * @param namespace The namespace
      * @param panelId The panel ID
      */
-    public void hidePanel(String namespace, String panelId) {
+    protected void _hidePanel(String namespace, String panelId) {
         PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
             IWindow window = reg.getWindow();
@@ -252,13 +159,13 @@ public class Bronze extends Stone {
      * @param namespace The namespace
      * @param panelId The panel ID
      */
-    public void togglePanel(String namespace, String panelId) {
+    protected void _togglePanel(String namespace, String panelId) {
         PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
             if (reg.isVisible()) {
-                hidePanel(namespace, panelId);
+                _hidePanel(namespace, panelId);
             } else {
-                showPanel(namespace, panelId);
+                _showPanel(namespace, panelId);
             }
         }
     }
@@ -315,26 +222,29 @@ public class Bronze extends Stone {
         return allRegs;
     }
 
-    // Track whether launch() has been called in window mode (single-call enforcement)
-    private boolean windowModeLaunched = false;
-
     // Counter for auto-registration of launched panels
     private int autoRegistrationCounter = 0;
 
+    protected void _launch(uiContext ctx) {
+        super._launch(ctx);
+    }
+
     /**
      * Launch a panel (make it visible).
+     * <p>
      * Auto-wraps JPanel in XPanel if needed.
      *
      * @param panel The JPanel to launch
      */
     public void launch(JPanel panel) {
-        XPanel xpanel = (panel instanceof XPanel) ? (XPanel) panel : new XPanel(panel);
+        XPanel xpanel = (panel instanceof XPanel) 
+                ? (XPanel) panel : new XPanel(panel);
         launch(xpanel);
     }
 
     /**
      * Launch a panel (make it visible).
-     *
+     * <p>
      * If the panel is not already registered, it will be auto-registered
      * with namespace "app.main" and auto-generated panel ID.
      *
@@ -347,6 +257,7 @@ public class Bronze extends Stone {
      * @throws IllegalStateException if called more than once in window mode
      */
     public void launch(XPanel panel) {
+
         // Find existing registration
         PanelRegistration reg = findRegistrationByPanel(panel);
 
@@ -359,50 +270,45 @@ public class Bronze extends Stone {
 
         // Window mode: enforce single launch
         if (Boolean.FALSE.equals(this.isDesktop)) {
-            if (windowModeLaunched) {
-                throw new IllegalStateException(
-                    "launch() can only be called once in window mode. " +
-                    "Already launched: " + reg.getFullId());
-            }
-            windowModeLaunched = true;
 
             // Window mode: Close splash by replacing content pane
-            if (splashWindow != null && splashProvider != null) {
-                // Replace splash content with the actual panel
-                javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        getExternalFrame().setContentPane(panel);
-                        getExternalFrame().pack();
-                        getExternalFrame().setLocationRelativeTo(null);
+//            if (splashWindow != null && splashProvider != null) {
+//                // Replace splash content with the actual panel
+//                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        getExternalFrame().setContentPane(panel);
+//                        getExternalFrame().pack();
+//                        getExternalFrame().setLocationRelativeTo(null);
+//
+//                        // Fire splash closed event
+//                        splashProvider.onSplashClosed();
+//                        splashWindow = null;
+//                        splashProvider = null;
+//                    }
+//                });
+//            }
 
-                        // Fire splash closed event
-                        splashProvider.onSplashClosed();
-                        splashWindow = null;
-                        splashProvider = null;
-                    }
-                });
-            }
         } else {
             // Desktop mode: Close splash internal frame on first launch
-            if (splashWindow != null && splashProvider != null) {
-                final IWindow splashToClose = splashWindow;
-                final uiSplashProvider providerToNotify = splashProvider;
-
-                javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        splashToClose.setVisible(false);
-                        splashToClose.close();
-
-                        // Fire splash closed event
-                        providerToNotify.onSplashClosed();
-                    }
-                });
-
-                splashWindow = null;
-                splashProvider = null;
-            }
+//            if (splashWindow != null && splashProvider != null) {
+//                final IWindow splashToClose = splashWindow;
+//                final uiSplashProvider providerToNotify = splashProvider;
+//
+//                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        splashToClose.setVisible(false);
+//                        splashToClose.close();
+//
+//                        // Fire splash closed event
+//                        providerToNotify.onSplashClosed();
+//                    }
+//                });
+//
+//                splashWindow = null;
+//                splashProvider = null;
+//            }
 
             // Make the launched panel's internal frame visible
             IWindow window = reg.getWindow();
@@ -412,6 +318,7 @@ public class Bronze extends Stone {
                 reg.fireOnShow();
             }
         }
+
     }
 
     /**
@@ -463,13 +370,28 @@ public class Bronze extends Stone {
     }
 
     /**
+     * Permits access to the context registry.
+     * <p>
+     * TODO I believe this is also a temporary fix in Bronze for the context
+     * code to work in the registerUI() method.  This needs more research but
+     * I am pretty sure that a "tool context" should not need access to the
+     * overall "tool context registry".
+     * 
+     * @return
+     */
+    public Map<String, uiContext> getContextRegistry() {
+        return contextRegistry;
+    }
+
+    /**
      * Creates an internal frame for a single panel registration.
      * This is called either during initialization (for panels registered before init)
      * or immediately when a panel is registered after init.
      *
      * @param reg The panel registration
      */
-    private void createInternalFrameForPanel(PanelRegistration reg) {
+    public void createInternalFrameForPanel(PanelRegistration reg) {
+
         if (reg.getInternalFrame() != null) {
             // Already has an internal frame, skip
             return;

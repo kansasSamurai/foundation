@@ -2,6 +2,7 @@ package org.jwellman.foundation.extend;
 
 import javax.swing.JPanel;
 import org.jwellman.foundation.Foundation;
+import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiThemeProvider;
 import org.jwellman.foundation.swing.IWindow;
 
@@ -62,16 +63,16 @@ abstract public class AbstractSimpleApp implements uiThemeProvider {
 		// context.setDimension(uiunit * 5, uiunit * 9);
 
         // Step 1 - Initialize Swing; if you want a non-null uContext, an example is in the comments above.
-        final Foundation f = Foundation.init(null);
+        final uiContext f = Foundation.init(null);
 
         // Step 2 - Create your UIs in JPanel(s)
-        mainui = f.registerUI("org.jwellman.foundation.examples.AbstractSimpleApp", "main", this.getMainUI());
+        f.registerMasterPanel(getTitle(),  this.getMainUI());
 
         // Step 3 - Use Foundation to create your "window"; give it your UI.
-        window = asMainFrame ? f.useWindow(mainui) : f.useDesktop(mainui);
-        window.setTitle(this.getTitle()); // Step 3a (optional) - Customize your window
-        window.setResizable(true); // Step 3a (optional) - Customize your window
-        window.setMaximizable(true); // Step 3a (optional) - Customize your window
+//        window = asMainFrame ? f.useWindow(mainui) : f.useDesktop(mainui);
+//        window.setTitle(this.getTitle()); // Step 3a (optional) - Customize your window
+//        window.setResizable(true); // Step 3a (optional) - Customize your window
+//        window.setMaximizable(true); // Step 3a (optional) - Customize your window
 
         // Step 4a - Create data models, controllers, and other non-UI objects
         // n/a
@@ -79,7 +80,8 @@ abstract public class AbstractSimpleApp implements uiThemeProvider {
         // n/a
 
         // Step 5 - Display your User Interface
-        f.showGUI(window);
+        Foundation.launch(f);
+
     }
 
     /**

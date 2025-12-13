@@ -4,16 +4,18 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+
 import org.jwellman.foundation.Foundation;
+import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.PanelLifecycleListener;
+import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XPanel;
-import org.jwellman.foundation.framework.WindowPosition;
-import org.jwellman.foundation.framework.uContext;
 
 /**
  * Demonstrates Foundation's enhanced multi-panel desktop capabilities.
@@ -37,19 +39,19 @@ import org.jwellman.foundation.framework.uContext;
  */
 public class MultiPanelDesktopDemo {
 
-    private static Foundation foundation;
-
+    @SuppressWarnings("unused")
     public static void main(String[] args) {
 
         // Step 1 - Initialize Foundation with desktop mode
-        uContext context = uContext.createContext(MultiPanelDesktopDemo.class);
+        uiContext context = Foundation.createContext(MultiPanelDesktopDemo.class);
         context.setDesktopMode(true);
         context.setDesktopTitle("Multi-Tool Desktop - Bronze Tier Demo");
-        foundation = Foundation.init(context);
+
+        Foundation.init(context);
 
         // Step 2 - Register Calculator tool with main and history panels
         System.out.println("=== Registering Calculator Tool ===");
-        XPanel calcMainPanel = foundation.registerUI(
+        XPanel calcMainPanel = context.registerUI(
                 "tool.calculator",
                 "main",
                 createCalculatorPanel(),
@@ -57,7 +59,7 @@ public class MultiPanelDesktopDemo {
                 WindowPosition.cascade()
         );
 
-        XPanel calcHistoryPanel = foundation.registerUI(
+        XPanel calcHistoryPanel = context.registerUI(
                 "tool.calculator",
                 "history",
                 createHistoryPanel(),
@@ -67,7 +69,7 @@ public class MultiPanelDesktopDemo {
 
         // Step 3 - Register Text Editor tool
         System.out.println("=== Registering Text Editor Tool ===");
-        XPanel editorPanel = foundation.registerUI(
+        XPanel editorPanel = context.registerUI(
                 "tool.editor",
                 "main",
                 createToolPanel("Text Editor", Color.WHITE),
@@ -77,7 +79,7 @@ public class MultiPanelDesktopDemo {
 
         // Step 4 - Register File Browser tool
         System.out.println("=== Registering File Browser Tool ===");
-        XPanel browserPanel = foundation.registerUI(
+        XPanel browserPanel = context.registerUI(
                 "tool.browser",
                 "main",
                 createToolPanel("File Browser", new Color(230, 240, 255)),
@@ -86,7 +88,7 @@ public class MultiPanelDesktopDemo {
         );
 
         // Step 5 - Create control panel for managing panels
-        XPanel controlPanel = foundation.registerUI(
+        XPanel controlPanel = context.registerUI(
                 "system",
                 "control",
                 createControlPanel(),
@@ -96,13 +98,16 @@ public class MultiPanelDesktopDemo {
 
         // Step 6 - Demonstrate querying the registry
         System.out.println("\n=== Panel Registry Query ===");
-        System.out.println("Calculator panels: " + foundation.getPanels("tool.calculator").size());
-        System.out.println("All namespaces: " + foundation.getNamespaces());
+        System.out.println("Calculator panels: " + Foundation.get().getPanels("tool.calculator").size());
+        System.out.println("All namespaces: " + Foundation.get().getNamespaces());
+
+        context.registerMasterPanel("master", controlPanel);
+        Foundation.launch(context);
 
         // Note: The desktop window was already created and shown by Foundation.init()
-        foundation.launch(controlPanel);
-
-        foundation.launch(calcMainPanel);
+//        Foundation.get().launch(controlPanel);
+//
+//        Foundation.get().launch(calcMainPanel);
 
     }
 
@@ -124,27 +129,27 @@ public class MultiPanelDesktopDemo {
         // Toggle calculator history
         JButton toggleHistoryBtn = new JButton("Toggle Calc History");
         toggleHistoryBtn.addActionListener(e -> {
-            foundation.togglePanel("tool.calculator", "history");
+            Foundation. togglePanel("tool.calculator", "history");
             System.out.println("Calculator history visible: " +
-                    foundation.isPanelVisible("tool.calculator", "history"));
+                    Foundation.get().isPanelVisible("tool.calculator", "history"));
         });
         buttonPanel.add(toggleHistoryBtn);
 
         // Toggle editor
         JButton toggleEditorBtn = new JButton("Toggle Editor");
         toggleEditorBtn.addActionListener(e -> {
-            foundation.togglePanel("tool.editor", "main");
+            Foundation. togglePanel("tool.editor", "main");
             System.out.println("Editor visible: " +
-                    foundation.isPanelVisible("tool.editor", "main"));
+                    Foundation.get().isPanelVisible("tool.editor", "main"));
         });
         buttonPanel.add(toggleEditorBtn);
 
         // Toggle file browser
         JButton toggleBrowserBtn = new JButton("Toggle File Browser");
         toggleBrowserBtn.addActionListener(e -> {
-            foundation.togglePanel("tool.browser", "main");
+            Foundation. togglePanel("tool.browser", "main");
             System.out.println("File browser visible: " +
-                    foundation.isPanelVisible("tool.browser", "main"));
+                    Foundation.get().isPanelVisible("tool.browser", "main"));
         });
         buttonPanel.add(toggleBrowserBtn);
 
@@ -177,7 +182,7 @@ public class MultiPanelDesktopDemo {
         JPanel buttons = new JPanel(new FlowLayout());
         JButton showHistoryBtn = new JButton("Show History");
         showHistoryBtn.addActionListener(e -> {
-            foundation.showPanel("tool.calculator", "history");
+            Foundation. showPanel("tool.calculator", "history");
         });
         buttons.add(showHistoryBtn);
         panel.add(buttons, BorderLayout.SOUTH);

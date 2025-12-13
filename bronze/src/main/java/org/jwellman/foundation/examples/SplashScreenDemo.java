@@ -32,6 +32,7 @@ public class SplashScreenDemo extends JPanel {
 
     public SplashScreenDemo() {
         super(new BorderLayout());
+
         setupUI();
     }
 
@@ -81,9 +82,15 @@ public class SplashScreenDemo extends JPanel {
         // Initialize Foundation - splash screen appears here
         uiContext app = Foundation.createContext(SplashScreenDemo.class);
         app.setSplashProvider(new DefaultSplashProvider());
+
         Foundation.init(app);
 
+        app.registerMasterPanel("master", new SplashScreenDemo());
+
         // Simulate more work
+        boolean displaySplash = false; // temporary debugging variable
+        if (displaySplash) {
+            
         final int total = 500; // foundation.logEnvironment(); // classpathEntries.length + fonts.length;
         final int delay = 4000 / total;
         int percent = 0;
@@ -108,6 +115,7 @@ public class SplashScreenDemo extends JPanel {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
         }
 
         // Launch the application - splash screen closes, app appears
