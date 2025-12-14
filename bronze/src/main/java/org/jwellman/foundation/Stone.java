@@ -154,7 +154,7 @@ public class Stone {
                 // Use default framework provider
                 masterContext.setDesktopProvider(new DefaultDesktopProvider());
             }
-            this.desktop = masterContext.getDesktopProvider().createDesktop();
+            setDesktop(masterContext.getDesktopProvider().createDesktop());
 
         }
 
@@ -360,13 +360,13 @@ public class Stone {
 
                 if (masterContext.isDesktopMode()) {
                     if (masterContext.getDesktopProvider() == null) {
-                        desktop = new JDesktopPane(); // a specialized layered pane
+                        setDesktop( new JDesktopPane()); // a specialized layered pane
                         desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE); 
                         // Make dragging a little faster but perhaps uglier.
 
                         externalFrame.setContentPane(desktop);
                     } else {
-                        desktop = masterContext.getDesktopProvider().getDesktop();
+                        setDesktop( masterContext.getDesktopProvider().getDesktop());
                     }
 
                     // Note that this only ADDs the window to the desktop;
@@ -425,11 +425,12 @@ public class Stone {
 // The missing piece was desktop.add() [but am a little confused because that WAS part of createInternalFrame?]
 // It may turn out that you can't add to a desktop until it has been made visible?
 //                    w.add(new JLabel("temp"));
-                    w.pack();
+//                    w.pack(); // hopefully done in Bronze.createInternalFrameForPanel
 //                    w.setLocation(100, 100);
                     // need access to PanelRegistration to get WindowPosition and call apply()
                     w.setVisible(true);
-                    desktop.add(w.getComponent());
+                    System.out.println("JDesktopPane stone: " + uUtility.objString(desktop));
+//                    desktop.add(w.getComponent()); // hopefully done in Bronze.createInternalFrameForPanel
                     System.out.println("Make visible: " + w.getTitle());
 
                     // This follows the oracle tutorial
@@ -469,8 +470,23 @@ public class Stone {
         this.externalFrame = xFrame;
     }
 
+    /**
+     * I don't think we want this public in the long term - may have to compare
+     * Stone vs Bronze.
+     * 
+     * @return
+     */
     public JDesktopPane getDesktop() {
         return desktop;
+    }
+
+    protected void setDesktop(JDesktopPane p) {
+        if (desktop == null) {
+            desktop = p;
+            System.out.println("INFO - Setting desktop: " + uUtility.objString(p));
+        } else {
+            System.out.println("ERROR - Cannot override current desktop");
+        }
     }
 
     protected XFrame getExternalFrame() {
@@ -535,7 +551,7 @@ public class Stone {
             uiDesktopProvider provider = masterContext.getDesktopProvider();
 
             // Create desktop using provider (no parameters - supports nested desktops)
-            desktop = provider.createDesktop();
+            setDesktop(provider.createDesktop());
 
             // Framework sets desktop as content pane
             externalFrame.setContentPane(desktop);

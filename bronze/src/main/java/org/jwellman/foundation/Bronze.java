@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.swing.JDesktopPane;
 import javax.swing.JPanel;
 
+import org.jwellman.foundation.framework.uUtility;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.IWindow;
@@ -452,7 +454,9 @@ public class Bronze extends Stone {
 
         // Add to desktop
         // TODO eventually this needs to add via the desktop provider of the current app context
-        // this.getDesktop().add(iframe);
+        JDesktopPane d = this.getDesktop();
+        System.out.println("JDesktopPane bronze: " + uUtility.objString(d));
+        d.add(iframe);
 
         // Fire onCreate event
         reg.fireOnCreate();

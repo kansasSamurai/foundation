@@ -99,20 +99,20 @@ public class MultiPanelDesktopDemo {
         context.registerMasterPanel(controlPanel);
         Foundation.launch(context);
 
-        Foundation.get().launchWindow(editorPanel);
-        Foundation.get().launchWindow(browserPanel);
-        Foundation.get().launchWindow(calcMainPanel);
-        Foundation.get().launchWindow(calcHistoryPanel);
+//        Foundation.get().launchWindow(editorPanel);
+//        Foundation.get().launchWindow(browserPanel);
+//        Foundation.get().launchWindow(calcMainPanel);
+//        Foundation.get().launchWindow(calcHistoryPanel);
 
         /* I would prefer the syntax below but I still have the issue of 
          * adding these panels to the desktop before using hide()/show().
          * So until then I need to use the syntax above.
          */
-//      editorPanel.show();
-//      browserPanel.show();
-//      calcMainPanel.show();
-//      calcHistoryPanel.show();
-      
+      editorPanel.show();
+      browserPanel.show();
+      calcMainPanel.show();
+      calcHistoryPanel.show();
+
     }
 
     /**
