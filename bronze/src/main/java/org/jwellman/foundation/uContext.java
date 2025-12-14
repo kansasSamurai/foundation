@@ -189,14 +189,23 @@ public class uContext implements uiContext {
      * 
      */
     @Override
-    public void registerMasterPanel(String panelId, JPanel panel) {
+    public PanelRegistration registerMasterPanel(String panelId, JPanel panel) {
         if (panelRegistry.containsKey(panelId)) {
             throw new IllegalArgumentException(
                     "Panel already registered in context '" + namespace + "': " + panelId);
         }
-        registerUI(panelId, panel);
-        PanelRegistration reg = getPanelRegistration(panelId);
+        PanelRegistration reg = registerUI(panelId, panel);
+        return this.registerMasterPanel(reg);
+    }
+
+    /**
+     * 
+     * @param reg
+     */
+    @Override
+    public PanelRegistration registerMasterPanel(PanelRegistration reg) {
         masterPanel = reg;
+        return reg;
     }
 
     /**
@@ -251,50 +260,41 @@ public class uContext implements uiContext {
     }
 
     /**
-     * Register a panel with required namespace and panel ID.
+     * Register a panel with required panel ID.
      *
-     * @param namespace Tool/application identifier (e.g., "tool.calculator")
-     * @param panelId Unique ID within namespace (e.g., "main", "settings", "history")
+     * @param panelId Unique ID within this context's namespace (e.g., "main", "settings", "history")
      * @param ui The JPanel to register
-     * @return The wrapped XPanel
+     * @return The PanelRegistration for this panel
      */
-    public XPanel registerUI(String panelId, JPanel ui) {
+    public PanelRegistration registerUI(String panelId, JPanel ui) {
         return registerUI(panelId, ui, null, null);
     }
 
     /**
      * Register a panel with window positioning (no lifecycle listener).
      *
-     * @param namespace Tool/application identifier
-     * @param panelId Unique ID within namespace
+     * @param panelId Unique ID within this context's namespace
      * @param ui The JPanel to register
      * @param position Window positioning strategy
-     * @return The wrapped XPanel
+     * @return The PanelRegistration for this panel
      */
-    public XPanel registerUI(String panelId, JPanel ui, WindowPosition position) {
+    public PanelRegistration registerUI(String panelId, JPanel ui, WindowPosition position) {
         return registerUI(panelId, ui, null, position);
     }
 
     /**
      * Register a panel with lifecycle listener and window positioning.
      *
-     * @param panelId Unique ID within namespace
+     * @param panelId Unique ID within this context's namespace
      * @param ui The JPanel to register
      * @param listener Lifecycle event listener (may be null)
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
-     * @return The wrapped XPanel
+     * @return The PanelRegistration for this panel
      */
-    public XPanel registerUI(String panelId, JPanel ui, PanelLifecycleListener listener, WindowPosition position) {
+    public PanelRegistration registerUI(String panelId, JPanel ui, PanelLifecycleListener listener, WindowPosition position) {
 
         // Get or create the uContext for this namespace
         uiContext ctx = this;
-        // No longer need to get this from Foundation since we ARE in the context.
-        // However, check that bronze foundation context registry is getting updated before removing this entirely.
-//        Foundation.get().getContextRegistry() .get(namespace);
-//        if (ctx == null) {
-//            ctx = Foundation.createContext(namespace);
-//            Foundation.get().getContextRegistry() .put(namespace, ctx);
-//        }
 
         // Check if panel already registered in this context
         if (ctx.hasPanelRegistration(panelId)) {
@@ -329,7 +329,7 @@ public class uContext implements uiContext {
 //            reg.fireOnShow();
         }
 
-        return xpanel;
+        return reg;
     }
 
 }

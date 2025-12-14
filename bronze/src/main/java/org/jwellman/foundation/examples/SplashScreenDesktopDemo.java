@@ -13,6 +13,7 @@ import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.uContext;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiContext;
+import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.XPanel;
 
 /**
@@ -31,8 +32,6 @@ import org.jwellman.foundation.swing.XPanel;
  */
 public class SplashScreenDesktopDemo {
 
-    private static Foundation foundation;
-
     public static void main(String[] args) {
 
         // Initialize Foundation in desktop mode - splash screen appears
@@ -42,22 +41,20 @@ public class SplashScreenDesktopDemo {
         Foundation.init(context);
 
         // Register panels (frames created but not visible)
-        XPanel mainPanel = foundation.registerUI(
-            "demo.app", "main",
+        PanelRegistration mainPanel = context.registerUI(
+            "demo.app", 
             createMainPanel(),
-            null,
             WindowPosition.center()
         );
 
-        XPanel toolPanel = foundation.registerUI(
-            "demo.tool", "calculator",
+        PanelRegistration toolPanel = context.registerUI(
+            "demo.tool",  
             createToolPanel("Calculator"),
-            null,
             WindowPosition.cascade()
         );
 
         // Simulate more work
-        final int total = foundation.logEnvironment(); // classpathEntries.length + fonts.length;
+        final int total = Foundation.get() .logEnvironment(); // classpathEntries.length + fonts.length;
         final int delay = 4000 / total;
         int percent = 0;
         for (int i = 0; i <= total; i++) {
@@ -92,7 +89,8 @@ public class SplashScreenDesktopDemo {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        foundation._launch(toolPanel);
+        Foundation.get().launchWindow(toolPanel);
+//        foundation._launch(toolPanel);
 
     }
 

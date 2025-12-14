@@ -13,8 +13,6 @@ import java.util.Map;
 import javax.swing.JDesktopPane;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
@@ -294,8 +292,9 @@ public class Stone {
      * 
      * @param masterPanel
      */
-    protected IWindow launchWindow(PanelRegistration reg) {
+    public IWindow launchWindow(PanelRegistration reg) {
         this.launchWindow(reg.getWindow());
+        reg.setVisible(true);
         return reg.getWindow();
 //        return this.launchWindow(reg.getPanel(), reg.getWindowTitle());
     }

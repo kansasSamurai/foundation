@@ -7,7 +7,6 @@ import javax.swing.JPanel;
 
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.model.PanelRegistration;
-import org.jwellman.foundation.swing.XPanel;
 
 /**
  * Strategy interface for a Foundation application context.
@@ -176,10 +175,17 @@ public interface uiContext {
     /**
      * Register the "master" panel of an application context.
      *
-     * @param string
-     * @param createUI
+     * @param panelId
+     * @param panel
      */
-    void registerMasterPanel(String string, JPanel createUI);
+    PanelRegistration registerMasterPanel(String string, JPanel panel);
+
+    /**
+     * Register the "master" panel of an application context.
+     *
+     * @param reg, the PanelRegistration designated as the master.
+     */
+    PanelRegistration registerMasterPanel(PanelRegistration reg);
 
     /**
      * Retrieve the "master" panel of an application context.
@@ -220,36 +226,33 @@ public interface uiContext {
     boolean hasPanelRegistration(String panelId);
 
     /**
-     * Register a panel with required namespace and panel ID.
+     * Register a panel with required panel ID.
      *
-     * @param namespace Tool/application identifier (e.g., "tool.calculator")
-     * @param panelId Unique ID within namespace (e.g., "main", "settings", "history")
+     * @param panelId Unique ID within this context's namespace (e.g., "main", "settings", "history")
      * @param ui The JPanel to register
-     * @return The wrapped XPanel
+     * @return The PanelRegistration for this panel
      */
-    XPanel registerUI(String panelId, JPanel ui);
+    PanelRegistration registerUI(String panelId, JPanel ui);
 
     /**
      * Register a panel with window positioning.
      *
-     * @param namespace Tool/application identifier
-     * @param panelId Unique ID within namespace
+     * @param panelId Unique ID within this context's namespace
      * @param ui The JPanel to register
      * @param position Window positioning strategy
-     * @return The wrapped XPanel
+     * @return The PanelRegistration for this panel
      */
-    XPanel registerUI(String panelId, JPanel ui, WindowPosition position);
+    PanelRegistration registerUI(String panelId, JPanel ui, WindowPosition position);
 
     /**
      * Register a panel with lifecycle listener and window positioning.
      *
-     * @param namespace Tool/application identifier
-     * @param panelId Unique ID within namespace
+     * @param panelId Unique ID within this context's namespace
      * @param ui The JPanel to register
      * @param listener Lifecycle event listener (may be null)
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
-     * @return The wrapped XPanel
+     * @return The PanelRegistration for this panel
      */
-    XPanel registerUI(String panelId, JPanel ui, PanelLifecycleListener listener, WindowPosition position);
+    PanelRegistration registerUI(String panelId, JPanel ui, PanelLifecycleListener listener, WindowPosition position);
 
 }
