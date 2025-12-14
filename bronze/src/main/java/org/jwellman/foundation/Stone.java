@@ -13,6 +13,8 @@ import java.util.Map;
 import javax.swing.JDesktopPane;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
@@ -79,9 +81,11 @@ public class Stone {
 	 *
 	 * @param c the micro context
 	 */
-	protected final void _init(uiContext c) {
+	protected uiContext _init(uiContext c) {
 
         if (isInitialized) {
+            // TODO eventually in bronze we need to be able to init a new context, it just won't be the master context
+            
             System.out.print("WARN - init() has been called more than once...");
             System.out.print("WARN - ... in a single app use case, this usually indicates a misuse of the API");
             System.out.print("WARN - ... which may often result in unexpected/undesired behavior.");
@@ -91,6 +95,7 @@ public class Stone {
             masterContext = c;
             isInitialized = true;
 
+            
             // I haven't settled on where I want this yet but I do want it 
             // as part of the bootstrapping process for debugging purposes.
             // For now, I have created logEnvironment() for this:
@@ -155,6 +160,7 @@ public class Stone {
 
         }
 
+        return c;
     } // end method
 
     /**
@@ -190,7 +196,7 @@ public class Stone {
         } else {
             // Create JFrame for window mode
             if (externalFrame == null) {
-                externalFrame = new XFrame(DEFAULT_APP_TITLE);
+                this.setExternalFrame(new XFrame(DEFAULT_APP_TITLE));
 
                 if (masterContext.getDesktopTitle() != null)
                     externalFrame.setTitle(masterContext.getDesktopTitle());
@@ -247,6 +253,8 @@ public class Stone {
     } // end method
 
     /**
+     * UPDATE DEC 2025: I hate this name - needs to be showWindow but not conflict with bronze._showWindow()
+     * 
      * Convenience method: 
      * Creates a window for the JPanel with the specified title and immediately launches it.
      * This is the one-step approach for simple applications.
@@ -263,6 +271,8 @@ public class Stone {
     }
 
     /**
+     * UPDATE DEC 2025: I hate this name - needs to be showWindow but not conflict with bronze._showWindow()
+     * 
      * Convenience method: 
      * Creates a window for the JPanel and immediately launches it.
      * Uses a default title: "Your App -- Powered By the Foundation API"
@@ -276,6 +286,8 @@ public class Stone {
     }
 
     /**
+     * UPDATE DEC 2025: I hate this name - needs to be showWindow but not conflict with bronze._showWindow()
+     * 
      * Overloaded launchWindow that takes PanelRegistration object.
      * 
      * @param masterPanel
@@ -285,6 +297,8 @@ public class Stone {
     }
 
     /**
+     * UPDATE DEC 2025: I hate this name - needs to be showWindow but not conflict with bronze._showWindow()
+     * 
      * Launches the given window, making it visible to the user.
      * This is the second step of the two-step approach (createWindow + launchWindow).
      *
@@ -299,6 +313,8 @@ public class Stone {
     }
 
     /**
+     * UPDATE DEC 2025: I hate this name - needs to be showWindow but not conflict with bronze._showWindow()
+     * 
      * Launches multiple windows, making them visible to the user.
      * Primarily used in desktop mode to launch multiple internal frames.
      *
@@ -324,7 +340,7 @@ public class Stone {
             }
 
             // We have not registered a desktop/main so create one
-            externalFrame = new XFrame(DEFAULT_APP_TITLE);
+            this.setExternalFrame(new XFrame(DEFAULT_APP_TITLE));
 
             // TODO The jPAD security manager doesn't like this line
             // but other apps without jpad might... review this design
@@ -338,7 +354,6 @@ public class Stone {
         // Start the GUI on the Event Dispatch Thread (EDT)
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
 
-            @SuppressWarnings("deprecation")
             @Override
             public void run() {
 
@@ -398,18 +413,58 @@ public class Stone {
             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+                    // 12/13 commenting most of this out for debugging.
+                    // (but now realizing maybe this is a "conflict" between
+                    // stone and bronze code)
+                    // in bronze.createInternalFrameForPanel() we do most of 
+                    // this work already except setting visible.  
+                    w.setTitle(uUtility.valueOrDefault(w.getTitle(), "iwindow"));
+// These were to debug but not necessary because bronze.createInternalFrame... is doing it correctly.
+// The missing piece was desktop.add() [but am a little confused because that WAS part of createInternalFrame?]
+// It may turn out that you can't add to a desktop until it has been made visible?
+//                    w.add(new JLabel("temp"));
 //                    w.pack();
-//                    w.setVisible(true);
-                    w.setLocation(50, 50);
-                    w.pack();
-                    desktop.add(w.getComponent());
-                    desktop.setPosition(w.getComponent(), 0);
+//                    w.setLocation(100, 100);
                     w.setVisible(true);
+                    desktop.add(w.getComponent());
+                    System.out.println("Make visible: " + w.getTitle());
+
+                    // This follows the oracle tutorial
+                    //... set the window size or call pack
+                    //... set the window's location
+                    //... set visible
+                    //... add to desktop
+//                    System.out.println("w " + w.toString());
+//                    System.out.println("c " + w.getComponent().toString());
+//                    desktop.add(w.getComponent());
+//                      desktop.setPosition(w.getComponent(), 0);
+// This will create an internal frame for debugging purposes
+//                    JInternalFrame f = new JInternalFrame();
+//                    f.setTitle("temp");
+//                    f.add(new JLabel("temp"));
+//                    f.pack();
+//                    f.setLocation(50, 50);
+//                    f.setVisible(true);
+//                    desktop.add(f);
+                    
                 }
             });
         }
 
     } // end method
+
+    /**
+     * A private setter to enforce that external logic should never try to 
+     * set the external frame after it has already been created.  
+     * 
+     * @param xFrame
+     */
+    private void setExternalFrame(XFrame xFrame) {
+        if (this.externalFrame != null) {
+            throw new IllegalArgumentException("ExternalFrame has already been initialized.");
+        }
+        this.externalFrame = xFrame;
+    }
 
     public JDesktopPane getDesktop() {
         return desktop;
@@ -451,6 +506,7 @@ public class Stone {
      * multiple times as different tools are loaded).
      */
     protected void _initializeAndShowWindow() {
+
         // If we already have a visible frame, do nothing
         if (externalFrame != null && externalFrame.isVisible()) {
             return;
@@ -466,7 +522,7 @@ public class Stone {
         // Create the external frame if it doesn't exist
         if (externalFrame == null) {
             String title = uUtility.valueOrDefault(masterContext.getDesktopTitle(), "Foundation Application");
-            externalFrame = new XFrame(title);
+            this.setExternalFrame(new XFrame(title));
             externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         }
 
@@ -542,7 +598,8 @@ public class Stone {
             e.printStackTrace();
         }
 
-        this.logEnvironment();
+        // temporarily disable while debugging demos
+        // this.logEnvironment();
 
     }
 
@@ -595,6 +652,7 @@ public class Stone {
     /**
      * This is basically a noop in Stone since it only supports a single
      * application window.  Other levels will definitely override this.
+     * TODO remove this method, its function has been deprecated from the design
      */
     protected void initializeOtherWindows() {}
 
@@ -610,19 +668,19 @@ public class Stone {
      * @param c The master context (MUST NOT be null)
      * @return The master uiContext (same instance that was passed in)
      */
-    public uiContext initStone(uiContext c) {
-        // IMPORTANT: context must NEVER be null
-        // If null, this is a fundamental framework bug - fail fast with NPE
-        if (c == null) {
-            throw new NullPointerException("Context cannot be null");
-        }
-
-        // Initialize Look and Feel
-        _init(c);
-
-        // Return the master context
-        return masterContext;
-    }
+//    public uiContext initStone(uiContext c) {
+//        // IMPORTANT: context must NEVER be null
+//        // If null, this is a fundamental framework bug - fail fast with NPE
+//        if (c == null) {
+//            throw new NullPointerException("Context cannot be null");
+//        }
+//
+//        // Initialize Look and Feel
+//        _init(c);
+//
+//        // Return the master context
+//        return masterContext;
+//    }
 
     /**
      * Launch the application with the given context.

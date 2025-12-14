@@ -194,9 +194,9 @@ public class uContext implements uiContext {
             throw new IllegalArgumentException(
                     "Panel already registered in context '" + namespace + "': " + panelId);
         }
-        PanelRegistration reg = new PanelRegistration(namespace, panelId, new XPanel(panel), null);
+        registerUI(panelId, panel);
+        PanelRegistration reg = getPanelRegistration(panelId);
         masterPanel = reg;
-        panelRegistry.put(panelId, reg);
     }
 
     /**
@@ -258,25 +258,12 @@ public class uContext implements uiContext {
      * @param ui The JPanel to register
      * @return The wrapped XPanel
      */
-    public XPanel registerUI(String namespace, String panelId, JPanel ui) {
-        return registerUI(namespace, panelId, ui, null, null);
+    public XPanel registerUI(String panelId, JPanel ui) {
+        return registerUI(panelId, ui, null, null);
     }
 
     /**
-     * Register a panel with lifecycle listener.
-     *
-     * @param namespace Tool/application identifier
-     * @param panelId Unique ID within namespace
-     * @param ui The JPanel to register
-     * @param listener Lifecycle event listener
-     * @return The wrapped XPanel
-     */
-    public XPanel registerUI(String namespace, String panelId, JPanel ui, PanelLifecycleListener listener) {
-        return registerUI(namespace, panelId, ui, listener, null);
-    }
-
-    /**
-     * Register a panel with window positioning.
+     * Register a panel with window positioning (no lifecycle listener).
      *
      * @param namespace Tool/application identifier
      * @param panelId Unique ID within namespace
@@ -284,29 +271,30 @@ public class uContext implements uiContext {
      * @param position Window positioning strategy
      * @return The wrapped XPanel
      */
-    public XPanel registerUI(String namespace, String panelId, JPanel ui, WindowPosition position) {
-        return registerUI(namespace, panelId, ui, null, position);
+    public XPanel registerUI(String panelId, JPanel ui, WindowPosition position) {
+        return registerUI(panelId, ui, null, position);
     }
 
     /**
      * Register a panel with lifecycle listener and window positioning.
      *
-     * @param namespace Tool/application identifier
      * @param panelId Unique ID within namespace
      * @param ui The JPanel to register
      * @param listener Lifecycle event listener (may be null)
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
      * @return The wrapped XPanel
      */
-    public XPanel registerUI(String namespace, String panelId, JPanel ui,
-             PanelLifecycleListener listener, WindowPosition position) {
+    public XPanel registerUI(String panelId, JPanel ui, PanelLifecycleListener listener, WindowPosition position) {
 
         // Get or create the uContext for this namespace
-        uiContext ctx = Foundation.get().getContextRegistry() .get(namespace);
-        if (ctx == null) {
-            ctx = Foundation.createContext(namespace);
-            Foundation.get().getContextRegistry() .put(namespace, ctx);
-        }
+        uiContext ctx = this;
+        // No longer need to get this from Foundation since we ARE in the context.
+        // However, check that bronze foundation context registry is getting updated before removing this entirely.
+//        Foundation.get().getContextRegistry() .get(namespace);
+//        if (ctx == null) {
+//            ctx = Foundation.createContext(namespace);
+//            Foundation.get().getContextRegistry() .put(namespace, ctx);
+//        }
 
         // Check if panel already registered in this context
         if (ctx.hasPanelRegistration(panelId)) {
@@ -317,19 +305,18 @@ public class uContext implements uiContext {
 
         // Create wrapped panel
         String fullId = namespace + ":" + panelId;
-        XPanel xpanel = new XPanel(ui);
+        // because XPanels inherit from JPanel, only wrap with XPanel if required.
+        XPanel xpanel = (ui instanceof XPanel) ? (XPanel)ui : new XPanel(ui);
         xpanel.setName(fullId);
 
-        // Create registration
+        // Create registration and immediately register in the context
         PanelRegistration reg = new PanelRegistration(namespace, panelId, xpanel, listener);
+        ctx.registerPanel(panelId, reg);
 
         // Set positioning (or use default CASCADE)
         if (position != null) {
             reg.setWindowPosition(position);
         }
-
-        // Register in the context's panel registry
-        ctx.registerPanel(panelId, reg);
 
         // If we're in desktop mode and the desktop already exists (meaning init() has been called
         // and window is visible), immediately create the internal frame for this panel

@@ -86,31 +86,37 @@ public class Foundation extends Platinum {
 
     /**
      * Initialize the Java Swing graphics environment via the Foundation API.
-     *
+     * <p>
      * The main and most important thing this does is initialize the Java Look and Feel;
      * see the _init() method for details on what few other initialization tasks are done.
-     *
+     * <p>
      * The provided context becomes the "master" context - it controls overall application
      * lifecycle including shutdown behavior.
      *
      * @param c The context (MUST NOT be null - use no-args init() for default context)
-     * @return The master uiContext (same instance that was passed in)
+     * @return The same instance that was passed in
      * @throws NullPointerException if context is null (indicates framework bug)
      */
     public static uiContext init(uiContext c) {
+
+        // IMPORTANT: context must NEVER be null
+        if (c == null) {
+            throw new NullPointerException("Context cannot be null");
+        }
+
         // Ensure singleton exists
         ensureInstance();
 
-        // Delegate to Stone tier implementation
-        return instance.initStone(c);
+        // Delegate to tier implementation
+        return instance._init(c);
     }
 
     /**
      * Launch the application with the given context.
-     *
+     * <p>
      * This creates and displays the main window based on the context configuration.
      * The context determines window mode vs desktop mode, dimensions, title, etc.
-     *
+     * <p>
      * For Stone tier: This displays a single JFrame (window or desktop mode).
      * For Bronze+ tiers: This can manage multiple panels/windows.
      *
@@ -122,7 +128,7 @@ public class Foundation extends Platinum {
                 "Foundation must be initialized (call init()) before calling launch()");
         }
 
-        // Delegate to Stone tier implementation
+        // Delegate to tier implementation
         instance._launch(context);
     }
 

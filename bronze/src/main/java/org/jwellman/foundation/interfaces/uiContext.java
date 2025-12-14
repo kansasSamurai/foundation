@@ -227,18 +227,7 @@ public interface uiContext {
      * @param ui The JPanel to register
      * @return The wrapped XPanel
      */
-    XPanel registerUI(String namespace, String panelId, JPanel ui);
-
-    /**
-     * Register a panel with lifecycle listener.
-     *
-     * @param namespace Tool/application identifier
-     * @param panelId Unique ID within namespace
-     * @param ui The JPanel to register
-     * @param listener Lifecycle event listener
-     * @return The wrapped XPanel
-     */
-    XPanel registerUI(String namespace, String panelId, JPanel ui, PanelLifecycleListener listener);
+    XPanel registerUI(String panelId, JPanel ui);
 
     /**
      * Register a panel with window positioning.
@@ -249,7 +238,7 @@ public interface uiContext {
      * @param position Window positioning strategy
      * @return The wrapped XPanel
      */
-    XPanel registerUI(String namespace, String panelId, JPanel ui, WindowPosition position);
+    XPanel registerUI(String panelId, JPanel ui, WindowPosition position);
 
     /**
      * Register a panel with lifecycle listener and window positioning.
@@ -261,7 +250,6 @@ public interface uiContext {
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
      * @return The wrapped XPanel
      */
-    XPanel registerUI(String namespace, String panelId, JPanel ui,
-                      PanelLifecycleListener listener, WindowPosition position);
+    XPanel registerUI(String panelId, JPanel ui, PanelLifecycleListener listener, WindowPosition position);
 
 }

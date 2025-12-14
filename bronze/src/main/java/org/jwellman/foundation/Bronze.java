@@ -227,6 +227,20 @@ public class Bronze extends Stone {
 
     protected void _launch(uiContext ctx) {
         super._launch(ctx);
+
+        // Show the master panel if it exists
+        // 12/13 I don't think I need this here; make sure stone is
+        // not making the master panel visible in its _launch or
+        // its several launchWindow() methods
+//        PanelRegistration masterReg = ctx.getMasterPanel();
+//        if (masterReg != null) {
+//            IWindow window = masterReg.getWindow();
+//            if (window != null) {
+//                window.setVisible(true);
+//                masterReg.setVisible(true);
+//                masterReg.fireOnShow();
+//            }
+//        }
     }
 
     /**
@@ -308,12 +322,13 @@ public class Bronze extends Stone {
 //            }
 
             // Make the launched panel's internal frame visible
-            IWindow window = reg.getWindow();
-            if (window != null) {
-                window.setVisible(true);
-                reg.setVisible(true);
-                reg.fireOnShow();
-            }
+            // 12/13 temp removal for debugging
+//            IWindow window = reg.getWindow();
+//            if (window != null) {
+//                window.setVisible(true);
+//                reg.setVisible(true);
+//                reg.fireOnShow();
+//            }
         }
 
     }
@@ -349,7 +364,7 @@ public class Bronze extends Stone {
         uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) {
             ctx = Foundation.createContext(namespace);
-            contextRegistry.put(namespace, ctx);
+            registerContext(ctx);
         }
 
         // Create registration
@@ -364,6 +379,23 @@ public class Bronze extends Stone {
         }
 
         return reg;
+    }
+
+    /**
+     * Register the context in the registry.
+     * <p>
+     * NOTE: Despite being private, this will end up being called during
+     * the _init() hierarchy from all tiers.
+     * 
+     * @param ctx
+     */
+    private void registerContext(uiContext ctx) {
+        uiContext c = contextRegistry.get(ctx.getNamespace());
+        if (c == null) {
+            contextRegistry.put(ctx.getNamespace(), ctx);
+        } else {
+            System.out.println("WARN - Attempt to re-register namespace: " + ctx.getNamespace());
+        }
     }
 
     /**
@@ -382,8 +414,14 @@ public class Bronze extends Stone {
 
     /**
      * Creates an internal frame for a single panel registration.
+     * <p>
      * This is called either during initialization (for panels registered before init)
      * or immediately when a panel is registered after init.
+     * NOTE:  The above comment was written early in development,
+     * as of DEC 2025, panels can no longer be registered before init
+     * because the role of init is to initialize the swing framework
+     * before any swing components (including panels) are created.
+     * Remove eventually but I want to keep these comments for now.
      *
      * @param reg The panel registration
      */
@@ -397,10 +435,16 @@ public class Bronze extends Stone {
         // Create internal frame
         final XInternalFrame iframe = new XInternalFrame();
 
+        // Set up bidirectional reference
+        reg.getPanel().setParent(iframe);
+        reg.setInternalFrame(iframe);
+
         // Use windowTitle if set, otherwise fallback to fullId
         String title = reg.getWindowTitle() != null ? reg.getWindowTitle() : reg.getFullId();
         iframe.setTitle(title);
+        System.out.println("created iframe: " + title);
 
+        // Add contents to internal frame
         iframe.add(reg.getPanel());
 
         // Configure frame properties
@@ -412,35 +456,46 @@ public class Bronze extends Stone {
         iframe.setClosable(false);
         iframe.setMaximizable(true);
 
-        // Set up bidirectional reference
-        reg.getPanel().setParent(iframe);
-        reg.setInternalFrame(iframe);
-
         // Apply positioning
         iframe.pack(); // Pack before positioning to get correct size
         reg.getWindowPosition().apply(iframe, this.getDesktop());
-
-        // Add to desktop
-        this.getDesktop().add(iframe);
 
         // Frame is created but NOT visible by default
         // Only frames shown via launch() will be made visible
         iframe.setVisible(false);
 
+        // Add to desktop
+        // TODO eventually this needs to add via the desktop provider of the current app context
+        // this.getDesktop().add(iframe);
+
         // Fire onCreate event
         reg.fireOnCreate();
     }
 
+    /**
+     * Initialize the Java Swing graphics environment via the Foundation API.
+     * <p>
+     * Bronze adds the ability to register one or more application contexts.
+     */
+    protected uiContext _init(uiContext ctx) {
+        registerContext(ctx);
+
+        return super._init(ctx);
+    }
+
     @Override
+    /**
+     * TODO remove this method, its function has been deprecated from the design
+     */
     protected void initializeOtherWindows() {
-        if (Boolean.TRUE.equals(this.isDesktop)) {
-            // Iterate through all contexts and their panels
-            for (uiContext ctx : contextRegistry.values()) {
-                for (PanelRegistration reg : ctx.getAllPanelRegistrations().values()) {
-                    createInternalFrameForPanel(reg);
-                }
-            }
-        }
+//        if (Boolean.TRUE.equals(this.isDesktop)) {
+//            // Iterate through all contexts and their panels
+//            for (uiContext ctx : contextRegistry.values()) {
+//                for (PanelRegistration reg : ctx.getAllPanelRegistrations().values()) {
+//                    createInternalFrameForPanel(reg);
+//                }
+//            }
+//        }
     }
 
 }

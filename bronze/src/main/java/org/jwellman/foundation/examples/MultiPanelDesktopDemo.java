@@ -53,15 +53,13 @@ public class MultiPanelDesktopDemo {
         System.out.println("=== Registering Calculator Tool ===");
         XPanel calcMainPanel = context.registerUI(
                 "tool.calculator",
-                "main",
                 createCalculatorPanel(),
                 createLifecycleListener("Calculator Main"),
                 WindowPosition.cascade()
         );
 
         XPanel calcHistoryPanel = context.registerUI(
-                "tool.calculator",
-                "history",
+                "tool.calculator.history",
                 createHistoryPanel(),
                 createLifecycleListener("Calculator History"),
                 WindowPosition.at(170, 20)  // Explicit positioning
@@ -71,7 +69,6 @@ public class MultiPanelDesktopDemo {
         System.out.println("=== Registering Text Editor Tool ===");
         XPanel editorPanel = context.registerUI(
                 "tool.editor",
-                "main",
                 createToolPanel("Text Editor", Color.WHITE),
                 createLifecycleListener("Text Editor"),
                 WindowPosition.at(20, 250)  // Explicit positioning
@@ -81,7 +78,6 @@ public class MultiPanelDesktopDemo {
         System.out.println("=== Registering File Browser Tool ===");
         XPanel browserPanel = context.registerUI(
                 "tool.browser",
-                "main",
                 createToolPanel("File Browser", new Color(230, 240, 255)),
                 createLifecycleListener("File Browser"),
                 WindowPosition.at(400, 250)  // Explicit positioning
@@ -90,8 +86,7 @@ public class MultiPanelDesktopDemo {
         // Step 5 - Create control panel for managing panels
         XPanel controlPanel = context.registerUI(
                 "system",
-                "control",
-                createControlPanel(),
+                createControlPanel(context.getNamespace()),
                 createLifecycleListener("Control Panel"),
                 WindowPosition.at(500, 10, 250, 200)
         );
@@ -105,16 +100,20 @@ public class MultiPanelDesktopDemo {
         context.registerMasterPanel("master", controlPanel);
         Foundation.launch(context);
 
-        Foundation.get().showWindow(browserPanel);
+        // Foundation.get().showWindow(browserPanel);
+        Foundation.get().launchWindow(browserPanel);
 
     }
 
     /**
      * Creates a control panel with buttons to demonstrate panel management.
+     * @param namespace 
      */
-    private static JPanel createControlPanel() {
+    private static JPanel createControlPanel(String namespace) {
+        Color bkg = new Color(255, 250, 240);
+
         JPanel panel = new JPanel(new BorderLayout(5, 5));
-        panel.setBackground(new Color(255, 250, 240));
+        panel.setBackground(bkg);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JLabel title = new JLabel("Panel Controls");
@@ -123,31 +122,31 @@ public class MultiPanelDesktopDemo {
         panel.add(title, BorderLayout.NORTH);
 
         JPanel buttonPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+        buttonPanel.setBackground(bkg);
 
         // Toggle calculator history
         JButton toggleHistoryBtn = new JButton("Toggle Calc History");
         toggleHistoryBtn.addActionListener(e -> {
-            Foundation. togglePanel("tool.calculator", "history");
-            System.out.println("Calculator history visible: " +
-                    Foundation.get().isPanelVisible("tool.calculator", "history"));
+            Foundation.togglePanel("tool.calculator", "history");
+            System.out.println(
+                    "Calculator history visible: " + Foundation.get().isPanelVisible("tool.calculator", "history"));
         });
         buttonPanel.add(toggleHistoryBtn);
 
         // Toggle editor
         JButton toggleEditorBtn = new JButton("Toggle Editor");
         toggleEditorBtn.addActionListener(e -> {
-            Foundation. togglePanel("tool.editor", "main");
-            System.out.println("Editor visible: " +
-                    Foundation.get().isPanelVisible("tool.editor", "main"));
+            Foundation.togglePanel("tool.editor", "main");
+            System.out.println("Editor visible: " + Foundation.get().isPanelVisible("tool.editor", "main"));
         });
         buttonPanel.add(toggleEditorBtn);
 
         // Toggle file browser
         JButton toggleBrowserBtn = new JButton("Toggle File Browser");
         toggleBrowserBtn.addActionListener(e -> {
-            Foundation. togglePanel("tool.browser", "main");
-            System.out.println("File browser visible: " +
-                    Foundation.get().isPanelVisible("tool.browser", "main"));
+            Foundation.togglePanel(namespace, "tool.browser");
+//            Foundation. togglePanel("tool.browser", "main");
+            System.out.println("File browser visible: " + Foundation.get().isPanelVisible("tool.browser", "main"));
         });
         buttonPanel.add(toggleBrowserBtn);
 

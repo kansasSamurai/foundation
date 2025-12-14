@@ -12,4 +12,8 @@ public class Gold extends Silver {
         super._launch(ctx);
     }
 
+    protected uiContext _init(uiContext c) {
+        return super._init(c);
+    }
+
 }
