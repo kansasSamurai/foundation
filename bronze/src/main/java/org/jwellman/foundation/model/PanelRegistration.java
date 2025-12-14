@@ -46,6 +46,9 @@ public class PanelRegistration {
     /** Current visibility state */
     private boolean visible;
 
+    /** Tracks whether show() has been called and completed at least once */
+    private boolean firstShowCompleted;
+
     /** Window positioning strategy */
     private WindowPosition windowPosition;
 
@@ -159,6 +162,81 @@ public class PanelRegistration {
             if (window != null) {
                 lifecycleListener.onClose(window);
             }
+        }
+    }
+
+    /**
+     * Show this panel's window.
+     * <p>
+     * On first show, applies window positioning and adds the internal frame to the desktop.
+     * Fires the onShow lifecycle event.
+     */
+    public void show() {
+        IWindow window = getWindow();
+        if (window == null) {
+            return; // No window to show
+        }
+
+        // Skip if already visible
+        if (isVisible()) {
+            return;
+        }
+
+        // First show: apply positioning and add to desktop
+        if (!firstShowCompleted && internalFrame != null) {
+            javax.swing.JDesktopPane desktop = internalFrame.getDesktopPane();
+
+            // Apply window positioning
+            if (windowPosition != null && desktop != null) {
+                windowPosition.apply(internalFrame, desktop);
+            }
+
+            // Add to desktop if not already added
+            if (desktop != null && internalFrame.getParent() == null) {
+                desktop.add(internalFrame);
+            }
+
+            firstShowCompleted = true;
+        }
+
+        // Make visible
+        window.setVisible(true);
+        setVisible(true);
+        fireOnShow();
+    }
+
+    /**
+     * Hide this panel's window.
+     * <p>
+     * Fires the onHide lifecycle event.
+     */
+    public void hide() {
+        IWindow window = getWindow();
+        if (window == null) {
+            return; // No window to hide
+        }
+
+        // Skip if already hidden
+        if (!isVisible()) {
+            return;
+        }
+
+        // Make invisible
+        window.setVisible(false);
+        setVisible(false);
+        fireOnHide();
+    }
+
+    /**
+     * Toggle visibility of this panel's window.
+     * <p>
+     * Calls show() if currently hidden, hide() if currently visible.
+     */
+    public void toggle() {
+        if (isVisible()) {
+            hide();
+        } else {
+            show();
         }
     }
 

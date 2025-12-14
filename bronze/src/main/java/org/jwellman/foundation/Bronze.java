@@ -125,12 +125,7 @@ public class Bronze extends Stone {
     protected void _showPanel(String namespace, String panelId) {
         PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
-            IWindow window = reg.getWindow();
-            if (window != null && !reg.isVisible()) {
-                window.setVisible(true);
-                reg.setVisible(true);
-                reg.fireOnShow();
-            }
+            reg.show();
         }
     }
 
@@ -144,12 +139,7 @@ public class Bronze extends Stone {
     protected void _hidePanel(String namespace, String panelId) {
         PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
-            IWindow window = reg.getWindow();
-            if (window != null && reg.isVisible()) {
-                window.setVisible(false);
-                reg.setVisible(false);
-                reg.fireOnHide();
-            }
+            reg.hide();
         }
     }
 
@@ -162,11 +152,7 @@ public class Bronze extends Stone {
     protected void _togglePanel(String namespace, String panelId) {
         PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
-            if (reg.isVisible()) {
-                _hidePanel(namespace, panelId);
-            } else {
-                _showPanel(namespace, panelId);
-            }
+            reg.toggle();
         }
     }
 

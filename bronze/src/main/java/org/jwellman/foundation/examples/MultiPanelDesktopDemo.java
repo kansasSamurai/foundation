@@ -101,7 +101,10 @@ public class MultiPanelDesktopDemo {
         Foundation.launch(context);
 
         // Foundation.get().showWindow(browserPanel);
+        Foundation.get().launchWindow(editorPanel);
         Foundation.get().launchWindow(browserPanel);
+        Foundation.get().launchWindow(calcMainPanel);
+        Foundation.get().launchWindow(calcHistoryPanel);
 
     }
 
@@ -127,7 +130,7 @@ public class MultiPanelDesktopDemo {
         // Toggle calculator history
         JButton toggleHistoryBtn = new JButton("Toggle Calc History");
         toggleHistoryBtn.addActionListener(e -> {
-            Foundation.togglePanel("tool.calculator", "history");
+            Foundation.togglePanel(namespace, "tool.calculator");
             System.out.println(
                     "Calculator history visible: " + Foundation.get().isPanelVisible("tool.calculator", "history"));
         });
@@ -136,7 +139,7 @@ public class MultiPanelDesktopDemo {
         // Toggle editor
         JButton toggleEditorBtn = new JButton("Toggle Editor");
         toggleEditorBtn.addActionListener(e -> {
-            Foundation.togglePanel("tool.editor", "main");
+            Foundation.togglePanel(namespace, "tool.editor");
             System.out.println("Editor visible: " + Foundation.get().isPanelVisible("tool.editor", "main"));
         });
         buttonPanel.add(toggleEditorBtn);

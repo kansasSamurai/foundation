@@ -264,10 +264,11 @@ public class Stone {
      * @return The IWindow that was created and launched
      */
     public IWindow launchWindow(JPanel jpanel, String title) {
-        IWindow window = this.createWindow(jpanel);
-        window.setTitle(title);
-        this.launchWindow(window);
-        return window;
+        throw new RuntimeException("Deprecated - Refactor any code that uses this.");
+//        IWindow window = this.createWindow(jpanel);
+//        window.setTitle(title);
+//        this.launchWindow(window);
+//        return window;
     }
 
     /**
@@ -282,7 +283,8 @@ public class Stone {
      * @return The IWindow that was created and launched
      */
     public IWindow launchWindow(JPanel jpanel) {
-        return this.launchWindow(jpanel, DEFAULT_APP_TITLE);
+        throw new RuntimeException("Deprecated - Refactor any code that uses this.");
+        // return this.launchWindow(jpanel, DEFAULT_APP_TITLE);
     }
 
     /**
@@ -293,7 +295,9 @@ public class Stone {
      * @param masterPanel
      */
     protected IWindow launchWindow(PanelRegistration reg) {
-        return this.launchWindow(reg.getPanel(), reg.getWindowTitle());
+        this.launchWindow(reg.getWindow());
+        return reg.getWindow();
+//        return this.launchWindow(reg.getPanel(), reg.getWindowTitle());
     }
 
     /**
@@ -369,12 +373,12 @@ public class Stone {
 
                     // Note that this only ADDs the window to the desktop;
                     // it is not pack(ed) nor setVisible()... that occurs later.
-                    for (IWindow w : windows) {
-                        if (w != externalFrame) {
-                            w.pack();
-                            w.setVisible(true);
-                        }
-                    }
+//                    for (IWindow w : windows) {
+//                        if (w != externalFrame) {
+//                            w.pack();
+//                            w.setVisible(true);
+//                        }
+//                    }
 
                 }
 
@@ -423,8 +427,9 @@ public class Stone {
 // The missing piece was desktop.add() [but am a little confused because that WAS part of createInternalFrame?]
 // It may turn out that you can't add to a desktop until it has been made visible?
 //                    w.add(new JLabel("temp"));
-//                    w.pack();
+                    w.pack();
 //                    w.setLocation(100, 100);
+                    // need access to PanelRegistration to get WindowPosition and call apply()
                     w.setVisible(true);
                     desktop.add(w.getComponent());
                     System.out.println("Make visible: " + w.getTitle());
