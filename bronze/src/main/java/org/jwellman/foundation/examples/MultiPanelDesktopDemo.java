@@ -23,7 +23,6 @@ import org.jwellman.foundation.swing.IWindow;
  * NEW in this demo (Bronze tier enhancements):
  * - Foundation.init() now automatically displays a window (desktop with empty JDesktopPane)
  * - Multiple panels per namespace (tool.calculator has "main" and "history")
- * - Panels registered after init() are immediately added to the visible desktop
  * - Panel lifecycle events (onCreate, onShow, onHide, onClose)
  * - Window positioning strategies (CASCADE, CENTER, EXPLICIT)
  * - Dynamic panel visibility management (show/hide)
@@ -41,8 +40,8 @@ public class MultiPanelDesktopDemo {
 
     public static void main(String[] args) {
 
-        // Step 1 - Initialize Foundation with desktop mode
-        uiContext context = Foundation.createContext(MultiPanelDesktopDemo.class);
+        // Step 1 - Initialize Foundation (new context in desktop mode)
+        uiContext context = Foundation.createContext("tool.calculator");
         context.setDesktopMode(true);
         context.setDesktopTitle("Multi-Tool Desktop - Bronze Tier Demo");
 
@@ -51,31 +50,35 @@ public class MultiPanelDesktopDemo {
         // Step 2 - Register Calculator tool with main and history panels
         System.out.println("=== Registering Calculator Tool ===");
         PanelRegistration calcMainPanel = context.registerUI(
-                "tool.calculator",
+                "main", // "tool.calculator",
                 createCalculatorPanel(context),
                 createLifecycleListener("Calculator Main"),
                 WindowPosition.cascade()
         );
 
         PanelRegistration calcHistoryPanel = context.registerUI(
-                "tool.calculator.history",
+                "history", // "tool.calculator.history",
                 createHistoryPanel(),
                 createLifecycleListener("Calculator History"),
                 WindowPosition.at(170, 20)  // Explicit positioning
         );
 
         // Step 3 - Register Text Editor tool
+        uiContext c2 = Foundation.createContext("tool.editor");
+
         System.out.println("=== Registering Text Editor Tool ===");
-        PanelRegistration editorPanel = context.registerUI(
-                "tool.editor",
+        PanelRegistration editorPanel = c2.registerUI(
+                "main",
                 createToolPanel("Text Editor", Color.WHITE),
                 createLifecycleListener("Text Editor"),
                 WindowPosition.at(20, 250)  // Explicit positioning
         );
 
         // Step 4 - Register File Browser tool
+        uiContext c3 = Foundation.createContext("tool.browser");
+
         System.out.println("=== Registering File Browser Tool ===");
-        PanelRegistration browserPanel = context.registerUI(
+        PanelRegistration browserPanel = c3.registerUI(
                 "tool.browser",
                 createToolPanel("File Browser", new Color(230, 240, 255)),
                 createLifecycleListener("File Browser"),
@@ -92,31 +95,23 @@ public class MultiPanelDesktopDemo {
 
         // Step 6 - Demonstrate querying the registry
         System.out.println("\n=== Panel Registry Query ===");
-        System.out.println("Calculator panels: " + Foundation.get().getPanels("tool.calculator").size());
         System.out.println("All namespaces: " + Foundation.get().getNamespaces());
+        System.out.println("Calculator panels: " + Foundation.get().getPanels("tool.calculator").size());
 
         // Note: The desktop window was already created and shown by Foundation.init()
         context.registerMasterPanel(controlPanel);
         Foundation.launch(context);
 
-//        Foundation.get().launchWindow(editorPanel);
-//        Foundation.get().launchWindow(browserPanel);
-//        Foundation.get().launchWindow(calcMainPanel);
-//        Foundation.get().launchWindow(calcHistoryPanel);
-
-        /* I would prefer the syntax below but I still have the issue of 
-         * adding these panels to the desktop before using hide()/show().
-         * So until then I need to use the syntax above.
-         */
-      editorPanel.show();
-      browserPanel.show();
-      calcMainPanel.show();
-      calcHistoryPanel.show();
+        Foundation.launch(c2); // editorPanel.show();
+        // browserPanel.show();
+        calcMainPanel.show();
+        calcHistoryPanel.show();
 
     }
 
     /**
      * Creates a control panel with buttons to demonstrate panel management.
+     * 
      * @param namespace 
      */
     private static JPanel createControlPanel(String namespace) {
@@ -137,9 +132,9 @@ public class MultiPanelDesktopDemo {
         // Toggle calculator history
         JButton toggleHistoryBtn = new JButton("Toggle Calc History");
         toggleHistoryBtn.addActionListener(e -> {
-            Foundation.togglePanel(namespace, "tool.calculator.history");
+            Foundation.togglePanel("tool.calculator", "history");
             System.out.println(
-                    "Calculator history visible: " + Foundation.get().isPanelVisible(namespace, "tool.calculator.history"));
+                    "Calculator history visible: " + Foundation.get().isPanelVisible("tool.calculator", "history"));
         });
         buttonPanel.add(toggleHistoryBtn);
 
@@ -191,7 +186,7 @@ public class MultiPanelDesktopDemo {
         buttons.setBackground(Color.LIGHT_GRAY);
         JButton showHistoryBtn = new JButton("Show History");
         showHistoryBtn.addActionListener(e -> {
-            Foundation. showPanel(context.getNamespace(), "tool.calculator" );
+            Foundation. showPanel(context.getNamespace(), "history" );
         });
         buttons.add(showHistoryBtn);
         panel.add(buttons, BorderLayout.SOUTH);

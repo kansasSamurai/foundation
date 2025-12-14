@@ -9,20 +9,20 @@ import org.jwellman.foundation.interfaces.uiContext;
 
 /**
  * A micro-framework for Swing applications.
- *
- * Foundation is the public API that exposes all tier functionality via static methods.
+ * <p>
+ * Foundation is the public API that exposes all tier functionality via static methods.<br>
  * It inherits from all tiers (Stone -> Bronze -> Silver -> Gold -> Platinum -> Foundation).
- *
- * Foundation has three primary responsibilities:
- * 1) Discover Look and Feel and initialize the Swing UIManager
- * 2) Manage application context objects (uiContext implementations)
- *    - One context must always be the "master" (controls app lifecycle/shutdown)
- * 3) Create all IWindow objects (JFrame vs JInternalFrame based on master context state)
- *
- * Usage:
- * (1) createContext() - create a uiContext for your application
- * (2) init() - initializes Look and Feel, returns the master uiContext
- * (3) launch() - launches the application with the given uiContext
+ * <p>
+ * Foundation has three primary responsibilities:<br>
+ * 1) Discover Look and Feel and initialize the Swing UIManager<br>
+ * 2) Manage application context objects (uiContext implementations)<br>
+ *    - One context must always be the "master" (controls app lifecycle/shutdown)<br>
+ * 3) Create all IWindow objects (JFrame vs JInternalFrame based on master context state)<br>
+ * <p>
+ * Usage:<br>
+ * (1) createContext() - create a uiContext for your application<br>
+ * (2) init() - initializes Look and Feel, returns the master uiContext<br>
+ * (3) launch() - launches the application with the given uiContext<br>
  *
  * @author Rick Wellman
  */

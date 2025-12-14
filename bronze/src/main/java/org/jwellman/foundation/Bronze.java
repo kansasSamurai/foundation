@@ -216,19 +216,12 @@ public class Bronze extends Stone {
     protected void _launch(uiContext ctx) {
         super._launch(ctx);
 
-        // Show the master panel if it exists
-        // 12/13 I don't think I need this here; make sure stone is
-        // not making the master panel visible in its _launch or
-        // its several launchWindow() methods
-//        PanelRegistration masterReg = ctx.getMasterPanel();
-//        if (masterReg != null) {
-//            IWindow window = masterReg.getWindow();
-//            if (window != null) {
-//                window.setVisible(true);
-//                masterReg.setVisible(true);
-//                masterReg.fireOnShow();
-//            }
-//        }
+        // Stone only launches the masterContext so Bronze needs to launch others
+        if (ctx == masterContext) {
+            System.out.println("INFO - Bronze bypass master context");
+        } else {
+            
+        }
     }
 
     /**

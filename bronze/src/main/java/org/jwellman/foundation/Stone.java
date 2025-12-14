@@ -82,18 +82,18 @@ public class Stone {
 	protected uiContext _init(uiContext c) {
 
         if (isInitialized) {
-            // TODO eventually in bronze we need to be able to init a new context, it just won't be the master context
-            
+            // TODO eventually in silver we need to be able to init a new context, it just won't be the master context
+
             System.out.print("WARN - init() has been called more than once...");
             System.out.print("WARN - ... in a single app use case, this usually indicates a misuse of the API");
             System.out.print("WARN - ... which may often result in unexpected/undesired behavior.");
         } else {
+            // TODO eventually in silver we need to be able to init a new context, it just won't be the master context
 
             // Set the master context & mark initialized as true
             masterContext = c;
             isInitialized = true;
 
-            
             // I haven't settled on where I want this yet but I do want it 
             // as part of the bootstrapping process for debugging purposes.
             // For now, I have created logEnvironment() for this:
@@ -523,8 +523,9 @@ public class Stone {
      * If a window is already visible, this method does nothing (supports the
      * multi-tool desktop scenario where Foundation.init() might be called
      * multiple times as different tools are loaded).
+     * @param ctx 
      */
-    protected void _initializeAndShowWindow() {
+    protected void _initializeAndShowWindow(uiContext ctx) {
 
         // If we already have a visible frame, do nothing
         if (externalFrame != null && externalFrame.isVisible()) {
@@ -624,7 +625,7 @@ public class Stone {
 
     /**
      * A convenience method for code that I want to run at startup for the
-     * forseeable future.  The return value is a bit of a hack to support
+     * foreseeable future.  The return value is a bit of a hack to support
      * some demo mode code.
      * 
      * @return
@@ -675,32 +676,6 @@ public class Stone {
      */
     protected void initializeOtherWindows() {}
 
-    /* ========== Stone Tier Public API (called via Foundation static methods) ========== */
-
-    /**
-     * Initialize the Stone tier with the given context.
-     *
-     * This performs Look and Feel initialization only.
-     * The provided context becomes the "master" context - it controls overall application
-     * lifecycle including shutdown behavior.
-     *
-     * @param c The master context (MUST NOT be null)
-     * @return The master uiContext (same instance that was passed in)
-     */
-//    public uiContext initStone(uiContext c) {
-//        // IMPORTANT: context must NEVER be null
-//        // If null, this is a fundamental framework bug - fail fast with NPE
-//        if (c == null) {
-//            throw new NullPointerException("Context cannot be null");
-//        }
-//
-//        // Initialize Look and Feel
-//        _init(c);
-//
-//        // Return the master context
-//        return masterContext;
-//    }
-
     /**
      * Launch the application with the given context.
      *
@@ -718,7 +693,7 @@ public class Stone {
         }
 
         // For Stone tier: Show the main window
-        _initializeAndShowWindow();
+        _initializeAndShowWindow(ctx);
     }
 
 } // end class
