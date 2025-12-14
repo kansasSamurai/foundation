@@ -39,7 +39,6 @@ import org.jwellman.foundation.swing.IWindow;
  */
 public class MultiPanelDesktopDemo {
 
-    @SuppressWarnings("unused")
     public static void main(String[] args) {
 
         // Step 1 - Initialize Foundation with desktop mode
@@ -53,7 +52,7 @@ public class MultiPanelDesktopDemo {
         System.out.println("=== Registering Calculator Tool ===");
         PanelRegistration calcMainPanel = context.registerUI(
                 "tool.calculator",
-                createCalculatorPanel(),
+                createCalculatorPanel(context),
                 createLifecycleListener("Calculator Main"),
                 WindowPosition.cascade()
         );
@@ -97,24 +96,23 @@ public class MultiPanelDesktopDemo {
         System.out.println("All namespaces: " + Foundation.get().getNamespaces());
 
         // Note: The desktop window was already created and shown by Foundation.init()
-        // I may not need the following line any more... the thing I need to ensure
-        // 
-        // context.registerMasterPanel(controlPanel);
         context.registerMasterPanel(controlPanel);
         Foundation.launch(context);
 
-//        editorPanel.show();
-//        browserPanel.show();
-//        calcMainPanel.show();
-//        calcHistoryPanel.show();
-        
-        // Foundation.get().showWindow(browserPanel);
         Foundation.get().launchWindow(editorPanel);
         Foundation.get().launchWindow(browserPanel);
         Foundation.get().launchWindow(calcMainPanel);
         Foundation.get().launchWindow(calcHistoryPanel);
 
-        
+        /* I would prefer the syntax below but I still have the issue of 
+         * adding these panels to the desktop before using hide()/show().
+         * So until then I need to use the syntax above.
+         */
+//      editorPanel.show();
+//      browserPanel.show();
+//      calcMainPanel.show();
+//      calcHistoryPanel.show();
+      
     }
 
     /**
@@ -169,8 +167,9 @@ public class MultiPanelDesktopDemo {
 
     /**
      * Creates a calculator panel with action buttons.
+     * @param context 
      */
-    private static JPanel createCalculatorPanel() {
+    private static JPanel createCalculatorPanel(uiContext context) {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(Color.LIGHT_GRAY);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -189,9 +188,10 @@ public class MultiPanelDesktopDemo {
         panel.add(display, BorderLayout.CENTER);
 
         JPanel buttons = new JPanel(new FlowLayout());
+        buttons.setBackground(Color.LIGHT_GRAY);
         JButton showHistoryBtn = new JButton("Show History");
         showHistoryBtn.addActionListener(e -> {
-            Foundation. showPanel("tool.calculator", "history");
+            Foundation. showPanel(context.getNamespace(), "tool.calculator" );
         });
         buttons.add(showHistoryBtn);
         panel.add(buttons, BorderLayout.SOUTH);

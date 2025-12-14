@@ -186,14 +186,16 @@ public class PanelRegistration {
         if (!firstShowCompleted && internalFrame != null) {
             javax.swing.JDesktopPane desktop = internalFrame.getDesktopPane();
 
-            // Apply window positioning
-            if (windowPosition != null && desktop != null) {
-                windowPosition.apply(internalFrame, desktop);
-            }
+            if (desktop != null) {
+                // Apply window positioning
+                if (windowPosition != null) {
+                    windowPosition.apply(internalFrame, desktop);
+                }
 
-            // Add to desktop if not already added
-            if (desktop != null && internalFrame.getParent() == null) {
-                desktop.add(internalFrame);
+                // Add to desktop if not already added
+                if (internalFrame.getParent() == null) {
+                    desktop.add(internalFrame);
+                }
             }
 
             firstShowCompleted = true;

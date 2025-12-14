@@ -48,22 +48,22 @@ public class LookAndFeelDemo {
         }
 
         // Create context with selected LAF
-        uiContext app = Foundation.createContext(LookAndFeelDemo.class);
-        app.setSplashProvider(new DefaultSplashProvider());
-        app.setLookAndFeel(selectedLAF.getClassName());
+        uiContext context = Foundation.createContext(LookAndFeelDemo.class);
+        context.setSplashProvider(new DefaultSplashProvider());
+        context.setLookAndFeel(selectedLAF.getClassName());
 
         // Initialize Foundation (LAFDiscovery will apply the LAF from context)
-        Foundation.init(app);
+        Foundation.init(context);
 
         // Create UI
         JPanel ui = createUI(selectedLAF);
-        app.registerMasterPanel("master", ui);
+        context.registerMasterPanel("master", ui);
 
         // Display splash screen while initializing the app (data, database, network, whatever)
-        initAppWithSplashScreen(app.getSplashProvider());
+        initAppWithSplashScreen(context.getSplashProvider());
 
         // Launch the application - splash screen closes, app appears
-        Foundation.launch(app);
+        Foundation.launch(context);
 
     }
 

@@ -293,10 +293,11 @@ public class Stone {
      * @param masterPanel
      */
     public IWindow launchWindow(PanelRegistration reg) {
-        this.launchWindow(reg.getWindow());
         reg.setVisible(true);
-        return reg.getWindow();
-//        return this.launchWindow(reg.getPanel(), reg.getWindowTitle());
+
+        IWindow w = reg.getWindow();
+        this.launchWindow(w);
+        return w;
     }
 
     /**
@@ -349,9 +350,6 @@ public class Stone {
             // but other apps without jpad might... review this design
             externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        } else {
-            // We have registered a desktop so use it
-
         }
 
         // Start the GUI on the Event Dispatch Thread (EDT)
@@ -363,8 +361,9 @@ public class Stone {
                 if (masterContext.isDesktopMode()) {
                     if (masterContext.getDesktopProvider() == null) {
                         desktop = new JDesktopPane(); // a specialized layered pane
-                        desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE); // Make dragging a little faster but
-                                                                             // perhaps uglier.
+                        desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE); 
+                        // Make dragging a little faster but perhaps uglier.
+
                         externalFrame.setContentPane(desktop);
                     } else {
                         desktop = masterContext.getDesktopProvider().getDesktop();
