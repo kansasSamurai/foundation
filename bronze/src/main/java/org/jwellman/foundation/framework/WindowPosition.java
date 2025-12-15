@@ -173,16 +173,16 @@ public class WindowPosition {
     }
 
     private void applyCascade(IWindow window, JDesktopPane desktop) {
-        int x = cascadeOffset;
-        int y = cascadeOffset;
-        cascadeOffset += CASCADE_INCREMENT;
+
+        window.setLocation(cascadeOffset, cascadeOffset);
+        System.out.println("DEBUG - applyCascade: " + cascadeOffset);
 
         // Reset cascade if we've gone too far
+        cascadeOffset += CASCADE_INCREMENT;
         if (cascadeOffset > 200) {
             cascadeOffset = 10;
         }
 
-        window.setLocation(x, y);
     }
 
     private void applyCenter(IWindow window, JDesktopPane desktop) {

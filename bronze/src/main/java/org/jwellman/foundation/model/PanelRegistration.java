@@ -189,12 +189,14 @@ public class PanelRegistration {
             if (desktop != null) {
                 // Apply window positioning
                 if (windowPosition != null) {
-                    windowPosition.apply(internalFrame, desktop);
+                    // This should already be applied during Bronze:createInternalFrameForPanel()
+                    // windowPosition.apply(internalFrame, desktop);
                 }
 
                 // Add to desktop if not already added
                 if (internalFrame.getParent() == null) {
-                    desktop.add(internalFrame);
+                    // This should already be applied during Bronze:createInternalFrameForPanel()
+                    // desktop.add(internalFrame);
                 }
             }
 
