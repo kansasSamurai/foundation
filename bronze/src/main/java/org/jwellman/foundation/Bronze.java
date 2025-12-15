@@ -155,6 +155,8 @@ public class Bronze extends Stone {
         PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
             reg.toggle();
+        } else {
+            dumpFoundationStructure();
         }
     }
 
@@ -220,7 +222,22 @@ public class Bronze extends Stone {
         if (ctx == masterContext) {
             System.out.println("INFO - Bronze bypass master context");
         } else {
-            
+
+            // 
+            /* Once we support the init() method being called more than once
+             * (like in multi tool desktop(s), calling it here may be redundant
+             *  but would not be expected to hurt since it would just replace
+             *  itself in the registry.  Making this note for future self.
+             */
+            registerContext(ctx);
+
+            if (isDesktop()) {
+                this.createInternalFrameForPanel(ctx.getMasterPanel());
+                ctx.getMasterPanel().getInternalFrame().show();
+            } else {
+                // TODO implement window logic
+            }
+            ctx.getMasterPanel();
         }
     }
 
@@ -377,6 +394,9 @@ public class Bronze extends Stone {
         } else {
             System.out.println("WARN - Attempt to re-register namespace: " + ctx.getNamespace());
         }
+
+        // I may not keep this here but useful for now
+        dumpFoundationStructure();
     }
 
     /**
@@ -406,7 +426,7 @@ public class Bronze extends Stone {
      *
      * @param reg The panel registration
      */
-    public void createInternalFrameForPanel(PanelRegistration reg) {
+    protected void createInternalFrameForPanel(PanelRegistration reg) {
 
         if (reg.getInternalFrame() != null) {
             // Already has an internal frame, skip
@@ -479,6 +499,48 @@ public class Bronze extends Stone {
 //                }
 //            }
 //        }
+    }
+
+    /**
+     * Dumps the Foundation object containment structure to System.out.
+     * Shows all registered contexts and their panels in a directory-like format.
+     * <p>
+     * Useful for debugging to see what contexts and panels are currently registered.
+     */
+    public void dumpFoundationStructure() {
+        System.out.println("=== Foundation Object Structure ===");
+        System.out.println("Registered Contexts: " + contextRegistry.size());
+
+        if (contextRegistry.isEmpty()) {
+            System.out.println("  (no contexts registered)");
+        } else {
+            for (Map.Entry<String, uiContext> entry : contextRegistry.entrySet()) {
+                String namespace = entry.getKey();
+                uiContext ctx = entry.getValue();
+
+                System.out.println("  [Context] " + namespace);
+
+                Map<String, PanelRegistration> panels = ctx.getAllPanelRegistrations();
+                if (panels.isEmpty()) {
+                    System.out.println("    └─ (no panels registered)");
+                } else {
+                    int count = 0;
+                    int total = panels.size();
+                    for (Map.Entry<String, PanelRegistration> panelEntry : panels.entrySet()) {
+                        count++;
+                        boolean isLast = (count == total);
+                        String prefix = isLast ? "    └─" : "    ├─";
+
+                        String panelId = panelEntry.getKey();
+                        PanelRegistration reg = panelEntry.getValue();
+
+                        System.out.println(prefix + " [Panel] " + panelId +
+                            " (visible: " + reg.isVisible() + ")");
+                    }
+                }
+            }
+        }
+        System.out.println("===================================");
     }
 
 }

@@ -64,26 +64,27 @@ public class MultiPanelDesktopDemo {
         );
 
         // Step 3 - Register Text Editor tool
-        uiContext c2 = Foundation.createContext("tool.editor");
-
         System.out.println("=== Registering Text Editor Tool ===");
+        uiContext c2 = Foundation.createContext("tool.editor");
         PanelRegistration editorPanel = c2.registerUI(
                 "main",
                 createToolPanel("Text Editor", Color.WHITE),
                 createLifecycleListener("Text Editor"),
                 WindowPosition.at(20, 250)  // Explicit positioning
         );
+        c2.registerMasterPanel(editorPanel);
 
         // Step 4 - Register File Browser tool
-        uiContext c3 = Foundation.createContext("tool.browser");
 
         System.out.println("=== Registering File Browser Tool ===");
+        uiContext c3 = Foundation.createContext("tool.browser");
         PanelRegistration browserPanel = c3.registerUI(
-                "tool.browser",
+                "main",
                 createToolPanel("File Browser", new Color(230, 240, 255)),
                 createLifecycleListener("File Browser"),
                 WindowPosition.at(400, 250)  // Explicit positioning
         );
+        c3.registerMasterPanel(browserPanel);
 
         // Step 5 - Create control panel for managing panels
         PanelRegistration controlPanel = context.registerUI(
@@ -92,6 +93,7 @@ public class MultiPanelDesktopDemo {
                 createLifecycleListener("Control Panel"),
                 WindowPosition.at(500, 10, 250, 200)
         ); 
+        context.registerMasterPanel(controlPanel);
 
         // Step 6 - Demonstrate querying the registry
         System.out.println("\n=== Panel Registry Query ===");
@@ -99,13 +101,12 @@ public class MultiPanelDesktopDemo {
         System.out.println("Calculator panels: " + Foundation.get().getPanels("tool.calculator").size());
 
         // Note: The desktop window was already created and shown by Foundation.init()
-        context.registerMasterPanel(controlPanel);
         Foundation.launch(context);
-
-        Foundation.launch(c2); // editorPanel.show();
-        // browserPanel.show();
         calcMainPanel.show();
         calcHistoryPanel.show();
+
+        Foundation.launch(c2); // editorPanel.show();
+        Foundation.launch(c3); // browserPanel.show();
 
     }
 
@@ -141,17 +142,16 @@ public class MultiPanelDesktopDemo {
         // Toggle editor
         JButton toggleEditorBtn = new JButton("Toggle Editor");
         toggleEditorBtn.addActionListener(e -> {
-            Foundation.togglePanel(namespace, "tool.editor");
-            System.out.println("Editor visible: " + Foundation.get().isPanelVisible(namespace, "tool.editor"));
+            Foundation.togglePanel("tool.editor", "main");
+            System.out.println("Editor visible: " + Foundation.get().isPanelVisible("tool.editor", "main"));
         });
         buttonPanel.add(toggleEditorBtn);
 
         // Toggle file browser
         JButton toggleBrowserBtn = new JButton("Toggle File Browser");
         toggleBrowserBtn.addActionListener(e -> {
-            Foundation.togglePanel(namespace, "tool.browser");
-//            Foundation. togglePanel("tool.browser", "main");
-            System.out.println("File browser visible: " + Foundation.get().isPanelVisible(namespace, "tool.browser"));
+            Foundation.togglePanel("tool.browser", "main");
+            System.out.println("File browser visible: " + Foundation.get().isPanelVisible("tool.browser", "main"));
         });
         buttonPanel.add(toggleBrowserBtn);
 

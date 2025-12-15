@@ -25,7 +25,6 @@ import org.jwellman.foundation.provider.DefaultDesktopProvider;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
-import org.jwellman.foundation.swing.XPanel;
 
 /**
  * The most basic of Swing application requirements.
@@ -318,6 +317,9 @@ public class Stone {
 
     /**
      * UPDATE DEC 2025: I hate this name - needs to be showWindow but not conflict with bronze._showWindow()
+     * Also, it is starting to feel like these launchWindow() methods may not be
+     * the way I want to go since most show/hide window is done via the
+     * uiContext/PanelRegistration.
      * 
      * Launches multiple windows, making them visible to the user.
      * Primarily used in desktop mode to launch multiple internal frames.
@@ -369,37 +371,9 @@ public class Stone {
                         setDesktop( masterContext.getDesktopProvider().getDesktop());
                     }
 
-                    // Note that this only ADDs the window to the desktop;
-                    // it is not pack(ed) nor setVisible()... that occurs later.
-//                    for (IWindow w : windows) {
-//                        if (w != externalFrame) {
-//                            w.pack();
-//                            w.setVisible(true);
-//                        }
-//                    }
-
                 }
 
-                // Display the window.
-                // In desktop mode, use explicit sizing (JDesktopPane cannot calculate preferred size)
-                // In window mode, pack() calculates size from JPanel content
-//                if (masterContext.isDesktopMode()) { // TODO this has already occurred in desktop mode so research and fix code
-//                    externalFrame.setSize(masterContext.getDimension()); // [E]
-//                } else {
-//                    // Window mode: Use explicit dimension if set, otherwise pack()
-//                    Dimension dim = masterContext.getDimension();
-//                    if (dim != null && !dim.equals(new Dimension(900, 500))) {
-//                        // User specified a custom dimension
-//                        externalFrame.setSize(dim);
-//                    } else {
-//                        // Use default behavior: pack() sizes to content
-//                        externalFrame.pack(); // [A] Let JPanel determine size
-//                    }
-//                }
-//                externalFrame.setLocationRelativeTo(null); // [C]
-//                externalFrame.setVisible(true);
-
-               } // end run()
+            } // end run()
 
         } ); // end runnable / invokeLater()
 
@@ -420,29 +394,24 @@ public class Stone {
                     // stone and bronze code)
                     // in bronze.createInternalFrameForPanel() we do most of 
                     // this work already except setting visible.  
+
+                    // temporary
                     w.setTitle(uUtility.valueOrDefault(w.getTitle(), "iwindow"));
-// These were to debug but not necessary because bronze.createInternalFrame... is doing it correctly.
-// The missing piece was desktop.add() [but am a little confused because that WAS part of createInternalFrame?]
-// It may turn out that you can't add to a desktop until it has been made visible?
-//                    w.add(new JLabel("temp"));
-//                    w.pack(); // hopefully done in Bronze.createInternalFrameForPanel
-//                    w.setLocation(100, 100);
+
                     // need access to PanelRegistration to get WindowPosition and call apply()
                     w.setVisible(true);
+
                     System.out.println("JDesktopPane stone: " + uUtility.objString(desktop));
-//                    desktop.add(w.getComponent()); // hopefully done in Bronze.createInternalFrameForPanel
                     System.out.println("Make visible: " + w.getTitle());
 
-                    // This follows the oracle tutorial
-                    //... set the window size or call pack
-                    //... set the window's location
-                    //... set visible
-                    //... add to desktop
 //                    System.out.println("w " + w.toString());
 //                    System.out.println("c " + w.getComponent().toString());
-//                    desktop.add(w.getComponent());
-//                      desktop.setPosition(w.getComponent(), 0);
 // This will create an internal frame for debugging purposes
+// per the oracle tutorial:
+//... set the window size or call pack
+//... set the window's location
+//... set visible
+//... add to desktop
 //                    JInternalFrame f = new JInternalFrame();
 //                    f.setTitle("temp");
 //                    f.add(new JLabel("temp"));
@@ -458,8 +427,9 @@ public class Stone {
     } // end method
 
     /**
-     * A private setter to enforce that external logic should never try to 
-     * set the external frame after it has already been created.  
+     * A setter to enforce that we should not set the 
+     * external frame after it has already been created/set.
+     * (this actually fixed an early Bronze bug)
      * 
      * @param xFrame
      */
@@ -471,15 +441,11 @@ public class Stone {
     }
 
     /**
-     * I don't think we want this public in the long term - may have to compare
-     * Stone vs Bronze.
+     * A setter to enforce that we should not set the desktop after
+     * it has already been created/set.
      * 
-     * @return
+     * @param p the JDesktopPane for the desktop mode
      */
-    public JDesktopPane getDesktop() {
-        return desktop;
-    }
-
     protected void setDesktop(JDesktopPane p) {
         if (desktop == null) {
             desktop = p;
@@ -487,6 +453,16 @@ public class Stone {
         } else {
             System.out.println("ERROR - Cannot override current desktop");
         }
+    }
+
+    /**
+     * I don't think we want this public in the long term - may have to compare
+     * Stone vs Bronze.
+     * 
+     * @return
+     */
+    public JDesktopPane getDesktop() {
+        return desktop;
     }
 
     protected XFrame getExternalFrame() {
@@ -528,6 +504,9 @@ public class Stone {
     protected void _initializeAndShowWindow(uiContext ctx) {
 
         // If we already have a visible frame, do nothing
+        // This has the effect that this method will ONLY ever be applied to 
+        // the master context.  Initialization of other uiContext objects
+        // in tiers above Stone will have to be done elsewhere.
         if (externalFrame != null && externalFrame.isVisible()) {
             return;
         }
@@ -540,6 +519,11 @@ public class Stone {
         }
 
         // Create the external frame if it doesn't exist
+        // Stone - It should NOT exist in Stone because Stone does not support
+        // splash screens - therefore, a main external frame should exist
+        // before this method is called.  
+        // Bronze - Because bronze supports splash screens, an external frame
+        // may already exist if the master context includes a splash provider.
         if (externalFrame == null) {
             String title = uUtility.valueOrDefault(masterContext.getDesktopTitle(), "Foundation Application");
             this.setExternalFrame(new XFrame(title));
@@ -569,6 +553,11 @@ public class Stone {
 
             // We'll call onDesktopInitialized after the window is shown
             // This will be done in the EDT runnable below
+            // TODO technically, how this gets launched probably needs some
+            // examination/refactor.  This is because we want to enforce by 
+            // design that this won't occur until AFTER the window is shown
+            // but its placement here does not enforce that (though it 
+            // probably won't occur... it is just not guaranteed).
             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
@@ -580,8 +569,7 @@ public class Stone {
             // Note: These frames are created but NOT visible (will be shown via launch())
             this.initializeOtherWindows();
         } else {
-            XPanel master = masterContext.getMasterPanel().getPanel();
-            externalFrame.setContentPane(master);
+            externalFrame.setContentPane(masterContext.getMasterPanel().getPanel());
         }
 
         // Show the window on the EDT
@@ -694,6 +682,14 @@ public class Stone {
 
         // For Stone tier: Show the main window
         _initializeAndShowWindow(ctx);
+    }
+
+    protected Boolean isDesktop() {
+        return Boolean.TRUE.equals(isDesktop);
+    }
+
+    protected void setDesktop(Boolean isDesktop) {
+        this.isDesktop = isDesktop;
     }
 
 } // end class
