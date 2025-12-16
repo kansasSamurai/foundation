@@ -232,12 +232,14 @@ public class Bronze extends Stone {
             registerContext(ctx);
 
             if (isDesktop()) {
+                // I think we should have already created the internal frame -
+                // unless I re-discover why we haven't on purpose, we need to.
                 this.createInternalFrameForPanel(ctx.getMasterPanel());
                 ctx.getMasterPanel().getInternalFrame().show();
             } else {
                 // TODO implement window logic
             }
-            ctx.getMasterPanel();
+
         }
     }
 

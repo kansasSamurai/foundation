@@ -449,9 +449,9 @@ public class Stone {
     protected void setDesktop(JDesktopPane p) {
         if (desktop == null) {
             desktop = p;
-            System.out.println("INFO - Setting desktop: " + uUtility.objString(p));
+            uUtility.logStackTrace("INFO - Setting desktop: " + uUtility.objString(p));
         } else {
-            System.out.println("ERROR - Cannot override current desktop");
+            uUtility.logStackTrace("ERROR - Cannot override current desktop");
         }
     }
 
