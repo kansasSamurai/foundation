@@ -4,16 +4,16 @@ import org.jwellman.foundation.swing.IWindow;
 
 /**
  * Listener interface for panel lifecycle events in Foundation framework.
- *
+ * <p>
  * Panels can register lifecycle listeners to be notified of important
  * events such as creation, showing, hiding, and closing.
- *
+ * <p>
  * This is particularly useful for:
  * - Initializing resources when a panel is first shown
  * - Saving state when a panel is hidden
  * - Cleanup when a panel is closed
  * - Lazy loading of expensive components
- *
+ * <p>
  * Example usage:
  * <pre>
  * Foundation f = Foundation.init();

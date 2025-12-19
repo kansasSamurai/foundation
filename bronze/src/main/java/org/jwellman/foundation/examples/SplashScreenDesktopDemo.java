@@ -10,24 +10,23 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import org.jwellman.foundation.Foundation;
-import org.jwellman.foundation.uContext;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.model.PanelRegistration;
-import org.jwellman.foundation.swing.XPanel;
 
 /**
  * Demonstrates the splash screen functionality in desktop mode.
- *
- * This example shows:
- * 1. Desktop with splash internal frame on init()
- * 2. Multiple panels registered (frames created but hidden)
- * 3. First panel launched - splash closes, panel appears
- * 4. Additional panels can be launched
- *
- * Run this demo:
+ * <p>
+ * This example shows:<br>
+ * 1. Desktop with splash internal frame on init()<br>
+ * 2. Multiple panels registered (frames created but hidden)<br>
+ * 3. First panel launched - splash closes, panel appears<br>
+ * 4. Additional panels can be launched<br>
+ * <p>
+ * Run this demo: <pre>
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SplashScreenDesktopDemo"
- *
+ * </pre>
+ * 
  * @author Foundation Framework
  */
 public class SplashScreenDesktopDemo {
@@ -46,6 +45,7 @@ public class SplashScreenDesktopDemo {
             createMainPanel(),
             WindowPosition.center()
         );
+        context.registerMasterPanel(mainPanel);
 
         PanelRegistration toolPanel = context.registerUI(
             "demo.tool",  
@@ -90,7 +90,6 @@ public class SplashScreenDesktopDemo {
             e.printStackTrace();
         }
         Foundation.get().launchWindow(toolPanel);
-//        foundation._launch(toolPanel);
 
     }
 

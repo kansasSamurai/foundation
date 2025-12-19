@@ -9,15 +9,15 @@ import org.jwellman.foundation.swing.XPanel;
 
 /**
  * Metadata container for a registered panel in the Foundation framework.
- *
- * This class tracks all information about a panel including:
- * - Namespace and panel ID for identification
- * - The panel itself (wrapped in XPanel)
- * - Window containers (JFrame or JInternalFrame)
- * - Visibility state
- * - Positioning preferences
- * - Lifecycle listeners
- *
+ * <p>
+ * This class tracks all information about a panel including:<br>
+ * - Namespace and panel ID for identification<br>
+ * - The panel itself (wrapped in XPanel)<br>
+ * - Window containers (JFrame or JInternalFrame)<br>
+ * - Visibility state<br>
+ * - Positioning preferences<br>
+ * - Lifecycle listeners<br>
+ * <p>
  * PanelRegistration supports the multi-window management capabilities
  * of the Bronze tier and above.
  *
