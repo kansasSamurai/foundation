@@ -503,38 +503,33 @@ public class Bronze extends Stone {
 
             uiSplashProvider splasher = ctx.getSplashProvider();
             if (this.isDesktop()) {
-                // Create the splash internal frame
-                JPanel splashContent = splasher.createSplashContent();
-                final XInternalFrame splashFrame = new XInternalFrame("Splash", false, false, false, false);
-                splashFrame.add(splashContent);
-                splashFrame.pack();
 
-                // Center the splash frame on the desktop
-                splashFrame.setLocation(
-                    (this.getDesktop().getWidth() - splashFrame.getWidth()) / 2,
-                    (this.getDesktop().getHeight() - splashFrame.getHeight()) / 2
+                // Create splash screen as a PanelRegistration (just like any other panel)
+                JPanel splashContent = splasher.createSplashContent();
+                XPanel splashPanel = new XPanel(splashContent);
+
+                PanelRegistration splashReg = new PanelRegistration(
+                    "system",           // namespace
+                    "splash",           // panelId
+                    splashPanel,        // panel
+                    null                // no lifecycle listener needed
                 );
 
-//                // Show the external frame synchronously (with desktop as content pane)
-//                this.showExternalFrameSynchronously();
+                // Use CENTER positioning to center the splash on the desktop
+                splashReg.setWindowPosition(org.jwellman.foundation.framework.WindowPosition.center());
+                splashReg.setWindowTitle("Loading...");
 
-                // Add splash to desktop and make it visible
-                javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        getDesktop().add(splashFrame);
-                        splashFrame.setVisible(true);
+                // Register in the context so we can find it later to close it
+                ctx.registerPanel("splash", splashReg);
 
-                        // Bring splash to front
-                        try {
-                            splashFrame.setSelected(true);
-                        } catch (java.beans.PropertyVetoException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+                // Create the internal frame (adds to desktop, applies positioning)
+                createInternalFrameForPanel(splashReg);
+
+                // Show it (makes visible and brings to front)
+                splashReg.show();
 
             } else {
+
                 // Window mode: show splash in the external frame
                 JPanel splashContent = splasher.createSplashContent();
 
@@ -542,7 +537,7 @@ public class Bronze extends Stone {
                 if (this.getExternalFrame() != null) {
                     this.getExternalFrame().setContentPane(splashContent);
                 }
-//                this.showExternalFrameSynchronously();
+
             }
         }
 

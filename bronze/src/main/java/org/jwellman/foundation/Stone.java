@@ -178,6 +178,43 @@ public class Stone {
     }
 
     /**
+     * Shows an internal frame on the desktop and brings it to the front.
+     * <p>
+     * This method handles the common pattern of making an internal frame visible
+     * and selected (brought to front) within a desktop environment.
+     * The operation is performed asynchronously on the EDT using invokeLater.
+     * <p>
+     * Common use cases:
+     * - Showing splash screens
+     * - Launching tool windows
+     * - Making hidden internal frames visible again
+     *
+     * @param internalFrame The internal frame to show
+     * @param desktop The desktop pane (frame will be added if not already a child)
+     */
+    protected void showInternalFrame(final XInternalFrame internalFrame, final JDesktopPane desktop) {
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                // Add to desktop if not already added
+                if (internalFrame.getParent() == null) {
+                    desktop.add(internalFrame);
+                }
+
+                // Make visible
+                internalFrame.setVisible(true);
+
+                // Bring to front
+                try {
+                    internalFrame.setSelected(true);
+                } catch (java.beans.PropertyVetoException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
      * Shows the external frame synchronously.
      * <p>
      * This method ensures the external frame is visible before returning.

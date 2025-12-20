@@ -55,6 +55,24 @@ public class SplashScreenDesktopDemo {
             WindowPosition.cascade()
         );
 
+        doMoreWork(context);
+
+        // Launch first panel - splash closes, main panel appears
+        Foundation.launch(context);
+
+        // After a delay, launch the tool panel
+//        try {
+//            Thread.sleep(5000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        Foundation.get().launchWindow(toolPanel);
+        toolPanel.show();
+
+    }
+
+    private static void doMoreWork(uiContext context) {
+        
         // Simulate more work
         final int total = Foundation.get() .logEnvironment(); // classpathEntries.length + fonts.length;
         final int delay = 4000 / total;
@@ -76,22 +94,13 @@ public class SplashScreenDesktopDemo {
         }
 
         context.getSplashProvider().updateProgress(100, "Initialization complete");
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
-        // Launch first panel - splash closes, main panel appears
-        Foundation.launch(context);
-
-        // After a delay, launch the tool panel
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        Foundation.get().launchWindow(toolPanel);
+        // Uncomment this if we need a delay to see splash "results"
+//        try {
+//            Thread.sleep(2000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
     }
 
