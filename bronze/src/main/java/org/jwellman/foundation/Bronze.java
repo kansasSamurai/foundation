@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.swing.JDesktopPane;
 import javax.swing.JPanel;
 
+import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.framework.uUtility;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
@@ -175,6 +176,7 @@ public class Bronze extends Stone {
 
     /**
      * Close a panel and remove it from the registry.
+     * <p>
      * Fires the onClose lifecycle event.
      *
      * @param namespace The namespace
@@ -186,18 +188,33 @@ public class Bronze extends Stone {
 
         PanelRegistration reg = ctx.getPanelRegistration(panelId);
         if (reg != null) {
-            // Fire lifecycle event
-            reg.fireOnClose();
-
-            // Close the window
-            IWindow window = reg.getWindow();
-            if (window != null) {
-                window.close();
-            }
-
-            // Remove from context's registry
-            ctx.removePanelRegistration(panelId);
+            closePanel(ctx, reg);
         }
+    }
+
+    /**
+     * Close a panel and remove it from the registry.
+     * <p>
+     * Fires the onClose lifecycle event.
+     * TODO Eventually (but probably not soon), the PanelRegistration may
+     * contain a reference to its parent uiContext in which case only the
+     * PanelRegistration parameter will be necessary here.
+     * 
+     * @param ctx The uiContext containing the PanelRegistration
+     * @param reg The PanelRegistration to be removed from the uiContext
+     */
+    public void closePanel(uiContext ctx, PanelRegistration reg) {
+        // Fire lifecycle event
+        reg.fireOnClose();
+
+        // Close the window
+        IWindow window = reg.getWindow();
+        if (window != null) {
+            window.close();
+        }
+
+        // Remove from context's registry
+        ctx.removePanelRegistration(reg.getPanelId());
     }
 
     /**
@@ -217,6 +234,12 @@ public class Bronze extends Stone {
     private int autoRegistrationCounter = 0;
 
     protected void _launch(uiContext ctx) {
+
+        // Close splash screen if it exists (before showing the main application)
+        if (ctx == masterContext) {
+            closeSplashScreen(ctx);
+        }
+
         super._launch(ctx);
 
         // Stone only launches the masterContext so Bronze needs to launch others
@@ -224,7 +247,7 @@ public class Bronze extends Stone {
             System.out.println("INFO - Bronze bypass master context");
         } else {
 
-            // 
+            //
             /* Once we support the init() method being called more than once
              * (like in multi tool desktop(s), calling it here may be redundant
              *  but would not be expected to hurt since it would just replace
@@ -507,20 +530,14 @@ public class Bronze extends Stone {
                 // Create splash screen as a PanelRegistration (just like any other panel)
                 JPanel splashContent = splasher.createSplashContent();
                 XPanel splashPanel = new XPanel(splashContent);
-
-                PanelRegistration splashReg = new PanelRegistration(
-                    "system",           // namespace
-                    "splash",           // panelId
-                    splashPanel,        // panel
-                    null                // no lifecycle listener needed
-                );
-
-                // Use CENTER positioning to center the splash on the desktop
-                splashReg.setWindowPosition(org.jwellman.foundation.framework.WindowPosition.center());
-                splashReg.setWindowTitle("Loading...");
-
                 // Register in the context so we can find it later to close it
-                ctx.registerPanel("splash", splashReg);
+                // Use CENTER positioning to center the splash on the desktop
+                PanelRegistration splashReg = ctx.registerUI(
+                        "splash", 
+                        splashPanel,
+                        WindowPosition.center()
+                );
+                splashReg.setWindowTitle("Loading...");
 
                 // Create the internal frame (adds to desktop, applies positioning)
                 createInternalFrameForPanel(splashReg);
@@ -541,6 +558,32 @@ public class Bronze extends Stone {
             }
         }
 
+    }
+
+    /**
+     * Closes the splash screen if it exists.
+     * <p>
+     * This method:
+     * - Finds the splash screen panel registration (system:splash)
+     * - Closes and removes it from the registry
+     * - Calls the splash provider's onSplashClosed() callback
+     *
+     * @param ctx The context to search for the splash screen
+     */
+    protected void closeSplashScreen(uiContext ctx) {
+        if (ctx.getSplashProvider() == null) {
+            return; // No splash provider, nothing to close
+        }
+
+        // Find the splash panel registration
+        PanelRegistration splashReg = ctx.getPanelRegistration("splash");
+        if (splashReg != null) {
+            // Close the panel (fires onClose event, closes window, removes from registry)
+            closePanel(ctx, splashReg);
+
+            // Notify the splash provider
+            ctx.getSplashProvider().onSplashClosed();
+        }
     }
 
     @Override
