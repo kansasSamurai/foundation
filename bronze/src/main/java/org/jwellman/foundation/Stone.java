@@ -638,11 +638,20 @@ public class Stone {
      */
     protected void _initializeAndShowWindow(uiContext ctx) {
 
-        // If we already have a visible frame, do nothing
         // This has the effect that this method will ONLY ever be applied to
         // the master context.  Initialization of other uiContext objects
         // in tiers above Stone will have to be done elsewhere.
-        if (externalFrame != null && externalFrame.isVisible()) {
+        if (ctx == masterContext) {
+            if (isDesktop()) {
+                // Do nothing and let method continue to show master panel...
+            } else {
+                if (externalFrame != null && externalFrame.isVisible()) {
+                    // If we already have a visible frame, do nothing
+                    System.err.println("WARN - _initializeAndShowWindow() called on already-visible window in window mode");
+                    return;
+                }
+            }
+        } else {
             return;
         }
 
@@ -650,6 +659,7 @@ public class Stone {
         // If mode hasn't been set yet, use the context setting (defaults to window mode)
         // NOTE: This should already be set by _init(), but kept as a safety check
         if (isDesktop() == null) {
+            System.out.println("WARN - unexpected null at isDesktop()");
             setDesktop(masterContext.isDesktopMode());
         }
 

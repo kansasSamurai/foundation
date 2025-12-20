@@ -61,12 +61,11 @@ public class SplashScreenDesktopDemo {
         Foundation.launch(context);
 
         // After a delay, launch the tool panel
-//        try {
-//            Thread.sleep(5000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//        Foundation.get().launchWindow(toolPanel);
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         toolPanel.show();
 
     }
@@ -153,9 +152,8 @@ public class SplashScreenDesktopDemo {
         JLabel infoLabel = new JLabel("<html>" +
             "<p>This tool was:</p>" +
             "<ul>" +
-            "<li>Registered before init()</li>" +
             "<li>Created as an internal frame (but hidden)</li>" +
-            "<li>Shown via launch() after a delay</li>" +
+            "<li>Shown via RegistrationPanel.show() after a delay</li>" +
             "</ul>" +
             "</html>", SwingConstants.CENTER);
 

@@ -322,11 +322,6 @@ public class uContext implements uiContext {
         // and window is visible), immediately create the internal frame for this panel
         if (Boolean.TRUE.equals(this.isDesktopMode()) ) {
             getFoundation().createInternalFrameForPanel(reg);
-            // NEW: Make the frame visible immediately since we're post-init
-            // 12/13 didn't work
-//            reg.getInternalFrame().setVisible(true);
-//            reg.setVisible(true);
-//            reg.fireOnShow();
         }
 
         return reg;

@@ -541,6 +541,11 @@ public class Bronze extends Stone {
 
                 // Create the internal frame (adds to desktop, applies positioning)
                 createInternalFrameForPanel(splashReg);
+                XInternalFrame iframe = splashReg.getInternalFrame();
+                iframe.setIconifiable(false);
+                iframe.setResizable(false);
+                iframe.setClosable(false);
+                iframe.setMaximizable(false);
 
                 // Show it (makes visible and brings to front)
                 splashReg.show();
