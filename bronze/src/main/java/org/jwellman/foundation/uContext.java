@@ -7,7 +7,7 @@ import java.util.Map;
 import javax.swing.JPanel;
 
 import org.jwellman.foundation.framework.WindowPosition;
-import org.jwellman.foundation.interfaces.PanelLifecycleListener;
+import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
@@ -291,7 +291,7 @@ public class uContext implements uiContext {
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
      * @return The PanelRegistration for this panel
      */
-    public PanelRegistration registerUI(String panelId, JPanel ui, PanelLifecycleListener listener, WindowPosition position) {
+    public PanelRegistration registerUI(String panelId, JPanel ui, uiPanelLifecycleListener listener, WindowPosition position) {
 
         // Get or create the uContext for this namespace
         uiContext ctx = this;

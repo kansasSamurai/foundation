@@ -1,7 +1,7 @@
 package org.jwellman.foundation.model;
 
 import org.jwellman.foundation.framework.WindowPosition;
-import org.jwellman.foundation.interfaces.PanelLifecycleListener;
+import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
@@ -53,7 +53,7 @@ public class PanelRegistration {
     private WindowPosition windowPosition;
 
     /** Lifecycle event listener (optional) */
-    private PanelLifecycleListener lifecycleListener;
+    private uiPanelLifecycleListener lifecycleListener;
 
     /**
      * Creates a new PanelRegistration.
@@ -90,7 +90,7 @@ public class PanelRegistration {
      * @param panel The wrapped panel
      * @param listener Lifecycle event listener
      */
-    public PanelRegistration(String namespace, String panelId, XPanel panel, PanelLifecycleListener listener) {
+    public PanelRegistration(String namespace, String panelId, XPanel panel, uiPanelLifecycleListener listener) {
         this(namespace, panelId, panel);
         this.lifecycleListener = listener;
     }
@@ -298,11 +298,11 @@ public class PanelRegistration {
         this.windowPosition = windowPosition;
     }
 
-    public PanelLifecycleListener getLifecycleListener() {
+    public uiPanelLifecycleListener getLifecycleListener() {
         return lifecycleListener;
     }
 
-    public void setLifecycleListener(PanelLifecycleListener lifecycleListener) {
+    public void setLifecycleListener(uiPanelLifecycleListener lifecycleListener) {
         this.lifecycleListener = lifecycleListener;
     }
 

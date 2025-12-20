@@ -253,6 +253,6 @@ public interface uiContext {
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
      * @return The PanelRegistration for this panel
      */
-    PanelRegistration registerUI(String panelId, JPanel ui, PanelLifecycleListener listener, WindowPosition position);
+    PanelRegistration registerUI(String panelId, JPanel ui, uiPanelLifecycleListener listener, WindowPosition position);
 
 }

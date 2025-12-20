@@ -42,14 +42,21 @@ public class Stone {
 
 	/** The master application context - controls overall lifecycle */
 	protected uiContext masterContext;
+	/* TODO I would like to make this private and access through a getter
+	 * (which is currently commented out below).  But I cannot do that currently 
+	 * because I have create a static getMasterContext() in the Foundation class.
+	 * It is too early to determine how I want to solve this so until then
+	 * I will allow direct access to this protected field instead of the typical
+	 * getter pattern.
+	 */
 
 	/** Indicates desktop mode; null until first useWindow() or useDesktop() call */
-	protected Boolean isDesktop;
+	private Boolean isDesktop;
 
 	/** Guards the init() method */
 	protected boolean isInitialized;
 
-	/** The "controlling" JFrame; used in both modes */
+	/** The "controlling" JFrame; either mode always has an externalFrame */
 	protected XFrame externalFrame;
 
 	/** The "main" internal frame used in desktop mode */
@@ -149,16 +156,26 @@ public class Stone {
             
             // Get or create desktop provider
             // IMPORTANT: context is never null (guaranteed by Foundation.init())
-            if (masterContext.getDesktopProvider() == null) {
-                // Use default framework provider
-                masterContext.setDesktopProvider(new DefaultDesktopProvider());
+            if (masterContext.isDesktopMode()) {
+                setDesktop(true);
+                if (masterContext.getDesktopProvider() == null) {
+                    // Use default framework provider
+                    masterContext.setDesktopProvider(new DefaultDesktopProvider());
+                }
+                setDesktop(masterContext.getDesktopProvider().createDesktop());
             }
-            setDesktop(masterContext.getDesktopProvider().createDesktop());
+
+            this.showSplashScreen(c);
 
         }
 
         return c;
     } // end method
+
+	/** This is a noop in Stone - Stone does not directly support Foundation splash screens */
+    protected void showSplashScreen(uiContext c) {
+        // This is a noop in Stone - Stone does not directly support Foundation splash screens
+    }
 
     /**
      * Creates a window for the given JPanel based on the current mode (window or desktop).
@@ -175,11 +192,12 @@ public class Stone {
 
         // Determine mode if not already set
         // Convention over configuration: default to window mode if not specified
-        if (isDesktop == null) {
-            isDesktop = masterContext.isDesktopMode();
+        // might be able to remove this eventually since determination of mode should be complete after init()
+        if (isDesktop() == null) {
+            setDesktop(masterContext.isDesktopMode());
         }
 
-        if (isDesktop) {
+        if (isDesktop()) {
             // Create internal frame for desktop mode
             final XInternalFrame internalFrame = new XInternalFrame("Your UI", true, true, true, true);
             internalFrame.setBounds(10, 10, 225, 125);
@@ -221,6 +239,7 @@ public class Stone {
         }
 
         // Set desktop mode on first call
+        // use of private field is probably ok because this entire deprecated method will probably go away soon
         if (isDesktop == null) {
             isDesktop = true;
             masterContext.setDesktopMode(true);
@@ -341,7 +360,7 @@ public class Stone {
             if (windows.size() == 1) {
                 if (windows.get(0) instanceof XInternalFrame) {
                     masterContext.setDesktopMode(true);
-                    isDesktop = true;
+                    setDesktop(true);
                 }
             }
 
@@ -514,8 +533,8 @@ public class Stone {
         // Determine mode (desktop vs window) from context
         // If mode hasn't been set yet, use the context setting (defaults to window mode)
         // TODO this setting of desktop mode may have to occur before now
-        if (isDesktop == null) {
-            isDesktop = masterContext.isDesktopMode();
+        if (isDesktop() == null) {
+            setDesktop(masterContext.isDesktopMode());
         }
 
         // Create the external frame if it doesn't exist
@@ -531,7 +550,7 @@ public class Stone {
         }
 
         // Set up desktop mode if needed
-        if (isDesktop) {
+        if (isDesktop()) {
 
             uiDesktopProvider provider = masterContext.getDesktopProvider();
 
@@ -576,7 +595,7 @@ public class Stone {
         try {
             final XFrame frameToShow = externalFrame;
             final Dimension size = masterContext.getDimension();
-            final boolean isDesktopMode = isDesktop;
+            final boolean isDesktopMode = isDesktop();
 
             javax.swing.SwingUtilities.invokeAndWait(new Runnable() {
                 @Override
@@ -688,8 +707,12 @@ public class Stone {
         return Boolean.TRUE.equals(isDesktop);
     }
 
-    protected void setDesktop(Boolean isDesktop) {
+    protected void setDesktop(boolean isDesktop) {
         this.isDesktop = isDesktop;
     }
+
+//    protected uiContext getMasterContext() {
+//        return masterContext;
+//    }
 
 } // end class

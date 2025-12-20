@@ -12,7 +12,7 @@ import javax.swing.JPanel;
 
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.WindowPosition;
-import org.jwellman.foundation.interfaces.PanelLifecycleListener;
+import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.IWindow;
@@ -252,8 +252,8 @@ public class MultiPanelDesktopDemo {
     /**
      * Creates a lifecycle listener for demonstration purposes.
      */
-    private static PanelLifecycleListener createLifecycleListener(final String panelName) {
-        return new PanelLifecycleListener() {
+    private static uiPanelLifecycleListener createLifecycleListener(final String panelName) {
+        return new uiPanelLifecycleListener() {
             @Override
             public void onCreate(IWindow window) {
                 System.out.println("[" + panelName + "] onCreate - window created");

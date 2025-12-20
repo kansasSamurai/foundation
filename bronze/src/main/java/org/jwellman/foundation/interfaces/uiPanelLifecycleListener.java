@@ -36,7 +36,7 @@ import org.jwellman.foundation.swing.IWindow;
  *
  * @author Foundation Framework
  */
-public interface PanelLifecycleListener {
+public interface uiPanelLifecycleListener {
 
     /**
      * Called when the panel's window container (JFrame or JInternalFrame) is created.

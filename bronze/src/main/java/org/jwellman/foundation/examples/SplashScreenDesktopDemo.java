@@ -13,6 +13,7 @@ import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.provider.DefaultSplashProvider;
 
 /**
  * Demonstrates the splash screen functionality in desktop mode.
@@ -37,6 +38,7 @@ public class SplashScreenDesktopDemo {
         uiContext context = Foundation.createContext(SplashScreenDesktopDemo.class);
         context.setDesktopMode(true);
         context.setDesktopTitle("Splash Screen Desktop Demo");
+        context.setSplashProvider(new DefaultSplashProvider());
         Foundation.init(context);
 
         // Register panels (frames created but not visible)

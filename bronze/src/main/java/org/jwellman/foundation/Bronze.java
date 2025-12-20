@@ -11,6 +11,7 @@ import javax.swing.JPanel;
 
 import org.jwellman.foundation.framework.uUtility;
 import org.jwellman.foundation.interfaces.uiContext;
+import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XInternalFrame;
@@ -280,7 +281,7 @@ public class Bronze extends Stone {
         }
 
         // Window mode: enforce single launch
-        if (Boolean.FALSE.equals(this.isDesktop)) {
+        if (Boolean.FALSE.equals(isDesktop())) {
 
             // Window mode: Close splash by replacing content pane
 //            if (splashWindow != null && splashProvider != null) {
@@ -374,7 +375,7 @@ public class Bronze extends Stone {
         ctx.registerPanel(panelId, reg);
 
         // Create frame immediately if in desktop mode and desktop exists
-        if (Boolean.TRUE.equals(this.isDesktop) && this.getDesktop() != null) {
+        if (Boolean.TRUE.equals(isDesktop()) && this.getDesktop() != null) {
             createInternalFrameForPanel(reg);
         }
 
@@ -483,9 +484,29 @@ public class Bronze extends Stone {
      * Bronze adds the ability to register one or more application contexts.
      */
     protected uiContext _init(uiContext ctx) {
+
+        // Bronze requires to register the context first
         registerContext(ctx);
 
-        return super._init(ctx);
+        super._init(ctx);
+
+        return ctx;
+    }
+
+    protected void showSplashScreen(uiContext ctx) {
+        
+        // If splash screen is enabled, show it.
+        if (ctx.getSplashProvider() != null) {
+            uiSplashProvider splasher = ctx.getSplashProvider();
+            if (this.isDesktop()) {
+                IWindow w = createWindow(splasher.createSplashContent());
+                this.launchWindow(w);
+                // this.showWindow(null);
+            } else {
+                
+            }
+        }
+
     }
 
     @Override
