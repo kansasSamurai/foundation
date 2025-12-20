@@ -165,14 +165,38 @@ public class Stone {
                 setDesktop(masterContext.getDesktopProvider().createDesktop());
             }
 
-            this.showSplashScreen(c);
+            // Show the initial window (with splash if splash provider exists, otherwise empty)
+            // This centralizes all frame display logic in one place
+            this._initializeAndShowWindow(c);
 
         }
 
         return c;
     } // end method
 
-	/** This is a noop in Stone - Stone does not directly support Foundation splash screens */
+	/**
+     * Prepares the splash content to be displayed in the external frame.
+     * This is a noop in Stone - Stone does not directly support Foundation splash screens.
+     * Bronze overrides this to create and set splash content.
+     */
+    protected void prepareSplashContent(uiContext ctx) {
+        // This is a noop in Stone - Stone does not directly support Foundation splash screens
+    }
+
+    /**
+     * Closes the splash screen and shows the master panel.
+     * This is a noop in Stone - Stone does not directly support Foundation splash screens.
+     * Bronze overrides this to handle splash-to-app transition.
+     */
+    protected void closeSplashAndShowMasterPanel(uiContext ctx) {
+        // This is a noop in Stone - Stone does not directly support Foundation splash screens
+    }
+
+    /**
+     * @deprecated This method has been replaced by prepareSplashContent() and closeSplashAndShowMasterPanel()
+     * This is a noop in Stone - Stone does not directly support Foundation splash screens
+     */
+    @Deprecated
     protected void showSplashScreen(uiContext c) {
         // This is a noop in Stone - Stone does not directly support Foundation splash screens
     }
@@ -627,31 +651,24 @@ public class Stone {
 
     /**
      * Initialize and show the main window.
+     * <p>
+     * This is the CENTRAL COORDINATOR for all frame display logic.
+     * It is called twice in the lifecycle:
+     * 1. From _init(): Shows splash (if splash provider exists) or prepares empty frame
+     * 2. From _launch(): Replaces splash with master panel, or shows master panel initially
+     * <p>
+     * This method handles:
+     * - Initial frame creation and display (with or without splash)
+     * - Splash replacement with master panel during launch
+     * - Both desktop mode and window mode
      *
-     * This method is called automatically by Foundation.init() to ensure that
-     * a visible window is always displayed when the framework initializes.
-     *
-     * If a window is already visible, this method does nothing (supports the
-     * multi-tool desktop scenario where Foundation.init() might be called
-     * multiple times as different tools are loaded).
-     * @param ctx
+     * @param ctx The context to initialize and show
      */
     protected void _initializeAndShowWindow(uiContext ctx) {
 
-        // This has the effect that this method will ONLY ever be applied to
-        // the master context.  Initialization of other uiContext objects
-        // in tiers above Stone will have to be done elsewhere.
-        if (ctx == masterContext) {
-            if (isDesktop()) {
-                // Do nothing and let method continue to show master panel...
-            } else {
-                if (externalFrame != null && externalFrame.isVisible()) {
-                    // If we already have a visible frame, do nothing
-                    System.err.println("WARN - _initializeAndShowWindow() called on already-visible window in window mode");
-                    return;
-                }
-            }
-        } else {
+        // This method ONLY applies to the master context
+        // Other contexts in tiers above Stone are handled elsewhere
+        if (ctx != masterContext) {
             return;
         }
 
@@ -663,28 +680,54 @@ public class Stone {
             setDesktop(masterContext.isDesktopMode());
         }
 
-        // Bronze-specific: Initialize other windows (create internal frames)
-        // Note: These frames are created but NOT visible (will be shown via launch())
-        if (isDesktop()) {
-            this.initializeOtherWindows();
-        } else {
-            // Window mode: Set master panel as content pane before showing
-            if (externalFrame != null && masterContext.getMasterPanel() != null) {
-            }
-        }
+        // Determine if this is the FIRST call (from init) or SECOND call (from launch)
+        boolean isFirstCall = (externalFrame == null || !externalFrame.isVisible());
+        boolean hasSplash = (ctx.getSplashProvider() != null);
 
-        // Show the external frame synchronously (handles frame creation, desktop setup, showing)
-        showExternalFrameSynchronously();
+        if (isFirstCall) {
+            // === FIRST CALL (from _init) ===
+            // Show the frame for the first time, with splash or empty
 
-        // Desktop mode: Launch master panel after frame is visible
-        if (isDesktop()) {
-            if (masterContext.getMasterPanel() == null) {
-                // TODO log warning because all contexts should have a master panel.
+            // Show external frame
+            showExternalFrameSynchronously();
+
+            if (hasSplash) {
+                // Show frame with splash content
+                this.prepareSplashContent(ctx);
+
             } else {
-                launchWindow(masterContext.getMasterPanel());
+                // No splash: show frame with master panel (or empty in desktop mode)
+
+                // Set content for window mode
+                if (!isDesktop() && masterContext.getMasterPanel() != null) {
+                    externalFrame.setContentPane(masterContext.getMasterPanel().getPanel());
+                }
+
+                // Launch master panel for desktop mode
+                if (isDesktop() && masterContext.getMasterPanel() != null) {
+                    launchWindow(masterContext.getMasterPanel());
+                }
             }
+
         } else {
-            externalFrame.setContentPane(masterContext.getMasterPanel().getPanel());
+            // === SECOND CALL (from _launch) ===
+            // Frame is already visible (with splash or app)
+            // Replace splash with master panel if needed
+
+            if (hasSplash) {
+                // Close splash and show master panel
+                this.closeSplashAndShowMasterPanel(ctx);
+            } else {
+                // No splash was shown, master panel should already be visible
+                // This is the normal path when no splash provider
+                if (isDesktop() && masterContext.getMasterPanel() != null) {
+                    // Desktop: master panel already launched in first call
+                    System.out.println("INFO - Master panel already visible in desktop mode");
+                } else if (!isDesktop()) {
+                    // Window mode: master panel already set as content pane
+                    System.out.println("INFO - Master panel already visible in window mode");
+                }
+            }
         }
 
         // temporarily disable while debugging demos

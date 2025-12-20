@@ -516,53 +516,121 @@ public class Bronze extends Stone {
         return ctx;
     }
 
-    protected void showSplashScreen(uiContext ctx) {
-
-        // If splash screen is enabled, show it.
-        if (ctx.getSplashProvider() != null) {
-
-            // Show the external frame synchronously (with desktop as content pane)
-            this.showExternalFrameSynchronously();
-
-            uiSplashProvider splasher = ctx.getSplashProvider();
-            if (this.isDesktop()) {
-
-                // Create splash screen as a PanelRegistration (just like any other panel)
-                JPanel splashContent = splasher.createSplashContent();
-                XPanel splashPanel = new XPanel(splashContent);
-                // Register in the context so we can find it later to close it
-                // Use CENTER positioning to center the splash on the desktop
-                PanelRegistration splashReg = ctx.registerUI(
-                        "splash", 
-                        splashPanel,
-                        WindowPosition.center()
-                );
-                splashReg.setWindowTitle("Loading...");
-
-                // Create the internal frame (adds to desktop, applies positioning)
-                createInternalFrameForPanel(splashReg);
-                XInternalFrame iframe = splashReg.getInternalFrame();
-                iframe.setIconifiable(false);
-                iframe.setResizable(false);
-                iframe.setClosable(false);
-                iframe.setMaximizable(false);
-
-                // Show it (makes visible and brings to front)
-                splashReg.show();
-
-            } else {
-
-                // Window mode: show splash in the external frame
-                JPanel splashContent = splasher.createSplashContent();
-
-                // Show the external frame with splash content synchronously
-                if (this.getExternalFrame() != null) {
-                    this.getExternalFrame().setContentPane(splashContent);
-                }
-
-            }
+    /**
+     * Prepares the splash content to be displayed in the external frame.
+     * Called from Stone._initializeAndShowWindow() during init() if splash provider exists.
+     * <p>
+     * This method:
+     * - Creates the splash content using the splash provider
+     * - In desktop mode: Registers splash as a panel and creates internal frame
+     * - In window mode: Sets splash content as the frame's content pane
+     */
+    @Override
+    protected void prepareSplashContent(uiContext ctx) {
+        if (ctx.getSplashProvider() == null) {
+            return; // No splash provider, nothing to prepare
         }
 
+        uiSplashProvider splasher = ctx.getSplashProvider();
+
+        if (this.isDesktop()) {
+            // Desktop mode: Create splash as an internal frame
+
+            // Create splash screen as a PanelRegistration (just like any other panel)
+            JPanel splashContent = splasher.createSplashContent();
+            XPanel splashPanel = new XPanel(splashContent);
+
+            // Register in the context so we can find it later to close it
+            // Use CENTER positioning to center the splash on the desktop
+            PanelRegistration splashReg = ctx.registerUI(
+                    "splash",
+                    splashPanel,
+                    WindowPosition.center()
+            );
+            splashReg.setWindowTitle("Loading...");
+
+            // Create the internal frame (adds to desktop, applies positioning)
+            createInternalFrameForPanel(splashReg);
+            XInternalFrame iframe = splashReg.getInternalFrame();
+            iframe.setIconifiable(false);
+            iframe.setResizable(false);
+            iframe.setClosable(false);
+            iframe.setMaximizable(false);
+
+            // Show it (makes visible and brings to front)
+            splashReg.show();
+
+        } else {
+            // Window mode: Set splash content as frame's content pane
+
+            JPanel splashContent = splasher.createSplashContent();
+
+            // Set splash content in the external frame (frame will be shown by caller)
+            if (this.getExternalFrame() != null) {
+                this.getExternalFrame().setContentPane(splashContent);
+            }
+        }
+    }
+
+    /**
+     * Closes the splash screen and shows the master panel.
+     * Called from Stone._initializeAndShowWindow() during launch() if splash was shown.
+     * <p>
+     * This method:
+     * - In desktop mode: Closes the splash internal frame
+     * - In window mode: Replaces the splash content pane with the master panel
+     * - Notifies the splash provider that splash is closed
+     */
+    @Override
+    protected void closeSplashAndShowMasterPanel(uiContext ctx) {
+        if (ctx.getSplashProvider() == null) {
+            return; // No splash provider, nothing to close
+        }
+
+        if (this.isDesktop()) {
+            // Desktop mode: Close splash internal frame, launch master panel
+
+            // Close the splash screen
+            closeSplashScreen(ctx);
+
+            // Launch the master panel
+            if (masterContext.getMasterPanel() != null) {
+                launchWindow(masterContext.getMasterPanel());
+            }
+
+        } else {
+            // Window mode: Replace splash content with master panel
+
+            final JPanel masterPanel = masterContext.getMasterPanel() != null
+                    ? masterContext.getMasterPanel().getPanel()
+                    : null;
+
+            if (masterPanel != null) {
+                // Replace content pane on EDT
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        getExternalFrame().setContentPane(masterPanel);
+                        getExternalFrame().pack();
+                        getExternalFrame().setLocationRelativeTo(null); // Re-center
+                        getExternalFrame().revalidate();
+                        getExternalFrame().repaint();
+                    }
+                });
+            }
+
+            // Notify splash provider
+            ctx.getSplashProvider().onSplashClosed();
+        }
+    }
+
+    /**
+     * @deprecated This method is no longer called in the new architecture.
+     * Use prepareSplashContent() and closeSplashAndShowMasterPanel() instead.
+     */
+    @Deprecated
+    protected void showSplashScreen(uiContext ctx) {
+        // Deprecated - no longer called
     }
 
     /**
