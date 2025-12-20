@@ -670,7 +670,6 @@ public class Stone {
         } else {
             // Window mode: Set master panel as content pane before showing
             if (externalFrame != null && masterContext.getMasterPanel() != null) {
-                externalFrame.setContentPane(masterContext.getMasterPanel().getPanel());
             }
         }
 
@@ -678,8 +677,14 @@ public class Stone {
         showExternalFrameSynchronously();
 
         // Desktop mode: Launch master panel after frame is visible
-        if (isDesktop() && masterContext.getMasterPanel() != null) {
-            launchWindow(masterContext.getMasterPanel());
+        if (isDesktop()) {
+            if (masterContext.getMasterPanel() == null) {
+                // TODO log warning because all contexts should have a master panel.
+            } else {
+                launchWindow(masterContext.getMasterPanel());
+            }
+        } else {
+            externalFrame.setContentPane(masterContext.getMasterPanel().getPanel());
         }
 
         // temporarily disable while debugging demos

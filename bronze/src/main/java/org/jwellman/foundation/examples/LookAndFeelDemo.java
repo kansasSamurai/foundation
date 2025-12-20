@@ -16,9 +16,11 @@ import javax.swing.border.EmptyBorder;
 
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.LAFDiscovery;
+import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.framework.LAFDiscovery.LAFInfo;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
+import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.provider.DefaultSplashProvider;
 
 /**
@@ -57,10 +59,12 @@ public class LookAndFeelDemo {
 
         // Create UI
         JPanel ui = createUI(selectedLAF);
-        context.registerMasterPanel("master", ui);
+//        context.registerMasterPanel("master", ui);
+        PanelRegistration mainPanel = context.registerUI("master", ui, WindowPosition.center());
+        context.registerMasterPanel(mainPanel);
 
         // Display splash screen while initializing the app (data, database, network, whatever)
-        initAppWithSplashScreen(context.getSplashProvider());
+        // initAppWithSplashScreen(context.getSplashProvider());
 
         // Launch the application - splash screen closes, app appears
         Foundation.launch(context);

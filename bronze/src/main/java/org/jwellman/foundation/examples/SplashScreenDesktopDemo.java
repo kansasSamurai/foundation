@@ -125,7 +125,7 @@ public class SplashScreenDesktopDemo {
             "<li>This main panel became visible</li>" +
             "<li>Calculator tool will appear in 2 seconds</li>" +
             "</ul>" +
-            "<p>Multiple launches are supported in desktop mode!</p>" +
+            "<p>You can launch multiple contexts in desktop mode!</p>" +
             "</html>");
 
         centerPanel.add(descLabel, BorderLayout.CENTER);
