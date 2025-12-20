@@ -494,16 +494,55 @@ public class Bronze extends Stone {
     }
 
     protected void showSplashScreen(uiContext ctx) {
-        
+
         // If splash screen is enabled, show it.
         if (ctx.getSplashProvider() != null) {
+
+            // Show the external frame synchronously (with desktop as content pane)
+            this.showExternalFrameSynchronously();
+
             uiSplashProvider splasher = ctx.getSplashProvider();
             if (this.isDesktop()) {
-                IWindow w = createWindow(splasher.createSplashContent());
-                this.launchWindow(w);
-                // this.showWindow(null);
+                // Create the splash internal frame
+                JPanel splashContent = splasher.createSplashContent();
+                final XInternalFrame splashFrame = new XInternalFrame("Splash", false, false, false, false);
+                splashFrame.add(splashContent);
+                splashFrame.pack();
+
+                // Center the splash frame on the desktop
+                splashFrame.setLocation(
+                    (this.getDesktop().getWidth() - splashFrame.getWidth()) / 2,
+                    (this.getDesktop().getHeight() - splashFrame.getHeight()) / 2
+                );
+
+//                // Show the external frame synchronously (with desktop as content pane)
+//                this.showExternalFrameSynchronously();
+
+                // Add splash to desktop and make it visible
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        getDesktop().add(splashFrame);
+                        splashFrame.setVisible(true);
+
+                        // Bring splash to front
+                        try {
+                            splashFrame.setSelected(true);
+                        } catch (java.beans.PropertyVetoException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
             } else {
-                
+                // Window mode: show splash in the external frame
+                JPanel splashContent = splasher.createSplashContent();
+
+                // Show the external frame with splash content synchronously
+                if (this.getExternalFrame() != null) {
+                    this.getExternalFrame().setContentPane(splashContent);
+                }
+//                this.showExternalFrameSynchronously();
             }
         }
 

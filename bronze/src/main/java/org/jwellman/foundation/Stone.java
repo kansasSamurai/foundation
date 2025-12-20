@@ -178,6 +178,85 @@ public class Stone {
     }
 
     /**
+     * Shows the external frame synchronously.
+     * <p>
+     * This method ensures the external frame is visible before returning.
+     * It handles:
+     * - Creating the external frame if it doesn't exist
+     * - Setting up desktop mode (if enabled)
+     * - Showing the frame using invokeAndWait() for synchronous display
+     * <p>
+     * Used primarily for showing splash screens during init().
+     */
+    protected void showExternalFrameSynchronously() {
+        // If frame is already visible, do nothing
+        if (externalFrame != null && externalFrame.isVisible()) {
+            return;
+        }
+
+        // Create the external frame if it doesn't exist
+        if (externalFrame == null) {
+            String title = uUtility.valueOrDefault(masterContext.getDesktopTitle(), "Foundation Application");
+            this.setExternalFrame(new XFrame(title));
+            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        }
+
+        // Set up desktop mode if needed
+        if (isDesktop()) {
+            // Desktop should already be created by _init()
+            // Framework sets desktop as content pane
+            externalFrame.setContentPane(desktop);
+
+            // Add menu bar if provider supplies one
+            uiDesktopProvider provider = masterContext.getDesktopProvider();
+            javax.swing.JMenuBar menuBar = provider.createMenuBar();
+            if (menuBar != null) {
+                externalFrame.setJMenuBar(menuBar);
+            }
+
+            // Store provider reference for post-initialization callback
+            final uiDesktopProvider finalProvider = provider;
+            final JDesktopPane finalDesktop = desktop;
+
+            // Call onDesktopInitialized after the window is shown
+            javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    finalProvider.onDesktopInitialized(finalDesktop);
+                }
+            });
+        }
+
+        // Show the window on the EDT synchronously
+        try {
+            final XFrame frameToShow = externalFrame;
+            final Dimension size = masterContext.getDimension();
+            final boolean isDesktopMode = isDesktop();
+
+            javax.swing.SwingUtilities.invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    // Set size
+                    if (isDesktopMode) {
+                        // Desktop mode: always use explicit sizing
+                        frameToShow.setSize(size);
+                    } else {
+                        // Window mode: pack to fit content
+                        frameToShow.pack();
+                    }
+
+                    frameToShow.setLocationRelativeTo(null); // Center on screen
+                    frameToShow.setVisible(true);
+                }
+            });
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Creates a window for the given JPanel based on the current mode (window or desktop).
      * The mode is determined by the uContext provided during init().
      * Convention: If no uContext provided, defaults to window mode (standalone).
@@ -518,12 +597,12 @@ public class Stone {
      * If a window is already visible, this method does nothing (supports the
      * multi-tool desktop scenario where Foundation.init() might be called
      * multiple times as different tools are loaded).
-     * @param ctx 
+     * @param ctx
      */
     protected void _initializeAndShowWindow(uiContext ctx) {
 
         // If we already have a visible frame, do nothing
-        // This has the effect that this method will ONLY ever be applied to 
+        // This has the effect that this method will ONLY ever be applied to
         // the master context.  Initialization of other uiContext objects
         // in tiers above Stone will have to be done elsewhere.
         if (externalFrame != null && externalFrame.isVisible()) {
@@ -532,97 +611,28 @@ public class Stone {
 
         // Determine mode (desktop vs window) from context
         // If mode hasn't been set yet, use the context setting (defaults to window mode)
-        // TODO this setting of desktop mode may have to occur before now
+        // NOTE: This should already be set by _init(), but kept as a safety check
         if (isDesktop() == null) {
             setDesktop(masterContext.isDesktopMode());
         }
 
-        // Create the external frame if it doesn't exist
-        // Stone - It should NOT exist in Stone because Stone does not support
-        // splash screens - therefore, a main external frame should exist
-        // before this method is called.  
-        // Bronze - Because bronze supports splash screens, an external frame
-        // may already exist if the master context includes a splash provider.
-        if (externalFrame == null) {
-            String title = uUtility.valueOrDefault(masterContext.getDesktopTitle(), "Foundation Application");
-            this.setExternalFrame(new XFrame(title));
-            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        }
-
-        // Set up desktop mode if needed
+        // Bronze-specific: Initialize other windows (create internal frames)
+        // Note: These frames are created but NOT visible (will be shown via launch())
         if (isDesktop()) {
-
-            uiDesktopProvider provider = masterContext.getDesktopProvider();
-
-            // Create desktop using provider (no parameters - supports nested desktops)
-            setDesktop(provider.createDesktop());
-
-            // Framework sets desktop as content pane
-            externalFrame.setContentPane(desktop);
-
-            // Add menu bar if provider supplies one
-            javax.swing.JMenuBar menuBar = provider.createMenuBar();
-            if (menuBar != null) {
-                externalFrame.setJMenuBar(menuBar);
-            }
-
-            // Store provider reference for post-initialization callback
-            final uiDesktopProvider finalProvider = provider;
-            final JDesktopPane finalDesktop = desktop;
-
-            // We'll call onDesktopInitialized after the window is shown
-            // This will be done in the EDT runnable below
-            // TODO technically, how this gets launched probably needs some
-            // examination/refactor.  This is because we want to enforce by 
-            // design that this won't occur until AFTER the window is shown
-            // but its placement here does not enforce that (though it 
-            // probably won't occur... it is just not guaranteed).
-            javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    finalProvider.onDesktopInitialized(finalDesktop);
-                }
-            });
-
-            // Initialize other windows (Bronze tier will create internal frames here)
-            // Note: These frames are created but NOT visible (will be shown via launch())
             this.initializeOtherWindows();
         } else {
-            externalFrame.setContentPane(masterContext.getMasterPanel().getPanel());
+            // Window mode: Set master panel as content pane before showing
+            if (externalFrame != null && masterContext.getMasterPanel() != null) {
+                externalFrame.setContentPane(masterContext.getMasterPanel().getPanel());
+            }
         }
 
-        // Show the window on the EDT
-        try {
-            final XFrame frameToShow = externalFrame;
-            final Dimension size = masterContext.getDimension();
-            final boolean isDesktopMode = isDesktop();
+        // Show the external frame synchronously (handles frame creation, desktop setup, showing)
+        showExternalFrameSynchronously();
 
-            javax.swing.SwingUtilities.invokeAndWait(new Runnable() {
-                @Override
-                public void run() {
-                    // Set size
-                    if (isDesktopMode) {
-                        // Desktop mode: always use explicit sizing
-                        frameToShow.setSize(size);
-                    } else {
-                        // Window mode: pack to fit splash content
-                        frameToShow.pack();
-                    }
-
-                    frameToShow.setLocationRelativeTo(null); // Center on screen
-                    frameToShow.setVisible(true);
-
-                    if (isDesktopMode) {
-                        // Desktop mode: always use explicit sizing
-                        launchWindow(masterContext.getMasterPanel());
-                    }
-
-                }
-            });
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        // Desktop mode: Launch master panel after frame is visible
+        if (isDesktop() && masterContext.getMasterPanel() != null) {
+            launchWindow(masterContext.getMasterPanel());
         }
 
         // temporarily disable while debugging demos
