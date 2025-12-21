@@ -744,10 +744,17 @@ public class Stone {
 
             if (hasSplash) {
 
-                // Show external frame
-                showExternalFrameSynchronously();
+                if (isDesktop()) {
+                    // Desktop mode: Show external frame first (sets up desktop as content pane)
+                    // This is needed so the splash internal frame has a desktop to be added to
+                    showExternalFrameSynchronously();
+                }
+                // Window mode: Don't show frame yet - showSplashScreen() will handle it
+                // This prevents visual flash of empty frame before content is set
 
-                // Show splash content (desktop: creates/shows internal frame, window: sets content pane)
+                // Show splash content
+                // - Desktop mode: Creates and shows splash internal frame on the desktop
+                // - Window mode: Shows frame with splash content already set (no flash)
                 this.showSplashScreen(ctx);
 
             } else {
