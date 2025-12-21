@@ -59,15 +59,16 @@ public class LookAndFeelDemo {
         context.setLookAndFeel(selectedLAF.getClassName());
 
         // Initialize Foundation (LAFDiscovery will apply the LAF from context)
+        // ... this includes display of splash screen via splash provider.
         Foundation.init(context);
 
         // Create UI
         JPanel ui = createUI(selectedLAF);
-//        context.registerMasterPanel("master", ui);
         PanelRegistration mainPanel = context.registerUI("master", ui, WindowPosition.center());
         context.registerMasterPanel(mainPanel);
 
-        // Display splash screen while initializing the app (data, database, network, whatever)
+        // Continue initializing the app (data, database, network, whatever)
+        // ... update the splash screen as progress is made.
         initAppWithSplashScreen(context.getSplashProvider());
 
         // Launch the application - splash screen closes, app appears
@@ -201,8 +202,6 @@ public class LookAndFeelDemo {
      * @param splasher
      */
     private static void initAppWithSplashScreen(uiSplashProvider splasher) {
-
-//        splasher.createSplashContent();
 
         // Simulate more work
         final int total = 1000; // foundation.logEnvironment(); // classpathEntries.length + fonts.length;

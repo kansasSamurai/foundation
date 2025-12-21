@@ -517,16 +517,19 @@ public class Bronze extends Stone {
     }
 
     /**
-     * Prepares the splash content to be displayed in the external frame.
+     * Shows the splash screen if a splash provider exists.
      * Called from Stone._initializeAndShowWindow() during init() if splash provider exists.
      * <p>
      * This method:
      * - Creates the splash content using the splash provider
-     * - In desktop mode: Registers splash as a panel and creates internal frame
+     * - In desktop mode: Registers splash as a panel and creates/shows internal frame
      * - In window mode: Sets splash content as the frame's content pane
+     * <p>
+     * Note: Must be called AFTER showExternalFrameSynchronously() so the external frame exists.
+     * In desktop mode, this method DOES show the splash internal frame via splashReg.show().
      */
     @Override
-    protected void prepareSplashContent(uiContext ctx) {
+    protected void showSplashScreen(uiContext ctx) {
         if (ctx.getSplashProvider() == null) {
             return; // No splash provider, nothing to prepare
         }
@@ -565,10 +568,8 @@ public class Bronze extends Stone {
 
             JPanel splashContent = splasher.createSplashContent();
 
-            // Set splash content in the external frame (frame will be shown by caller)
-            if (this.getExternalFrame() != null) {
-                this.getExternalFrame().setContentPane(splashContent);
-            }
+            // Show frame with splash content (sets content pane, packs, centers, shows)
+            showFrameWithContent(splashContent);
         }
     }
 
@@ -601,36 +602,18 @@ public class Bronze extends Stone {
         } else {
             // Window mode: Replace splash content with master panel
 
-            final JPanel masterPanel = masterContext.getMasterPanel() != null
+            JPanel masterPanel = masterContext.getMasterPanel() != null
                     ? masterContext.getMasterPanel().getPanel()
                     : null;
 
             if (masterPanel != null) {
-                // Replace content pane on EDT
-                javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        getExternalFrame().setContentPane(masterPanel);
-                        getExternalFrame().pack();
-                        getExternalFrame().setLocationRelativeTo(null); // Re-center
-                        getExternalFrame().revalidate();
-                        getExternalFrame().repaint();
-                    }
-                });
+                // Replace content pane (sets content pane, packs, centers, shows)
+                showFrameWithContent(masterPanel);
             }
 
             // Notify splash provider
             ctx.getSplashProvider().onSplashClosed();
         }
-    }
-
-    /**
-     * @deprecated This method is no longer called in the new architecture.
-     * Use prepareSplashContent() and closeSplashAndShowMasterPanel() instead.
-     */
-    @Deprecated
-    protected void showSplashScreen(uiContext ctx) {
-        // Deprecated - no longer called
     }
 
     /**
@@ -657,21 +640,6 @@ public class Bronze extends Stone {
             // Notify the splash provider
             ctx.getSplashProvider().onSplashClosed();
         }
-    }
-
-    @Override
-    /**
-     * TODO remove this method, its function has been deprecated from the design
-     */
-    protected void initializeOtherWindows() {
-//        if (Boolean.TRUE.equals(this.isDesktop)) {
-//            // Iterate through all contexts and their panels
-//            for (uiContext ctx : contextRegistry.values()) {
-//                for (PanelRegistration reg : ctx.getAllPanelRegistrations().values()) {
-//                    createInternalFrameForPanel(reg);
-//                }
-//            }
-//        }
     }
 
     /**

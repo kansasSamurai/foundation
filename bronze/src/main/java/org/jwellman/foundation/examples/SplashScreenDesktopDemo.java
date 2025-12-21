@@ -71,10 +71,11 @@ public class SplashScreenDesktopDemo {
     }
 
     private static void doMoreWork(uiContext context) {
-        
+
         // Simulate more work
-        final int total = Foundation.get() .logEnvironment(); // classpathEntries.length + fonts.length;
+        final int total = Foundation.get().logEnvironment(); 
         final int delay = 4000 / total;
+
         int percent = 0;
         for (int i = 0; i <= total; i++) {
 
@@ -88,18 +89,16 @@ public class SplashScreenDesktopDemo {
             int current = (i*100)/total;
             if (current > percent) {
                 percent = current;
-                context.getSplashProvider().updateProgress(percent, null); // "In progress...");
+                context.getSplashProvider().updateProgress(percent, null); 
             }
         }
 
-        context.getSplashProvider().updateProgress(100, "Initialization complete");
-
-        // Uncomment this if we need a delay to see splash "results"
-//        try {
-//            Thread.sleep(2000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            context.getSplashProvider().updateProgress(100, "Initialization complete");
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 

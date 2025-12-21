@@ -56,7 +56,10 @@ public class Stone {
 	/** Guards the init() method */
 	protected boolean isInitialized;
 
-	/** The "controlling" JFrame; either mode always has an externalFrame */
+	/** Set to false after the first call to _initializeAndShowWindow() */
+    private boolean isFirstCall = true; // (externalFrame == null || !externalFrame.isVisible());
+
+    /** The "controlling" JFrame; either mode always has an externalFrame */
 	protected XFrame externalFrame;
 
 	/** The "main" internal frame used in desktop mode */
@@ -175,11 +178,15 @@ public class Stone {
     } // end method
 
 	/**
-     * Prepares the splash content to be displayed in the external frame.
+     * Shows the splash screen if a splash provider exists.
      * This is a noop in Stone - Stone does not directly support Foundation splash screens.
-     * Bronze overrides this to create and set splash content.
+     * Bronze overrides this to:
+     * - Desktop mode: Create and show splash as internal frame
+     * - Window mode: Set splash content as frame's content pane
+     * <p>
+     * Note: Must be called AFTER showExternalFrameSynchronously() so the external frame exists.
      */
-    protected void prepareSplashContent(uiContext ctx) {
+    protected void showSplashScreen(uiContext ctx) {
         // This is a noop in Stone - Stone does not directly support Foundation splash screens
     }
 
@@ -189,15 +196,6 @@ public class Stone {
      * Bronze overrides this to handle splash-to-app transition.
      */
     protected void closeSplashAndShowMasterPanel(uiContext ctx) {
-        // This is a noop in Stone - Stone does not directly support Foundation splash screens
-    }
-
-    /**
-     * @deprecated This method has been replaced by prepareSplashContent() and closeSplashAndShowMasterPanel()
-     * This is a noop in Stone - Stone does not directly support Foundation splash screens
-     */
-    @Deprecated
-    protected void showSplashScreen(uiContext c) {
         // This is a noop in Stone - Stone does not directly support Foundation splash screens
     }
 
@@ -315,6 +313,39 @@ public class Stone {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Sets the content pane of the external frame and displays it properly.
+     * <p>
+     * This method:
+     * - Sets the JPanel as the frame's content pane
+     * - Packs the frame to fit the content
+     * - Centers the frame on screen
+     * - Makes the frame visible
+     * - Revalidates and repaints
+     * <p>
+     * All operations are performed on the EDT using invokeLater.
+     * Used for window mode when switching content (e.g., splash to main app).
+     *
+     * @param content The JPanel to set as content pane
+     */
+    protected void showFrameWithContent(final JPanel content) {
+        if (externalFrame == null) {
+            throw new IllegalStateException("External frame has not been created yet");
+        }
+
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                externalFrame.setContentPane(content);
+                externalFrame.pack();
+                externalFrame.setLocationRelativeTo(null); // Center on screen
+                externalFrame.setVisible(true);
+                externalFrame.revalidate();
+                externalFrame.repaint();
+            }
+        });
     }
 
     /**
@@ -680,33 +711,37 @@ public class Stone {
             setDesktop(masterContext.isDesktopMode());
         }
 
-        // Determine if this is the FIRST call (from init) or SECOND call (from launch)
-        boolean isFirstCall = (externalFrame == null || !externalFrame.isVisible());
         boolean hasSplash = (ctx.getSplashProvider() != null);
 
+        // Determine if this is the FIRST call (from init) or SECOND call (from launch)
         if (isFirstCall) {
             // === FIRST CALL (from _init) ===
             // Show the frame for the first time, with splash or empty
 
-            // Show external frame
-            showExternalFrameSynchronously();
+            isFirstCall = false;
 
             if (hasSplash) {
-                // Show frame with splash content
-                this.prepareSplashContent(ctx);
+
+                // Show external frame
+                showExternalFrameSynchronously();
+
+                // Show splash content (desktop: creates/shows internal frame, window: sets content pane)
+                this.showSplashScreen(ctx);
 
             } else {
                 // No splash: show frame with master panel (or empty in desktop mode)
 
-                // Set content for window mode
-                if (!isDesktop() && masterContext.getMasterPanel() != null) {
-                    externalFrame.setContentPane(masterContext.getMasterPanel().getPanel());
+                if (masterContext.getMasterPanel() != null) {
+                    if (isDesktop()) {
+                        // Launch master panel for desktop mode
+                        launchWindow(masterContext.getMasterPanel());
+                    } else {
+                        // Set content for window mode
+                        // TODO should this call showFrameWithContent?
+                        externalFrame.setContentPane(masterContext.getMasterPanel().getPanel());
+                    }
                 }
 
-                // Launch master panel for desktop mode
-                if (isDesktop() && masterContext.getMasterPanel() != null) {
-                    launchWindow(masterContext.getMasterPanel());
-                }
             }
 
         } else {
@@ -718,6 +753,10 @@ public class Stone {
                 // Close splash and show master panel
                 this.closeSplashAndShowMasterPanel(ctx);
             } else {
+
+                // Show external frame
+                showExternalFrameSynchronously();
+
                 // No splash was shown, master panel should already be visible
                 // This is the normal path when no splash provider
                 if (isDesktop() && masterContext.getMasterPanel() != null) {
