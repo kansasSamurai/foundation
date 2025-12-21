@@ -209,13 +209,32 @@ public class Stone {
 
     /**
      * Shows the master panel according to the current mode (desktop or window).
-     * This is a noop in Stone - Stone does not directly support Foundation splash screens.
-     * Bronze overrides this to:
-     * - Desktop mode: Show external frame, then launch master panel as internal frame
-     * - Window mode: Show external frame with master panel content
+     * <p>
+     * This method:
+     * - In desktop mode: Shows external frame (if needed), then launches master panel as internal frame
+     * - In window mode: Shows external frame with master panel content
      */
     protected void showMasterPanel(uiContext ctx) {
-        // This is a noop in Stone - Stone does not directly support Foundation splash screens
+        if (masterContext.getMasterPanel() == null) {
+            return; // No master panel to show
+        }
+
+        if (this.isDesktop()) {
+            // Desktop mode: Show external frame, then launch master panel
+
+            // Show external frame if not already visible
+            if (this.getExternalFrame() == null || !this.getExternalFrame().isVisible()) {
+                showExternalFrameSynchronously();
+            }
+
+            // Launch the master panel as internal frame
+            launchWindow(masterContext.getMasterPanel());
+
+        } else {
+            // Window mode: Show frame with master panel content
+            JPanel masterPanel = masterContext.getMasterPanel().getPanel();
+            showFrameWithContent(masterPanel);
+        }
     }
 
     /**
@@ -279,14 +298,14 @@ public class Stone {
      * Used primarily for showing splash screens during init().
      */
     protected void showExternalFrameSynchronously() {
-        // If frame is already visible, do nothing
-        if (externalFrame != null && externalFrame.isVisible()) {
-            return;
-        }
-
         // External frame should always exist (created in _init)
         if (externalFrame == null) {
             throw new IllegalStateException("External frame should have been created during init()");
+        } else {
+            // If frame is already visible, do nothing
+            if (externalFrame.isVisible()) {
+                return;
+            }
         }
 
         // Set up desktop mode if needed
