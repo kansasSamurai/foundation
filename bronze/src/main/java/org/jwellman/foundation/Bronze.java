@@ -574,6 +574,39 @@ public class Bronze extends Stone {
     }
 
     /**
+     * Shows the master panel according to the current mode (desktop or window).
+     * Called from Stone._initializeAndShowWindow() during launch().
+     * <p>
+     * This method:
+     * - In desktop mode: Shows external frame (if needed), then launches master panel as internal frame
+     * - In window mode: Shows external frame with master panel content
+     */
+    @Override
+    protected void showMasterPanel(uiContext ctx) {
+        if (masterContext.getMasterPanel() == null) {
+            return; // No master panel to show
+        }
+
+        if (this.isDesktop()) {
+            // Desktop mode: Show external frame, then launch master panel
+
+            // Show external frame if not already visible
+            if (this.getExternalFrame() == null || !this.getExternalFrame().isVisible()) {
+                showExternalFrameSynchronously();
+            }
+
+            // Launch the master panel as internal frame
+            launchWindow(masterContext.getMasterPanel());
+
+        } else {
+            // Window mode: Show frame with master panel content
+            JPanel masterPanel = masterContext.getMasterPanel().getPanel();
+            showFrameWithContent(masterPanel);
+        }
+    }
+
+    /**
+     * @deprecated Use closeSplashScreen() and showMasterPanel() separately instead.
      * Closes the splash screen and shows the master panel.
      * Called from Stone._initializeAndShowWindow() during launch() if splash was shown.
      * <p>
@@ -582,6 +615,7 @@ public class Bronze extends Stone {
      * - In window mode: Replaces the splash content pane with the master panel
      * - Notifies the splash provider that splash is closed
      */
+    @Deprecated
     @Override
     protected void closeSplashAndShowMasterPanel(uiContext ctx) {
         if (ctx.getSplashProvider() == null) {

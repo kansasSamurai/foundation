@@ -83,10 +83,10 @@ public class SimpleDesktopDemo extends JPanel {
         // The panel is identified by namespace:panelId ("demo.simple:main")
         ctx.registerMasterPanel("main", new SimpleDesktopDemo());
 
-        // Step 4 - Set a custom window title using the windowTitle property
+        // Step 3a - Set a custom window title using the windowTitle property
         ctx.getMasterPanel().setWindowTitle("Foundation - Simple Desktop Demo");
 
-        // Step 5 - Show the panel
+        // Step 4 - Show the panel
         Foundation.launch(ctx);
 
     }
