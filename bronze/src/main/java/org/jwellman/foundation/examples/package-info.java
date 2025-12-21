@@ -10,6 +10,7 @@
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.MultiPanelDesktopDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SplashScreenDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SplashScreenDesktopDemo"
+ * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.CustomSplashProviderDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.LookAndFeelDemo"
  * </pre>
  *
@@ -42,6 +43,10 @@
  *     Same as SplashScreenDemo but in desktop mode with internal frame splash.
  *     Shows deployment-agnostic splash screen support.</li>
  *
+ * <li><b>CustomSplashProviderDemo</b> - Custom splash screen with application-specific branding.
+ *     Demonstrates implementing uiSplashProvider with company logo, custom colors, and professional design.
+ *     Shows how easy it is to swap providers (one line of code) without modifying framework.</li>
+ *
  * <li><b>LookAndFeelDemo</b> - Tests Look and Feel support with splash screen.
  *     Validates that all LAF dependencies are configured correctly.
  *     Uses LAFDiscovery system for runtime LAF selection and validation.</li>
@@ -51,9 +56,6 @@
  *
  * <p>The following demonstration scenarios are not yet implemented:</p>
  * <ul>
- * <li><b>Custom Splash Provider Demo</b> - Show how to implement custom uiSplashProvider
- *     with application-specific branding, logos, and custom progress tracking.</li>
- *
  * <li><b>Custom Desktop Provider Demo</b> - Demonstrate implementing custom uiDesktopProvider
  *     with custom desktop background, menu bar, and window management features.</li>
  *
@@ -78,6 +80,7 @@
  * <li><b>IWindow Abstraction</b> - Applications never directly reference JFrame/JInternalFrame</li>
  * <li><b>Foundation Lifecycle</b> - init(context) → register panels → launch(context)</li>
  * <li><b>Splash Screen Support</b> - Optional splash during initialization via uiSplashProvider</li>
+ * <li><b>Custom Providers</b> - Easy customization via provider pattern (splash, desktop, theme)</li>
  * <li><b>Minimal Boilerplate</b> - Clean main() methods with clear, simple Foundation API</li>
  * <li><b>Multi-Panel Registry</b> - Bronze tier namespace:panelId registry with lifecycle events</li>
  * <li><b>Window Positioning</b> - Declarative window positioning strategies (CASCADE, CENTER, etc.)</li>
