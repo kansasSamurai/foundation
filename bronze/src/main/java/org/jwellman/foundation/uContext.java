@@ -318,10 +318,14 @@ public class uContext implements uiContext {
             reg.setWindowPosition(position);
         }
 
-        // If we're in desktop mode and the desktop already exists (meaning init() has been called
-        // and window is visible), immediately create the internal frame for this panel
+        // Create the appropriate container for this panel based on mode
+        // Desktop mode: create internal frame (inside JDesktopPane)
+        // Window mode: create external frame (separate JFrame) - enables multi-window mode
         if (Boolean.TRUE.equals(this.isDesktopMode()) ) {
             getFoundation().createInternalFrameForPanel(reg);
+        } else {
+            // Window mode: create external frame for this panel (multi-window mode)
+            getFoundation().createFrameForPanel(reg);
         }
 
         return reg;

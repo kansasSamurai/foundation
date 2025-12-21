@@ -44,6 +44,11 @@ public class MultiPanelDesktopDemo {
         uiContext context = Foundation.createContext("tool.calculator");
         context.setDesktopMode(true);
         context.setDesktopTitle("Multi-Tool Desktop - Bronze Tier Demo");
+        /* !! NOTE !! Although this demo app is coded to use desktop mode,
+         * it can be modified to setDesktopMode(false) and will run flawlessly
+         * using JFrames instead of JInternalFrames on a JDesktopPane.
+         * This is a fundamental architectural goal of the framework!
+         */
 
         Foundation.init(context);
 

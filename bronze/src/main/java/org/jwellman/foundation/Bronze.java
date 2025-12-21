@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.swing.JDesktopPane;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import org.jwellman.foundation.framework.WindowPosition;
@@ -15,6 +16,7 @@ import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.IWindow;
+import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
 import org.jwellman.foundation.swing.XPanel;
 
@@ -256,15 +258,57 @@ public class Bronze extends Stone {
             registerContext(ctx);
 
             if (isDesktop()) {
-                // I think we should have already created the internal frame -
-                // unless I re-discover why we haven't on purpose, we need to.
+                // Desktop mode: create internal frame (if not already created) and show it
                 this.createInternalFrameForPanel(ctx.getMasterPanel());
                 ctx.getMasterPanel().getInternalFrame().show();
             } else {
-                // TODO implement window logic
+                // Window mode: create external frame (if not already created) and show it
+                this.createFrameForPanel(ctx.getMasterPanel());
+                ctx.getMasterPanel().getExternalFrame().setVisible(true);
             }
 
         }
+    }
+
+    /**
+     * Creates an external frame (JFrame) for a panel registration in multi-window mode.
+     * <p>
+     * This mirrors createInternalFrameForPanel() but creates a top-level JFrame instead.
+     * The frame is created but NOT made visible - visibility is handled later by
+     * existing show mechanisms (reg.show(), launchWindow(), etc.).
+     *
+     * @param reg The panel registration
+     */
+    protected void createFrameForPanel(PanelRegistration reg) {
+        if (reg.getExternalFrame() != null) {
+            // Already has an external frame, skip
+            return;
+        }
+
+        // Create external frame
+        String title = reg.getWindowTitle() != null ? reg.getWindowTitle() : reg.getFullId();
+        final XFrame frame = new XFrame(title);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Don't exit app when closing individual windows
+
+        // Set up bidirectional reference
+        reg.getPanel().setParent(frame);
+        reg.setExternalFrame(frame);
+
+        System.out.println("created frame: " + title);
+
+        // Set panel as content
+        frame.setContentPane(reg.getPanel());
+
+        // Apply positioning
+        frame.pack(); // Pack before positioning to get correct size
+        reg.getWindowPosition().apply(frame, null); // null desktop for window positioning
+
+        // Frame is created but NOT visible by default
+        // Only frames shown via launch() or show() will be made visible
+        frame.setVisible(false);
+
+        // Fire onCreate event
+        reg.fireOnCreate();
     }
 
     /**
@@ -397,9 +441,12 @@ public class Bronze extends Stone {
         PanelRegistration reg = new PanelRegistration(namespace, panelId, panel, null);
         ctx.registerPanel(panelId, reg);
 
-        // Create frame immediately if in desktop mode and desktop exists
+        // Create frame immediately based on mode
         if (Boolean.TRUE.equals(isDesktop()) && this.getDesktop() != null) {
             createInternalFrameForPanel(reg);
+        } else if (!Boolean.TRUE.equals(isDesktop())) {
+            // Window mode: create external frame for multi-window mode
+            createFrameForPanel(reg);
         }
 
         return reg;
