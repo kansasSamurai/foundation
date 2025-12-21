@@ -80,15 +80,15 @@ public class SplashScreenDemo extends JPanel {
     public static void main(String[] args) {
 
         // Initialize Foundation - splash screen appears here
-        uiContext app = Foundation.createContext(SplashScreenDemo.class);
-        app.setSplashProvider(new DefaultSplashProvider());
+        uiContext ctx = Foundation.createContext(SplashScreenDemo.class);
+        ctx.setSplashProvider(new DefaultSplashProvider());
 
-        Foundation.init(app);
+        Foundation.init(ctx);
 
-        app.registerMasterPanel("master", new SplashScreenDemo());
+        ctx.registerMasterPanel("master", new SplashScreenDemo());
 
         // Simulate more work
-        boolean displaySplash = false; // temporary debugging variable
+        boolean displaySplash = true; // temporary debugging variable
         if (displaySplash) {
             
         final int total = 500; // foundation.logEnvironment(); // classpathEntries.length + fonts.length;
@@ -106,11 +106,11 @@ public class SplashScreenDemo extends JPanel {
             int current = (i*100)/total;
             if (current > percent) {
                 percent = current;
-                app.getSplashProvider().updateProgress(percent, null); // "In progress...");
+                ctx.getSplashProvider().updateProgress(percent, null); // "In progress...");
             }
         }
 
-        app.getSplashProvider().updateProgress(100, "Initialization complete");
+        ctx.getSplashProvider().updateProgress(100, "Initialization complete");
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -119,7 +119,7 @@ public class SplashScreenDemo extends JPanel {
         }
 
         // Launch the application - splash screen closes, app appears
-        Foundation.launch(app);
+        Foundation.launch(ctx);
 
     }
 

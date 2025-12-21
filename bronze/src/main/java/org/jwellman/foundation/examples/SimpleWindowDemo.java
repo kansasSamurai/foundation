@@ -66,7 +66,7 @@ public class SimpleWindowDemo extends JPanel {
 
         // Demonstrate how to startup an application using Foundation.
         // For quick and simple use cases, the demo() method can be used.
-        boolean demo = false;
+        boolean demo = true;
         if (demo) {
             Foundation.demo(SimpleWindowDemo.class);
         } else {
@@ -82,7 +82,7 @@ public class SimpleWindowDemo extends JPanel {
              * which can make this a difficult situation to diagnose.
              */
 
-            // Step 1 - Initialize Foundation
+            // Step 1 - Create an application context
             uiContext ctx = Foundation.createContext(SimpleWindowDemo.class);
 
             // Step 2 - Initialize Foundation

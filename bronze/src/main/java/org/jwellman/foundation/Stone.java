@@ -154,9 +154,9 @@ public class Stone {
                 masterContext.getThemeProvider().doTheme();
             }
 
-            // This may have to move again but it is done here so 
+            // This may have to move again but it is done here so
             // that desktop mode code has a desktop provider after init().
-            
+
             // Get or create desktop provider
             // IMPORTANT: context is never null (guaranteed by Foundation.init())
             if (masterContext.isDesktopMode()) {
@@ -167,6 +167,14 @@ public class Stone {
                 }
                 setDesktop(masterContext.getDesktopProvider().createDesktop());
             }
+
+            // ALWAYS create the external frame (regardless of mode or splash)
+            // The external frame is the top-level container in both window and desktop modes
+            // - Window mode: Frame contains the application JPanel
+            // - Desktop mode: Frame contains the JDesktopPane (which contains internal frames)
+            String title = uUtility.valueOrDefault(masterContext.getDesktopTitle(), DEFAULT_APP_TITLE);
+            this.setExternalFrame(new XFrame(title));
+            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             // Show the initial window (with splash if splash provider exists, otherwise empty)
             // This centralizes all frame display logic in one place
@@ -263,9 +271,10 @@ public class Stone {
      * <p>
      * This method ensures the external frame is visible before returning.
      * It handles:
-     * - Creating the external frame if it doesn't exist
-     * - Setting up desktop mode (if enabled)
+     * - Setting up desktop mode content pane (if enabled)
      * - Showing the frame using invokeAndWait() for synchronous display
+     * <p>
+     * NOTE: External frame is always created during _init(), so it always exists when this is called.
      * <p>
      * Used primarily for showing splash screens during init().
      */
@@ -275,11 +284,9 @@ public class Stone {
             return;
         }
 
-        // Create the external frame if it doesn't exist
+        // External frame should always exist (created in _init)
         if (externalFrame == null) {
-            String title = uUtility.valueOrDefault(masterContext.getDesktopTitle(), "Foundation Application");
-            this.setExternalFrame(new XFrame(title));
-            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            throw new IllegalStateException("External frame should have been created during init()");
         }
 
         // Set up desktop mode if needed
@@ -402,16 +409,7 @@ public class Stone {
 
             return internalFrame;
         } else {
-            // Create JFrame for window mode
-            if (externalFrame == null) {
-                this.setExternalFrame(new XFrame(DEFAULT_APP_TITLE));
-
-                if (masterContext.getDesktopTitle() != null)
-                    externalFrame.setTitle(masterContext.getDesktopTitle());
-
-                externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            }
-
+            // Window mode: Use external frame (already created in _init)
             externalFrame.add(ui);
             return externalFrame;
         }
@@ -544,26 +542,9 @@ public class Stone {
             throw new RuntimeException("Cannot call launchWindow() until Foundation.init() is called.");
         }
 
-        // Create the JFrame
+        // External frame should always exist (created in _init)
         if (externalFrame == null) {
-
-            // This is a bit of a hack for now (12/1/2020)...
-            // If the externalFrame has not been explicitly registered then try to decode if
-            // desktop mode should be used.
-            if (windows.size() == 1) {
-                if (windows.get(0) instanceof XInternalFrame) {
-                    masterContext.setDesktopMode(true);
-                    setDesktop(true);
-                }
-            }
-
-            // We have not registered a desktop/main so create one
-            this.setExternalFrame(new XFrame(DEFAULT_APP_TITLE));
-
-            // TODO The jPAD security manager doesn't like this line
-            // but other apps without jpad might... review this design
-            externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+            throw new IllegalStateException("External frame should have been created during init()");
         }
 
         // Start the GUI on the Event Dispatch Thread (EDT)

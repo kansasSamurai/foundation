@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
+import org.jwellman.foundation.examples.SimpleWindowDemo;
 import org.jwellman.foundation.interfaces.uiContext;
 
 /**
@@ -180,15 +181,19 @@ public class Foundation extends Platinum {
      */
     public static void demo(Class<? extends JComponent> c) {
 
-        // Step 1 - Initialize Foundation
-        uiContext app = Foundation.init();
+        // Step 1 - Create an application context
+        uiContext app = Foundation.createContext(SimpleWindowDemo.class);
 
-        // Step 2 - Create your application (which is a JPanel)
+        // Step 2 - Initialize Foundation
+        Foundation.init(app);
+
+        // Step 3 - Create your application (which is a JPanel)
         try {
             Object o = c.newInstance();
             if (o instanceof JPanel) {
                 app.registerMasterPanel("master", (JPanel)o);
             } else {
+                // Probably rarely used but if JComponent is not something inherited from JPanel...
                 JPanel x = new JPanel(new BorderLayout());
                 x.add((JComponent)o, BorderLayout.CENTER);
                 app.registerMasterPanel("master", x);
@@ -197,7 +202,7 @@ public class Foundation extends Platinum {
             e.printStackTrace();
         }
 
-        // Step 3 - Display the UI - this occurs properly on the EDT
+        // Step 4 - Display the UI - this occurs properly on the EDT
         Foundation.launch(app);
 
     }

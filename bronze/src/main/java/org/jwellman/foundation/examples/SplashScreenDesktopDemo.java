@@ -39,6 +39,7 @@ public class SplashScreenDesktopDemo {
         context.setDesktopMode(true);
         context.setDesktopTitle("Splash Screen Desktop Demo");
         context.setSplashProvider(new DefaultSplashProvider());
+
         Foundation.init(context);
 
         // Register panels (frames created but not visible)
