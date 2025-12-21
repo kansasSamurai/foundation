@@ -8,6 +8,8 @@
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SimpleWindowDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SimpleDesktopDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.MultiPanelDesktopDemo"
+ * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SplashScreenDemo"
+ * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SplashScreenDesktopDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.LookAndFeelDemo"
  * </pre>
  *
@@ -25,16 +27,47 @@
  *     Shows basic Foundation lifecycle and single-panel deployment.</li>
  *
  * <li><b>SimpleDesktopDemo</b> - Minimal example showing desktop mode (JInternalFrame).
- *     Nearly identical to SimpleWindowDemo - only useDesktop() vs useWindow() differs.
- *     Demonstrates deployment-agnostic design principle.</li>
+ *     Nearly identical to SimpleWindowDemo - demonstrates deployment-agnostic design.
+ *     Same application code works in both window and desktop modes.</li>
  *
- * <li><b>MultiPanelDesktopDemo</b> - Shows multiple panels in a desktop environment.
- *     Simulates a multi-tool desktop where each tool is a separate JPanel.
- *     This demonstrates Foundation's vision: tools built once, deployed anywhere.</li>
+ * <li><b>MultiPanelDesktopDemo</b> - Shows Bronze tier multi-panel registry in action.
+ *     Demonstrates namespace:panelId registration, panel lifecycle events, and window positioning.
+ *     Simulates a multi-tool desktop environment with dynamic panel visibility control.</li>
  *
- * <li><b>LookAndFeelDemo</b> - Tests Look and Feel support.
+ * <li><b>SplashScreenDemo</b> - Window mode with splash screen during initialization.
+ *     Shows DefaultSplashProvider usage with progress updates during app startup.
+ *     Demonstrates clean transition from splash to main application UI.</li>
+ *
+ * <li><b>SplashScreenDesktopDemo</b> - Desktop mode with splash screen during initialization.
+ *     Same as SplashScreenDemo but in desktop mode with internal frame splash.
+ *     Shows deployment-agnostic splash screen support.</li>
+ *
+ * <li><b>LookAndFeelDemo</b> - Tests Look and Feel support with splash screen.
  *     Validates that all LAF dependencies are configured correctly.
- *     Documents the future architecture for dynamic LAF discovery.</li>
+ *     Uses LAFDiscovery system for runtime LAF selection and validation.</li>
+ * </ul>
+ *
+ * <h2>Missing Demos (Future Work)</h2>
+ *
+ * <p>The following demonstration scenarios are not yet implemented:</p>
+ * <ul>
+ * <li><b>Custom Splash Provider Demo</b> - Show how to implement custom uiSplashProvider
+ *     with application-specific branding, logos, and custom progress tracking.</li>
+ *
+ * <li><b>Custom Desktop Provider Demo</b> - Demonstrate implementing custom uiDesktopProvider
+ *     with custom desktop background, menu bar, and window management features.</li>
+ *
+ * <li><b>Theme Provider Demo</b> - Show uiThemeProvider implementation for custom
+ *     application themes and color schemes beyond Look and Feel.</li>
+ *
+ * <li><b>Window Positioning Demo</b> - Comprehensive demo of WindowPosition strategies
+ *     (CASCADE, CENTER, TILE, EXPLICIT) with interactive controls.</li>
+ *
+ * <li><b>Panel Lifecycle Demo</b> - Interactive demo showing onCreate, onShow, onHide,
+ *     onClose events with visual feedback and state tracking.</li>
+ *
+ * <li><b>Dynamic Panel Management Demo</b> - Show runtime panel creation, removal,
+ *     show/hide toggling, and namespace queries in an interactive interface.</li>
  * </ul>
  *
  * <h2>Key Concepts Demonstrated</h2>
@@ -43,9 +76,11 @@
  * <li><b>Extend JPanel, Not JFrame</b> - Applications extend JPanel; Foundation handles JFrame boilerplate</li>
  * <li><b>Deployment-Agnostic Applications</b> - Same JPanel class works in window or desktop mode</li>
  * <li><b>IWindow Abstraction</b> - Applications never directly reference JFrame/JInternalFrame</li>
- * <li><b>Foundation Lifecycle</b> - init() → useWindow()/useDesktop() → showGUI()</li>
+ * <li><b>Foundation Lifecycle</b> - init(context) → register panels → launch(context)</li>
+ * <li><b>Splash Screen Support</b> - Optional splash during initialization via uiSplashProvider</li>
  * <li><b>Minimal Boilerplate</b> - Clean main() methods with clear, simple Foundation API</li>
- * <li><b>Multi-Panel Support</b> - Multiple tools in a single desktop environment</li>
+ * <li><b>Multi-Panel Registry</b> - Bronze tier namespace:panelId registry with lifecycle events</li>
+ * <li><b>Window Positioning</b> - Declarative window positioning strategies (CASCADE, CENTER, etc.)</li>
  * </ul>
  *
  * @since 1.0.1
