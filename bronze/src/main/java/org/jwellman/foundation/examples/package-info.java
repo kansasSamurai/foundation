@@ -12,6 +12,7 @@
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SplashScreenDesktopDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.CustomSplashProviderDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.CustomDesktopProviderDemo"
+ * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.BronzeTierShowcaseDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.LookAndFeelDemo"
  * </pre>
  *
@@ -52,6 +53,12 @@
  *     Demonstrates implementing uiDesktopProvider with gradient background, company watermark, and desktop menu bar.
  *     Shows provider pattern for desktop customization without framework modification.</li>
  *
+ * <li><b>BronzeTierShowcaseDemo</b> - Comprehensive interactive demo combining three key Bronze tier features:
+ *     (1) Window Positioning with CASCADE, CENTER, and EXPLICIT strategies;
+ *     (2) Panel Lifecycle events (onCreate, onShow, onHide, onClose) with real-time event log;
+ *     (3) Dynamic Panel Management with runtime creation/removal and registry queries.
+ *     Features interactive control panel, visual event logging, and registry statistics.</li>
+ *
  * <li><b>LookAndFeelDemo</b> - Tests Look and Feel support with splash screen.
  *     Validates that all LAF dependencies are configured correctly.
  *     Uses LAFDiscovery system for runtime LAF selection and validation.</li>
@@ -62,16 +69,8 @@
  * <p>The following demonstration scenarios are not yet implemented:</p>
  * <ul>
  * <li><b>Theme Provider Demo</b> - Show uiThemeProvider implementation for custom
- *     application themes and color schemes beyond Look and Feel.</li>
- *
- * <li><b>Window Positioning Demo</b> - Comprehensive demo of WindowPosition strategies
- *     (CASCADE, CENTER, TILE, EXPLICIT) with interactive controls.</li>
- *
- * <li><b>Panel Lifecycle Demo</b> - Interactive demo showing onCreate, onShow, onHide,
- *     onClose events with visual feedback and state tracking.</li>
- *
- * <li><b>Dynamic Panel Management Demo</b> - Show runtime panel creation, removal,
- *     show/hide toggling, and namespace queries in an interactive interface.</li>
+ *     application themes and color schemes beyond Look and Feel. (May be better suited
+ *     for Silver tier when theme support is expanded.)</li>
  * </ul>
  *
  * <h2>Key Concepts Demonstrated</h2>
@@ -85,7 +84,10 @@
  * <li><b>Custom Providers</b> - Easy customization via provider pattern (splash, desktop, theme)</li>
  * <li><b>Minimal Boilerplate</b> - Clean main() methods with clear, simple Foundation API</li>
  * <li><b>Multi-Panel Registry</b> - Bronze tier namespace:panelId registry with lifecycle events</li>
- * <li><b>Window Positioning</b> - Declarative window positioning strategies (CASCADE, CENTER, etc.)</li>
+ * <li><b>Window Positioning</b> - Declarative window positioning strategies (CASCADE, CENTER, EXPLICIT)</li>
+ * <li><b>Panel Lifecycle Events</b> - onCreate, onShow, onHide, onClose hooks for resource management</li>
+ * <li><b>Dynamic Panel Management</b> - Runtime panel creation, removal, visibility control, and registry queries</li>
+ * <li><b>Interactive Framework Exploration</b> - Comprehensive showcase demo for hands-on learning</li>
  * </ul>
  *
  * @since 1.0.1
