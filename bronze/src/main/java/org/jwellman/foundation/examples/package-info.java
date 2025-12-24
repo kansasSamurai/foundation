@@ -11,6 +11,7 @@
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SplashScreenDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SplashScreenDesktopDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.CustomSplashProviderDemo"
+ * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.CustomDesktopProviderDemo"
  * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.LookAndFeelDemo"
  * </pre>
  *
@@ -47,6 +48,10 @@
  *     Demonstrates implementing uiSplashProvider with company logo, custom colors, and professional design.
  *     Shows how easy it is to swap providers (one line of code) without modifying framework.</li>
  *
+ * <li><b>CustomDesktopProviderDemo</b> - Custom desktop environment with application-specific branding.
+ *     Demonstrates implementing uiDesktopProvider with gradient background, company watermark, and desktop menu bar.
+ *     Shows provider pattern for desktop customization without framework modification.</li>
+ *
  * <li><b>LookAndFeelDemo</b> - Tests Look and Feel support with splash screen.
  *     Validates that all LAF dependencies are configured correctly.
  *     Uses LAFDiscovery system for runtime LAF selection and validation.</li>
@@ -56,9 +61,6 @@
  *
  * <p>The following demonstration scenarios are not yet implemented:</p>
  * <ul>
- * <li><b>Custom Desktop Provider Demo</b> - Demonstrate implementing custom uiDesktopProvider
- *     with custom desktop background, menu bar, and window management features.</li>
- *
  * <li><b>Theme Provider Demo</b> - Show uiThemeProvider implementation for custom
  *     application themes and color schemes beyond Look and Feel.</li>
  *
