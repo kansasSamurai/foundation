@@ -13,12 +13,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
@@ -74,8 +75,12 @@ public class BronzeTierShowcaseDemo {
         new Color(240, 248, 255), // Alice blue
         new Color(255, 240, 245), // Lavender blush
         new Color(255, 255, 240), // Ivory
-        new Color(245, 245, 245)  // White smoke
+        new Color(245, 245, 245), // White smoke
     };
+
+    private static class PALETTE {
+        public static Color bkgControl = new Color(248, 248, 250);
+    }
 
     public static void main(String[] args) {
 
@@ -91,7 +96,7 @@ public class BronzeTierShowcaseDemo {
             "control",
             createControlPanel(),
             createLifecycleListener("Control Panel"),
-            WindowPosition.at(10, 10, 380, 700)
+            WindowPosition.at(10, 10, 430, 700)
         );
 
         // Create the event log panel (right side)
@@ -99,7 +104,7 @@ public class BronzeTierShowcaseDemo {
             "eventlog",
             createEventLogPanel(),
             createLifecycleListener("Event Log"),
-            WindowPosition.at(400, 10, 550, 350)
+            WindowPosition.at(450, 10, 550, 350)
         );
 
         // Create the registry stats panel (right side, below event log)
@@ -107,7 +112,7 @@ public class BronzeTierShowcaseDemo {
             "stats",
             createStatsPanel(),
             createLifecycleListener("Registry Stats"),
-            WindowPosition.at(400, 370, 550, 340)
+            WindowPosition.at(450, 370, 550, 340)
         );
 
         // Set control panel as master
@@ -128,22 +133,23 @@ public class BronzeTierShowcaseDemo {
      */
     private static JPanel createControlPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(new Color(248, 248, 250));
+        panel.setBackground(PALETTE.bkgControl);
         panel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
+            BorderFactory.createLineBorder(PALETTE.bkgControl, 2),
             BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
 
         // Header
         JLabel headerLabel = new JLabel("Framework Showcase Controls");
         headerLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-        headerLabel.setForeground(new Color(70, 130, 180));
+        // headerLabel.setForeground(PALETTE.bkgControl);
         headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         // Main content area
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setOpaque(false);
+        // contentPanel.setOpaque(false);
+        contentPanel.setBackground(PALETTE.bkgControl);
 
         // Section 1: Create New Panel
         contentPanel.add(createSectionHeader("1. Window Positioning"));
@@ -203,51 +209,56 @@ public class BronzeTierShowcaseDemo {
         section.add(infoLabel);
         section.add(Box.createVerticalStrut(8));
 
-        // Positioning strategy selector
-        JPanel selectorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        selectorPanel.setOpaque(false);
-        JLabel strategyLabel = new JLabel("Position:");
-        JComboBox<String> strategyCombo = new JComboBox<>(new String[]{
-            "CASCADE (diagonal offset)",
-            "CENTER (centered)",
-            "EXPLICIT (100,100)",
-            "EXPLICIT (with size 200,150,400,300)"
-        });
-        strategyCombo.setPreferredSize(new Dimension(280, 25));
-        selectorPanel.add(strategyLabel);
-        selectorPanel.add(strategyCombo);
-        selectorPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-        section.add(selectorPanel);
+        // Positioning strategy selector - radio buttons
+        JRadioButton cascadeRadio = new JRadioButton("CASCADE (diagonal offset)", true);
+        JRadioButton centerRadio = new JRadioButton("CENTER (centered)");
+        JRadioButton explicitPosRadio = new JRadioButton("EXPLICIT (100,100)");
+        JRadioButton explicitSizeRadio = new JRadioButton("EXPLICIT (with size 200,150,400,300)");
+
+        ButtonGroup strategyGroup = new ButtonGroup();
+        strategyGroup.add(cascadeRadio);
+        strategyGroup.add(centerRadio);
+        strategyGroup.add(explicitPosRadio);
+        strategyGroup.add(explicitSizeRadio);
+
+        JPanel radioPanel = new JPanel();
+        radioPanel.setLayout(new BoxLayout(radioPanel, BoxLayout.Y_AXIS));
+        radioPanel.setOpaque(false);
+        radioPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+        cascadeRadio.setOpaque(false);
+        centerRadio.setOpaque(false);
+        explicitPosRadio.setOpaque(false);
+        explicitSizeRadio.setOpaque(false);
+        radioPanel.add(cascadeRadio);
+        radioPanel.add(centerRadio);
+        radioPanel.add(explicitPosRadio);
+        radioPanel.add(explicitSizeRadio);
+
+        section.add(radioPanel);
         section.add(Box.createVerticalStrut(8));
 
         // Create button
         JButton createButton = new JButton("Create Panel with Selected Strategy");
         createButton.setAlignmentX(JButton.LEFT_ALIGNMENT);
         createButton.addActionListener(e -> {
-            int selection = strategyCombo.getSelectedIndex();
             WindowPosition position;
             String strategyName;
 
-            switch (selection) {
-                case 0: // CASCADE
-                    position = WindowPosition.cascade();
-                    strategyName = "CASCADE";
-                    break;
-                case 1: // CENTER
-                    position = WindowPosition.center();
-                    strategyName = "CENTER";
-                    break;
-                case 2: // EXPLICIT (position only)
-                    position = WindowPosition.at(100, 100);
-                    strategyName = "EXPLICIT(100,100)";
-                    break;
-                case 3: // EXPLICIT (position and size)
-                    position = WindowPosition.at(200, 150, 400, 300);
-                    strategyName = "EXPLICIT(200,150,400,300)";
-                    break;
-                default:
-                    position = WindowPosition.cascade();
-                    strategyName = "CASCADE";
+            if (cascadeRadio.isSelected()) {
+                position = WindowPosition.cascade();
+                strategyName = "CASCADE";
+            } else if (centerRadio.isSelected()) {
+                position = WindowPosition.center();
+                strategyName = "CENTER";
+            } else if (explicitPosRadio.isSelected()) {
+                position = WindowPosition.at(100, 100);
+                strategyName = "EXPLICIT(100,100)";
+            } else if (explicitSizeRadio.isSelected()) {
+                position = WindowPosition.at(200, 150, 400, 300);
+                strategyName = "EXPLICIT(200,150,400,300)";
+            } else {
+                position = WindowPosition.cascade();
+                strategyName = "CASCADE";
             }
 
             createDynamicPanel(strategyName, position);
