@@ -98,6 +98,7 @@ public class BronzeTierShowcaseDemo {
             createLifecycleListener("Control Panel"),
             WindowPosition.at(10, 10, 430, 700)
         );
+        controlPanel.setAttribute("permanent", true);
 
         // Create the event log panel (right side)
         PanelRegistration eventLogPanel = context.registerUI(
@@ -106,6 +107,7 @@ public class BronzeTierShowcaseDemo {
             createLifecycleListener("Event Log"),
             WindowPosition.at(450, 10, 550, 350)
         );
+        eventLogPanel.setAttribute("permanent", true);
 
         // Create the registry stats panel (right side, below event log)
         PanelRegistration statsPanel = context.registerUI(
@@ -114,6 +116,7 @@ public class BronzeTierShowcaseDemo {
             createLifecycleListener("Registry Stats"),
             WindowPosition.at(450, 370, 550, 340)
         );
+        statsPanel.setAttribute("permanent", true);
 
         // Set control panel as master
         context.registerMasterPanel(controlPanel);
@@ -431,6 +434,7 @@ public class BronzeTierShowcaseDemo {
             createLifecycleListener("Dynamic Panel #" + panelNum),
             position
         );
+        registration.setAttribute("dynamic", true);
 
         // Show the panel
         registration.show();
@@ -609,21 +613,25 @@ public class BronzeTierShowcaseDemo {
     }
 
     /**
-     * Hides all dynamic panels (keeps control, eventlog, stats visible).
+     * Hides all dynamic panels (keeps permanent panels visible).
+     * <p>
+     * Uses the "dynamic" attribute to identify which panels to hide.
      */
     private static void hideAllDynamicPanels() {
         List<PanelRegistration> allPanels = Foundation.get().getRegistrations("showcase");
         for (PanelRegistration reg : allPanels ) {
             if (isPanelDynamic(reg)) {
                 reg.hide();
-            } 
+            }
         }
         updateStats();
         updatePanelList();
     }
 
     /**
-     * Closes all dynamic panels (keeps control, eventlog, stats).
+     * Closes all dynamic panels (keeps permanent panels).
+     * <p>
+     * Uses the "dynamic" attribute to identify which panels to close.
      */
     private static void closeAllDynamicPanels() {
         List<PanelRegistration> allPanels = Foundation.get().getRegistrations("showcase");
@@ -635,9 +643,17 @@ public class BronzeTierShowcaseDemo {
         updatePanelList();
     }
 
+    /**
+     * Check if a panel is dynamic (i.e., not permanent).
+     * <p>
+     * Uses the panel's attributes map to check for the "dynamic" attribute.
+     * This is cleaner than checking panel IDs against a hardcoded list.
+     *
+     * @param reg the panel registration to check
+     * @return true if the panel is dynamic, false if permanent
+     */
     private static boolean isPanelDynamic(PanelRegistration reg) {
-        String staticPanels = "control:eventlog:stats";
-        return ! staticPanels.contains(reg.getPanel().getName().split(":")[1]);
+        return Boolean.TRUE.equals(reg.getAttribute("dynamic"));
     }
 
     /**

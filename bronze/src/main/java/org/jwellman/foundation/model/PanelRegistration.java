@@ -1,5 +1,8 @@
 package org.jwellman.foundation.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.swing.IWindow;
@@ -17,6 +20,7 @@ import org.jwellman.foundation.swing.XPanel;
  * - Visibility state<br>
  * - Positioning preferences<br>
  * - Lifecycle listeners<br>
+ * - Application-specific attributes (key-value pairs)<br>
  * <p>
  * PanelRegistration supports the multi-window management capabilities
  * of the Bronze tier and above.
@@ -52,6 +56,9 @@ public class PanelRegistration {
     /** Lifecycle event listener (optional) */
     private uiPanelLifecycleListener lifecycleListener;
 
+    /** Application-specific attributes for storing custom metadata */
+    private final Map<String, Object> attributes;
+
     /**
      * Creates a new PanelRegistration.
      *
@@ -73,6 +80,7 @@ public class PanelRegistration {
         this.namespace = namespace;
         this.panelId = panelId;
         this.panel = panel;
+        this.attributes = new HashMap<>();
 
         // Default positioning
         this.windowPosition = WindowPosition.cascade();
@@ -319,6 +327,60 @@ public class PanelRegistration {
 
     public void setLifecycleListener(uiPanelLifecycleListener lifecycleListener) {
         this.lifecycleListener = lifecycleListener;
+    }
+
+    /**
+     * Get the attributes map for storing application-specific metadata.
+     * <p>
+     * This map can be used to associate arbitrary key-value pairs with a panel registration.
+     * Common use cases include:
+     * <ul>
+     * <li>Marking panels as "dynamic" vs "permanent"</li>
+     * <li>Storing panel category or type information</li>
+     * <li>Associating business objects with UI panels</li>
+     * <li>Storing panel-specific configuration data</li>
+     * </ul>
+     *
+     * @return the attributes map (never null)
+     */
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    /**
+     * Set an attribute value.
+     * <p>
+     * Convenience method for {@code getAttributes().put(key, value)}.
+     *
+     * @param key the attribute key
+     * @param value the attribute value
+     */
+    public void setAttribute(String key, Object value) {
+        attributes.put(key, value);
+    }
+
+    /**
+     * Get an attribute value.
+     * <p>
+     * Convenience method for {@code getAttributes().get(key)}.
+     *
+     * @param key the attribute key
+     * @return the attribute value, or null if not present
+     */
+    public Object getAttribute(String key) {
+        return attributes.get(key);
+    }
+
+    /**
+     * Check if an attribute exists.
+     * <p>
+     * Convenience method for {@code getAttributes().containsKey(key)}.
+     *
+     * @param key the attribute key
+     * @return true if the attribute exists, false otherwise
+     */
+    public boolean hasAttribute(String key) {
+        return attributes.containsKey(key);
     }
 
     @Override
