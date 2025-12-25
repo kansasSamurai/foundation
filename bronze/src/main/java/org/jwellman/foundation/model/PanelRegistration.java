@@ -43,9 +43,6 @@ public class PanelRegistration {
     /** Window mode container (null in desktop mode) */
     private XFrame externalFrame;
 
-    /** Current visibility state */
-    private boolean visible;
-
     /** Tracks whether show() has been called and completed at least once */
     private boolean firstShowCompleted;
 
@@ -76,7 +73,6 @@ public class PanelRegistration {
         this.namespace = namespace;
         this.panelId = panelId;
         this.panel = panel;
-        this.visible = false;
 
         // Default positioning
         this.windowPosition = WindowPosition.cascade();
@@ -205,7 +201,6 @@ public class PanelRegistration {
 
         // Make visible
         window.setVisible(true);
-        setVisible(true);
         fireOnShow();
     }
 
@@ -227,7 +222,6 @@ public class PanelRegistration {
 
         // Make invisible
         window.setVisible(false);
-        setVisible(false);
         fireOnHide();
     }
 
@@ -282,12 +276,33 @@ public class PanelRegistration {
         this.externalFrame = externalFrame;
     }
 
+    /**
+     * Check if this panel's window is currently visible.
+     * <p>
+     * This delegates to the actual window's visibility state to ensure
+     * synchronization between PanelRegistration and the window.
+     *
+     * @return true if the window exists and is visible, false otherwise
+     */
     public boolean isVisible() {
-        return visible;
+        IWindow window = getWindow();
+        return window != null && window.isVisible();
     }
 
+    /**
+     * Set the visibility of this panel's window.
+     * <p>
+     * This is a convenience wrapper that delegates to show() or hide()
+     * to ensure proper lifecycle event handling.
+     *
+     * @param visible true to show the panel, false to hide it
+     */
     public void setVisible(boolean visible) {
-        this.visible = visible;
+        if (visible) {
+            show();
+        } else {
+            hide();
+        }
     }
 
     public WindowPosition getWindowPosition() {
@@ -311,7 +326,7 @@ public class PanelRegistration {
         return "PanelRegistration{" +
                 "namespace='" + namespace + '\'' +
                 ", panelId='" + panelId + '\'' +
-                ", visible=" + visible +
+                ", visible=" + isVisible() +
                 ", fullId='" + getFullId() + '\'' +
                 '}';
     }

@@ -92,4 +92,14 @@ public interface IWindow {
      */
     public Component getComponent();
 
+    /**
+     * Check if this window is currently visible.
+     * <p>
+     * This method provides a uniform way to query visibility state across
+     * both JFrame and JInternalFrame implementations.
+     *
+     * @return true if the window is visible, false otherwise
+     */
+    public boolean isVisible();
+
 }
