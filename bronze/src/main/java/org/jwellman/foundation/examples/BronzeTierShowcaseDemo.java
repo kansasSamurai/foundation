@@ -309,7 +309,7 @@ public class BronzeTierShowcaseDemo {
 
         panelListModel = new DefaultListModel<>();
         panelListComponent = new JList<>(panelListModel);
-        panelListComponent.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        panelListComponent.setFont(new Font("Monospaced", Font.PLAIN, 12));
         panelListComponent.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int index = panelListComponent.getSelectedIndex();
@@ -534,12 +534,11 @@ public class BronzeTierShowcaseDemo {
     private static void updateStats() {
         javax.swing.SwingUtilities.invokeLater(() -> {
             List<String> namespaces = Foundation.get().getNamespaces();
-            List<XPanel> allPanels = Foundation.get().getPanels("showcase");
 
             int visibleCount = 0;
             int hiddenCount = 0;
-            for (XPanel panel : allPanels) {
-                PanelRegistration reg = Foundation.get().getRegistration("showcase", panel.getName());
+            List<PanelRegistration> allPanels = Foundation.get().getRegistrations("showcase");
+            for (PanelRegistration reg : allPanels ) {
                 if (reg != null && reg.isVisible()) {
                     visibleCount++;
                 } else {
@@ -561,13 +560,12 @@ public class BronzeTierShowcaseDemo {
             }
 
             stats.append("<br><b>All Panels:</b><br>");
-            for (XPanel panel : allPanels) {
-                PanelRegistration reg = Foundation.get().getRegistration("showcase", panel.getName());
+            for (PanelRegistration reg : allPanels ) {
                 String visibility = (reg != null && reg.isVisible()) ? "VISIBLE" : "HIDDEN";
-                stats.append("• showcase:").append(panel.getName()).append(" [").append(visibility).append("]<br>");
+                stats.append("• showcase:").append(reg.getPanel().getName()).append(" [").append(visibility).append("]<br>");
             }
-
             stats.append("</body></html>");
+
             statsLabel.setText(stats.toString());
         });
     }
@@ -578,12 +576,10 @@ public class BronzeTierShowcaseDemo {
     private static void updatePanelList() {
         javax.swing.SwingUtilities.invokeLater(() -> {
             panelListModel.clear();
-            List<XPanel> allPanels = Foundation.get().getPanels("showcase");
-
-            for (XPanel panel : allPanels) {
-                PanelRegistration reg = Foundation.get().getRegistration("showcase", panel.getName());
+            List<PanelRegistration> panelList = Foundation.get().getRegistrations("showcase");
+            for (PanelRegistration reg : panelList ) {
                 String visibility = (reg != null && reg.isVisible()) ? "●" : "○";
-                String entry = String.format("%s showcase:%s", visibility, panel.getName());
+                String entry = String.format("%s showcase:%s", visibility, reg.getPanel().getName());
                 panelListModel.addElement(entry);
             }
         });
@@ -593,9 +589,9 @@ public class BronzeTierShowcaseDemo {
      * Shows all panels.
      */
     private static void showAllPanels() {
-        List<XPanel> allPanels = Foundation.get().getPanels("showcase");
-        for (XPanel panel : allPanels) {
-            Foundation.showPanel("showcase", panel.getName());
+        List<PanelRegistration> panelList = Foundation.get().getRegistrations("showcase");
+        for (PanelRegistration panel : panelList ) {
+            panel.show();
         }
         updateStats();
         updatePanelList();
@@ -605,12 +601,11 @@ public class BronzeTierShowcaseDemo {
      * Hides all dynamic panels (keeps control, eventlog, stats visible).
      */
     private static void hideAllDynamicPanels() {
-        List<XPanel> allPanels = Foundation.get().getPanels("showcase");
-        for (XPanel panel : allPanels) {
-            String panelId = panel.getName();
-            if (!panelId.equals("control") && !panelId.equals("eventlog") && !panelId.equals("stats")) {
-                Foundation.hidePanel("showcase", panelId);
-            }
+        List<PanelRegistration> allPanels = Foundation.get().getRegistrations("showcase");
+        for (PanelRegistration reg : allPanels ) {
+            if (isPanelDynamic(reg)) {
+                reg.hide();
+            } 
         }
         updateStats();
         updatePanelList();
@@ -620,16 +615,18 @@ public class BronzeTierShowcaseDemo {
      * Closes all dynamic panels (keeps control, eventlog, stats).
      */
     private static void closeAllDynamicPanels() {
-        List<XPanel> allPanels = Foundation.get().getPanels("showcase");
-        for (XPanel panel : allPanels) {
-            String panelId = panel.getName();
-            if (!panelId.equals("control") && !panelId.equals("eventlog") && !panelId.equals("stats")) {
-                // TODO ensure the following works
-                Foundation.get().closePanel("showcase", panelId);
-            }
+        List<PanelRegistration> allPanels = Foundation.get().getRegistrations("showcase");
+        for (PanelRegistration reg : allPanels ) {
+            if (isPanelDynamic(reg)) reg.getWindow().close();
+            // This does not actual remove from uiContext but close enough for demo app
         }
         updateStats();
         updatePanelList();
+    }
+
+    private static boolean isPanelDynamic(PanelRegistration reg) {
+        String staticPanels = "control:eventlog:stats";
+        return ! staticPanels.contains(reg.getPanel().getName().split(":")[1]);
     }
 
     /**
@@ -638,8 +635,8 @@ public class BronzeTierShowcaseDemo {
     private static void togglePanelFromList(String listItem) {
         // Parse "● showcase:panel1" or "○ showcase:panel1"
         String[] parts = listItem.split(":");
-        if (parts.length == 2) {
-            String panelId = parts[1].trim();
+        if (parts.length == 3) {
+            String panelId = parts[2].trim();
             Foundation.togglePanel("showcase", panelId);
         }
     }

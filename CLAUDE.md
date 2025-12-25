@@ -50,6 +50,13 @@ This project uses Maven. The project targets Java 8.
 - `mvn clean package` - Build JAR file (output: target/foundation-1.0.1-SNAPSHOT.jar)
 - `mvn clean install` - Install to local Maven repository
 
+## Developer Workflow Preferences
+
+**Compilation:**
+- DO NOT automatically run compile commands (mvn compile, mvn package, etc.) unless explicitly requested
+- The developer will handle all compilation and build tasks manually
+- After making code changes, simply inform the developer that changes are complete and ready to compile
+
 ## Architecture
 
 ### Class Hierarchy (Foundation API)

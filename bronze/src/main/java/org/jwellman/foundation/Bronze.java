@@ -106,9 +106,17 @@ public class Bronze extends Stone {
      */
     public PanelRegistration getRegistration(String namespace, String panelId) {
         uiContext ctx = contextRegistry.get(namespace);
-        if (ctx == null) return null;
+        if (ctx == null) {
+            dumpFoundationStructure(namespace, panelId);
+            return null;
+        }
 
-        return ctx.getPanelRegistration(panelId);
+        PanelRegistration reg = ctx.getPanelRegistration(panelId);
+        if (reg == null) {
+            dumpFoundationStructure(namespace, panelId);
+        }
+
+        return reg;
     }
 
     /**
@@ -159,8 +167,6 @@ public class Bronze extends Stone {
         PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg != null) {
             reg.toggle();
-        } else {
-            dumpFoundationStructure();
         }
     }
 
@@ -644,6 +650,20 @@ public class Bronze extends Stone {
             // Notify the splash provider
             ctx.getSplashProvider().onSplashClosed();
         }
+    }
+
+    /**
+     * Utility method to log searched values before dumping the structure to logs.
+     * 
+     * @param namespace
+     * @param panelId
+     */
+    private void dumpFoundationStructure(String namespace, String panelId) {
+        System.out.println("=== Foundation Object Search failed ===");
+        System.out.println(String.format("String namespace: %s, String panelId: %s",
+                namespace, panelId));
+
+        dumpFoundationStructure();
     }
 
     /**
