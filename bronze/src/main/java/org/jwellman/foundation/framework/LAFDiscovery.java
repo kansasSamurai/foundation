@@ -21,6 +21,8 @@ import javax.swing.UIManager;
 
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.interfaces.uiContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Discovers Look and Feel implementations at runtime.
@@ -41,6 +43,8 @@ import org.jwellman.foundation.interfaces.uiContext;
  * @author Foundation Framework
  */
 public class LAFDiscovery {
+
+    private static final Logger log = LoggerFactory.getLogger(LAFDiscovery.class);
 
     /** Directory to scan for LAF JARs */
     private static final String LAF_DIRECTORY = "./lafs";
@@ -165,7 +169,7 @@ public class LAFDiscovery {
             }
 
         } catch (Exception e) {
-            System.err.println("Error processing JAR " + jarFile.getName() + ": " + e.getMessage());
+            log.error("Error processing JAR {}: {}", jarFile.getName(), e.getMessage());
         }
 
         return lafs;
@@ -195,7 +199,7 @@ public class LAFDiscovery {
             }
 
         } catch (IOException e) {
-            System.err.println("Error reading metadata from " + jarFile.getName() + ": " + e.getMessage());
+            log.error("Error reading metadata from {}: {}", jarFile.getName(), e.getMessage());
         }
 
         return null;
@@ -239,13 +243,13 @@ public class LAFDiscovery {
                         // Class not loadable, skip it
                     } catch (Exception e) {
                         // Other error, log and continue
-                        System.err.println("  Error checking class " + className + ": " + e.getMessage());
+                        log.error("Error checking class {}: {}", className, e.getMessage());
                     }
                 }
             }
 
         } catch (IOException e) {
-            System.err.println("Error scanning JAR " + jarFile.getName() + ": " + e.getMessage());
+            log.error("Error scanning JAR {}: {}", jarFile.getName(), e.getMessage());
         }
 
         return lafs;
@@ -323,7 +327,7 @@ public class LAFDiscovery {
                 selectionReason = "Specified in uContext: " + preferredLAFClassName;
                 System.out.println("Using LAF from context: " + selectedLAF.getName());
             } else {
-                System.err.println("WARNING: Preferred LAF not found: " + preferredLAFClassName);
+                log.warn("Preferred LAF not found: {}", preferredLAFClassName);
                 System.out.println("Falling back to default selection...");
             }
         }
@@ -339,7 +343,7 @@ public class LAFDiscovery {
                         selectionReason = "Specified in " + CONFIG_FILE_PATH;
                         System.out.println("Using LAF from config: " + selectedLAF.getName());
                     } else {
-                        System.err.println("WARNING: Configured LAF not found: " + configuredClassName);
+                        log.warn("Configured LAF not found: {}", configuredClassName);
                         System.out.println("Falling back to default selection...");
                     }
                 }
@@ -369,7 +373,7 @@ public class LAFDiscovery {
                     selectionReason = "System default (Nimbus not available)";
                     System.out.println(selectionReason);
                 } else {
-                    System.err.println("ERROR: Could not determine any LAF!");
+                    log.error("Could not determine any LAF!");
                     return false;
                 }
             }
@@ -400,7 +404,7 @@ public class LAFDiscovery {
             System.out.println("Successfully applied LAF: " + lafInfo.getName());
             return true;
         } catch (Exception e) {
-            System.err.println("Error applying LAF " + lafInfo.getName() + ": " + e.getMessage());
+            log.error("Error applying LAF {}: {}", lafInfo.getName(), e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -425,7 +429,7 @@ public class LAFDiscovery {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error determining system LAF: " + e.getMessage());
+            log.error("Error determining system LAF: {}", e.getMessage());
         }
         return null;
     }
@@ -447,7 +451,7 @@ public class LAFDiscovery {
             System.out.println("Loaded configuration from: " + CONFIG_FILE_PATH);
             return props;
         } catch (IOException e) {
-            System.err.println("Error loading config file: " + e.getMessage());
+            log.error("Error loading config file: {}", e.getMessage());
             return null;
         }
     }
@@ -515,7 +519,7 @@ public class LAFDiscovery {
 
             System.out.println("Generated default config file: " + CONFIG_FILE_PATH);
         } catch (IOException e) {
-            System.err.println("Error generating config file: " + e.getMessage());
+            log.error("Error generating config file: {}", e.getMessage());
         }
     }
 
@@ -563,7 +567,7 @@ public class LAFDiscovery {
                     selectionReason = "Specified in " + CONFIG_FILE_PATH;
                     System.out.println("Using LAF from config: " + selectedLAF.getName());
                 } else {
-                    System.err.println("WARNING: Configured LAF not found: " + configuredClassName);
+                    log.warn("Configured LAF not found: {}", configuredClassName);
                     System.out.println("Falling back to default selection...");
                 }
             }
@@ -586,7 +590,7 @@ public class LAFDiscovery {
                 selectionReason = "System default (no LAFs found in " + LAF_DIRECTORY + ")";
                 System.out.println(selectionReason);
             } else {
-                System.err.println("ERROR: Could not determine system LAF!");
+                log.error("Could not determine system LAF!");
                 return;
             }
         }

@@ -8,13 +8,27 @@
     <parent>
         <groupId>org.jwellman</groupId>
         <artifactId>foundation-parent</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>
+            1.0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>foundation-bronze</artifactId>
     <packaging>jar</packaging>
 
     <name>Foundation Bronze Tier</name>
-    <description>Bronze tier - Includes Stone + multi-panel registry with namespace:panelId identification, lifecycle events, window positioning, and dynamic visibility management</description>
+    <description>Bronze tier - 
+        Includes Stone + multi-panel registry with namespace:panelId identification, 
+        lifecycle events, window positioning, and dynamic visibility management
+    </description>
+
+    <dependencies>
+
+        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+    </dependencies>
 
 </project>

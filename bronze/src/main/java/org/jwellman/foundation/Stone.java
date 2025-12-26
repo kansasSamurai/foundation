@@ -25,6 +25,8 @@ import org.jwellman.foundation.provider.DefaultDesktopProvider;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The most basic of Swing application requirements.
@@ -39,6 +41,8 @@ import org.jwellman.foundation.swing.XInternalFrame;
  *
  */
 public class Stone {
+
+	private static final Logger log = LoggerFactory.getLogger(Stone.class);
 
 	/** The master application context - controls overall lifecycle */
 	protected uiContext masterContext;
@@ -93,9 +97,7 @@ public class Stone {
         if (isInitialized) {
             // TODO eventually in silver we need to be able to init a new context, it just won't be the master context
 
-            System.out.print("WARN - init() has been called more than once...");
-            System.out.print("WARN - ... in a single app use case, this usually indicates a misuse of the API");
-            System.out.print("WARN - ... which may often result in unexpected/undesired behavior.");
+            log.warn("init() has been called more than once. In a single app use case, this usually indicates a misuse of the API which may often result in unexpected/undesired behavior.");
         } else {
             // TODO eventually in silver we need to be able to init a new context, it just won't be the master context
 
@@ -137,7 +139,7 @@ public class Stone {
             JDialog.setDefaultLookAndFeelDecorated(true);
             boolean lafApplied = LAFDiscovery.selectAndApplyLookAndFeel(masterContext.getLookAndFeel());
             if (!lafApplied) {
-                System.err.println("WARNING: Failed to apply any Look and Feel. UI may not render correctly.");
+                log.warn("Failed to apply any Look and Feel. UI may not render correctly.");
             } else {
                 System.out.println("USING LAF: " + UIManager.getLookAndFeel().getName());
             }
@@ -454,9 +456,7 @@ public class Stone {
             isDesktop = true;
             masterContext.setDesktopMode(true);
         } else if (!isDesktop) {
-            System.err.println("WARN - useDesktop() called after useWindow() was already called.");
-            System.err.println("WARN - The first call to useWindow() or useDesktop() determines the mode.");
-            System.err.println("WARN - Ignoring this call; framework is already in window mode.");
+            log.warn("useDesktop() called after useWindow() was already called. The first call to useWindow() or useDesktop() determines the mode. Ignoring this call; framework is already in window mode.");
             throw new RuntimeException("Cannot mix useDesktop() and useWindow() modes");
         }
 
@@ -729,7 +729,7 @@ public class Stone {
         // If mode hasn't been set yet, use the context setting (defaults to window mode)
         // NOTE: This should already be set by _init(), but kept as a safety check
         if (isDesktop() == null) {
-            System.out.println("WARN - unexpected null at isDesktop()");
+            log.warn("unexpected null at isDesktop()");
             setDesktop(masterContext.isDesktopMode());
         }
 

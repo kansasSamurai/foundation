@@ -19,6 +19,8 @@ import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
 import org.jwellman.foundation.swing.XPanel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Bronze tier of Foundation framework.
@@ -34,6 +36,8 @@ import org.jwellman.foundation.swing.XPanel;
  * @author rwellman
  */
 public class Bronze extends Stone {
+
+    private static final Logger log = LoggerFactory.getLogger(Bronze.class);
 
     /**
      * The context registry.
@@ -252,7 +256,7 @@ public class Bronze extends Stone {
 
         // Stone only launches the masterContext so Bronze needs to launch others
         if (ctx == masterContext) {
-            System.out.println("INFO - Bronze bypass master context");
+            log.info("Bronze bypass master context");
         } else {
 
             //
@@ -471,7 +475,7 @@ public class Bronze extends Stone {
         if (c == null) {
             contextRegistry.put(ctx.getNamespace(), ctx);
         } else {
-            System.out.println("WARN - Attempt to re-register namespace: " + ctx.getNamespace());
+            log.warn("Attempt to re-register namespace: {}", ctx.getNamespace());
         }
 
         // I may not keep this here but useful for now

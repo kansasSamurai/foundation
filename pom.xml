@@ -27,20 +27,31 @@
     </modules>
 
     <!--
-        Common dependencies inherited by all modules.
-        Each tier is standalone and contains the full codebase,
-        so all dependencies are needed by all tiers.
+        Since Stone is the least common denominator and has ZERO dependencies,
+        this section is empty.  Higher tiers DO have dependencies kept in
+        their individual project pom.  
+        
+        See the <dependencyManagement> section for versioning information.
     -->
     <dependencies>
 
-        <!-- This is for napkinlaf; may have to rollback to 1.0 -->
+        <!-- These look and feels were originally used for project
+             prototyping but have been removed as explicit dependencies for
+             the following reasons:
+             1) To keep the distribution .jar's as lean as possible, external
+                look and feels are not distributed WITH the Foundation API.
+             2) Some LAFs are licensed as GPL and are thus not eligible to
+                be delivered directly with the Foundation API.
+
+
+        <!dashdash This is for napkinlaf; may have to rollback to 1.0 dashdash>
         <dependency>
             <groupId>org.jdom</groupId>
             <artifactId>jdom</artifactId>
             <version>1.1</version>
         </dependency>
 
-        <!-- This is not in maven central -->
+        <!dashdash This is not in maven central dashdash>
         <dependency>
             <groupId>net.sourceforge.napkinlaf</groupId>
             <artifactId>napkinlaf</artifactId>
@@ -53,22 +64,22 @@
             <version>1.27</version>
         </dependency>
 
-        <!--  1.29 is my version with a fix; use if available
+        <!dashdash  1.29 is my version with a fix; use if available
         <dependency>
             <groupId>com.mgarin</groupId>
             <artifactId>weblaf</artifactId>
             <version>1.29</version>
         </dependency>
-        -->
+        dashdash>
 
-        <!-- This is currently only necessary for weblaf (though I may keep) -->
+        <!dashdash This is currently only necessary for weblaf (though I may keep) dashdash>
         <dependency>
             <groupId>com.thoughtworks.xstream</groupId>
             <artifactId>xstream</artifactId>
             <version>1.4.7</version>
         </dependency>
 
-        <!-- Not available in maven central; see local repo -->
+        <!dashdash Not available in maven central; see local repo dashdash>
         <dependency>
             <groupId>com.nilo.plaf</groupId>
             <artifactId>nimrod</artifactId>
@@ -81,6 +92,24 @@
             <version>1.6.11</version>
         </dependency>
 
+         -->
+
     </dependencies>
+
+    <dependencyManagement>
+
+        <dependencies>
+
+            <!-- Bronze and above -->
+            <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>2.0.17</version>
+            </dependency>
+
+        </dependencies>
+
+    </dependencyManagement>
 
 </project>
