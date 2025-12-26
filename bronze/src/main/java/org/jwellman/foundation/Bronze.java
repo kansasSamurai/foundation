@@ -452,7 +452,7 @@ public class Bronze extends Stone {
         reg.getPanel().setParent(frame);
         reg.setExternalFrame(frame);
 
-        System.out.println("created frame: " + title);
+        log.debug("Created external frame: {}", title);
 
         // Set panel as content
         frame.setContentPane(reg.getPanel());
@@ -674,7 +674,7 @@ public class Bronze extends Stone {
         // Use windowTitle if set, otherwise fallback to fullId
         String title = reg.getWindowTitle() != null ? reg.getWindowTitle() : reg.getFullId();
         iframe.setTitle(title);
-        System.out.println("created iframe: " + title);
+        log.debug("Created internal frame: {}", title);
 
         // Add contents to internal frame
         iframe.add(reg.getPanel());
@@ -699,7 +699,7 @@ public class Bronze extends Stone {
         // Add to desktop
         // TODO eventually this needs to add via the desktop provider of the current app context
         JDesktopPane d = this.getDesktop();
-        System.out.println("JDesktopPane bronze: " + uUtility.objString(d));
+        log.debug("JDesktopPane bronze: {}", uUtility.objString(d));
         d.add(iframe);
 
         // Fire onCreate event

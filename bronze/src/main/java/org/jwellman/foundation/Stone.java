@@ -613,8 +613,8 @@ public class Stone {
                     // need access to PanelRegistration to get WindowPosition and call apply()
                     w.setVisible(true);
 
-                    System.out.println("JDesktopPane stone: " + uUtility.objString(desktop));
-                    System.out.println("Make visible: " + w.getTitle());
+                    log.debug("JDesktopPane stone: {}", uUtility.objString(desktop));
+                    log.debug("Make visible: {}", w.getTitle());
 
 //                    System.out.println("w " + w.toString());
 //                    System.out.println("c " + w.getComponent().toString());
