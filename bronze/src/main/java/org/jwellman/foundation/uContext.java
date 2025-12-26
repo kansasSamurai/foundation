@@ -17,9 +17,9 @@ import org.jwellman.foundation.swing.XPanel;
 
 /**
  * Default implementation of uiContext interface.
- *
+ * <p>
  * A context for a Foundation application or tool.
- *
+ * <p>
  * As of the Bronze tier redesign, each context represents a namespace (tool/application)
  * and contains its own panel registry. This allows each tool to have multiple panels
  * with tool-specific configuration.
@@ -329,6 +329,53 @@ public class uContext implements uiContext {
         }
 
         return reg;
+    }
+
+    /**
+     * Close a panel and remove it from this context's registry.
+     * <p>
+     * Fires the onClose lifecycle event.
+     *
+     * @param panelId The panel identifier
+     */
+    @Override
+    public void closePanel(String panelId) {
+        foundation.closePanel(namespace, panelId);
+    }
+
+    /**
+     * Check if a panel is currently visible.
+     *
+     * @param panelId The panel identifier
+     * @return true if visible, false otherwise (or if panel doesn't exist)
+     */
+    @Override
+    public boolean isPanelVisible(String panelId) {
+        return foundation.isPanelVisible(namespace, panelId);
+    }
+
+    /**
+     * Get all panels in this context as a list.
+     * <p>
+     * Convenience method for extracting XPanel instances from registrations.
+     *
+     * @return List of XPanels (may be empty, never null)
+     */
+    @Override
+    public java.util.List<XPanel> getPanels() {
+        return foundation.getPanels(namespace);
+    }
+
+    /**
+     * Get all panel registrations in this context as a list.
+     * <p>
+     * Convenience method for getAllPanelRegistrations().values().
+     *
+     * @return List of PanelRegistrations (may be empty, never null)
+     */
+    @Override
+    public java.util.List<PanelRegistration> getRegistrations() {
+        return foundation.getRegistrations(namespace);
     }
 
 }

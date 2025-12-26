@@ -479,8 +479,7 @@ public class BronzeTierShowcaseDemo {
         // Close button
         JButton closeButton = new JButton("Close This Panel");
         closeButton.addActionListener(e -> {
-            // TODO ensure the following works
-            Foundation.get().closePanel("showcase", "panel" + panelNum);
+            context.closePanel("panel" + panelNum);
             updateStats();
             updatePanelList();
         });
@@ -548,11 +547,9 @@ public class BronzeTierShowcaseDemo {
      */
     private static void updateStats() {
         javax.swing.SwingUtilities.invokeLater(() -> {
-            List<String> namespaces = Foundation.get().getNamespaces();
-
             int visibleCount = 0;
             int hiddenCount = 0;
-            List<PanelRegistration> allPanels = Foundation.get().getRegistrations("showcase");
+            List<PanelRegistration> allPanels = context.getRegistrations();
             for (PanelRegistration reg : allPanels ) {
                 if (reg != null && reg.isVisible()) {
                     visibleCount++;
@@ -563,16 +560,10 @@ public class BronzeTierShowcaseDemo {
 
             StringBuilder stats = new StringBuilder("<html><body style='padding: 10px;'>");
             stats.append("<b>Registry Overview:</b><br>");
-            stats.append("Namespaces: ").append(namespaces.size()).append("<br>");
+            stats.append("Namespace: showcase<br>");
             stats.append("Total Panels: ").append(allPanels.size()).append("<br>");
             stats.append("Visible Panels: ").append(visibleCount).append("<br>");
             stats.append("Hidden Panels: ").append(hiddenCount).append("<br><br>");
-
-            stats.append("<b>Namespaces:</b><br>");
-            for (String ns : namespaces) {
-                List<XPanel> nsPanels = Foundation.get().getPanels(ns);
-                stats.append("• ").append(ns).append(": ").append(nsPanels.size()).append(" panels<br>");
-            }
 
             stats.append("<br><b>All Panels:</b><br>");
             for (PanelRegistration reg : allPanels ) {
@@ -591,7 +582,7 @@ public class BronzeTierShowcaseDemo {
     private static void updatePanelList() {
         javax.swing.SwingUtilities.invokeLater(() -> {
             panelListModel.clear();
-            List<PanelRegistration> panelList = Foundation.get().getRegistrations("showcase");
+            List<PanelRegistration> panelList = context.getRegistrations();
             for (PanelRegistration reg : panelList ) {
                 String visibility = (reg != null && reg.isVisible()) ? "●" : "○";
                 String entry = String.format("%s showcase:%s", visibility, reg.getPanel().getName());
@@ -604,7 +595,7 @@ public class BronzeTierShowcaseDemo {
      * Shows all panels.
      */
     private static void showAllPanels() {
-        List<PanelRegistration> panelList = Foundation.get().getRegistrations("showcase");
+        List<PanelRegistration> panelList = context.getRegistrations();
         for (PanelRegistration panel : panelList ) {
             panel.show();
         }
@@ -618,7 +609,7 @@ public class BronzeTierShowcaseDemo {
      * Uses the "dynamic" attribute to identify which panels to hide.
      */
     private static void hideAllDynamicPanels() {
-        List<PanelRegistration> allPanels = Foundation.get().getRegistrations("showcase");
+        List<PanelRegistration> allPanels = context.getRegistrations();
         for (PanelRegistration reg : allPanels ) {
             if (isPanelDynamic(reg)) {
                 reg.hide();
@@ -634,7 +625,7 @@ public class BronzeTierShowcaseDemo {
      * Uses the "dynamic" attribute to identify which panels to close.
      */
     private static void closeAllDynamicPanels() {
-        List<PanelRegistration> allPanels = Foundation.get().getRegistrations("showcase");
+        List<PanelRegistration> allPanels = context.getRegistrations();
         for (PanelRegistration reg : allPanels ) {
             if (isPanelDynamic(reg)) reg.getWindow().close();
             // This does not actual remove from uiContext but close enough for demo app

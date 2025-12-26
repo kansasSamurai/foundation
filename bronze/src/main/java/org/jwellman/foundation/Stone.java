@@ -790,7 +790,7 @@ public class Stone {
      * 
      * @return
      */
-    public int logEnvironment() {
+    public static int logEnvironment() {
 
         // Log the directory from which the JVM was launched (working directory) 
         String currentDir = System.getProperty("user.dir");

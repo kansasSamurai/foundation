@@ -74,7 +74,7 @@ public class SplashScreenDesktopDemo {
     private static void doMoreWork(uiContext context) {
 
         // Simulate more work
-        final int total = Foundation.get().logEnvironment(); 
+        final int total = Foundation.logEnvironment(); 
         final int delay = 4000 / total;
 
         int percent = 0;

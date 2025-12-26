@@ -255,4 +255,39 @@ public interface uiContext {
      */
     PanelRegistration registerUI(String panelId, JPanel ui, uiPanelLifecycleListener listener, WindowPosition position);
 
+    /**
+     * Close a panel and remove it from this context's registry.
+     * <p>
+     * Fires the onClose lifecycle event.
+     *
+     * @param panelId The panel identifier
+     */
+    void closePanel(String panelId);
+
+    /**
+     * Check if a panel is currently visible.
+     *
+     * @param panelId The panel identifier
+     * @return true if visible, false otherwise (or if panel doesn't exist)
+     */
+    boolean isPanelVisible(String panelId);
+
+    /**
+     * Get all panels in this context as a list.
+     * <p>
+     * Convenience method for extracting XPanel instances from registrations.
+     *
+     * @return List of XPanels (may be empty, never null)
+     */
+    java.util.List<org.jwellman.foundation.swing.XPanel> getPanels();
+
+    /**
+     * Get all panel registrations in this context as a list.
+     * <p>
+     * Convenience method for getAllPanelRegistrations().values().
+     *
+     * @return List of PanelRegistrations (may be empty, never null)
+     */
+    java.util.List<PanelRegistration> getRegistrations();
+
 }

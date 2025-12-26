@@ -58,6 +58,7 @@ public class Foundation extends Platinum {
 
     /**
      * Ensure the singleton instance exists.
+     * <p>
      * This is called by createContext() methods to allow context creation before init().
      */
     private static void ensureInstance() {
@@ -68,10 +69,10 @@ public class Foundation extends Platinum {
 
     /**
      * Initialize the Java Swing graphics environment via the Foundation API.
-     *
+     * <p>
      * This no-args version creates a default uiContext for simple use cases.
      * The default context uses "foundation.app" as the namespace and window mode (not desktop).
-     *
+     * <p>
      * For production applications, use init(uiContext) with a properly configured context.
      *
      * @return The master uiContext that was initialized
@@ -151,19 +152,6 @@ public class Foundation extends Platinum {
 
     public static void togglePanel(String namespace, String panelId) {
         instance._togglePanel(namespace, panelId);
-    }
-
-    /**
-     * This is a temporary workaround to get code working in Bronze.
-     * <p>
-     * Use of this method indicates an area in the code that needs to be
-     * altered/improved in order to NOT need direct access to the
-     * Foundation singleton.
-     * 
-     * @return
-     */
-    public static Foundation get() {
-        return instance;
     }
 
     /**

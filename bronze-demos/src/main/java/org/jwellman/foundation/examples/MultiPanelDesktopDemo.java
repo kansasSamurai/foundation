@@ -94,16 +94,16 @@ public class MultiPanelDesktopDemo {
         // Step 5 - Create control panel for managing panels
         PanelRegistration controlPanel = context.registerUI(
                 "system",
-                createControlPanel(context.getNamespace()),
+                createControlPanel(context, c2, c3),
                 createLifecycleListener("Control Panel"),
                 WindowPosition.at(500, 10, 250, 200)
-        ); 
+        );
         context.registerMasterPanel(controlPanel);
 
         // Step 6 - Demonstrate querying the registry
         System.out.println("\n=== Panel Registry Query ===");
-        System.out.println("All namespaces: " + Foundation.get().getNamespaces());
-        System.out.println("Calculator panels: " + Foundation.get().getPanels("tool.calculator").size());
+        System.out.println("Calculator context namespace: " + context.getNamespace());
+        System.out.println("Calculator panels: " + context.getPanels().size());
 
         // Note: The desktop window was already created and shown by Foundation.init()
         Foundation.launch(context);
@@ -117,10 +117,12 @@ public class MultiPanelDesktopDemo {
 
     /**
      * Creates a control panel with buttons to demonstrate panel management.
-     * 
-     * @param namespace 
+     *
+     * @param calcContext The calculator context
+     * @param editorContext The editor context
+     * @param browserContext The browser context
      */
-    private static JPanel createControlPanel(String namespace) {
+    private static JPanel createControlPanel(uiContext calcContext, uiContext editorContext, uiContext browserContext) {
         Color bkg = new Color(255, 250, 240);
 
         JPanel panel = new JPanel(new BorderLayout(5, 5));
@@ -140,7 +142,7 @@ public class MultiPanelDesktopDemo {
         toggleHistoryBtn.addActionListener(e -> {
             Foundation.togglePanel("tool.calculator", "history");
             System.out.println(
-                    "Calculator history visible: " + Foundation.get().isPanelVisible("tool.calculator", "history"));
+                    "Calculator history visible: " + calcContext.isPanelVisible("history"));
         });
         buttonPanel.add(toggleHistoryBtn);
 
@@ -148,7 +150,7 @@ public class MultiPanelDesktopDemo {
         JButton toggleEditorBtn = new JButton("Toggle Editor");
         toggleEditorBtn.addActionListener(e -> {
             Foundation.togglePanel("tool.editor", "main");
-            System.out.println("Editor visible: " + Foundation.get().isPanelVisible("tool.editor", "main"));
+            System.out.println("Editor visible: " + editorContext.isPanelVisible("main"));
         });
         buttonPanel.add(toggleEditorBtn);
 
@@ -156,7 +158,7 @@ public class MultiPanelDesktopDemo {
         JButton toggleBrowserBtn = new JButton("Toggle File Browser");
         toggleBrowserBtn.addActionListener(e -> {
             Foundation.togglePanel("tool.browser", "main");
-            System.out.println("File browser visible: " + Foundation.get().isPanelVisible("tool.browser", "main"));
+            System.out.println("File browser visible: " + browserContext.isPanelVisible("main"));
         });
         buttonPanel.add(toggleBrowserBtn);
 

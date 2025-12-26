@@ -80,7 +80,9 @@ public interface IWindow {
     public String getTitle();
 
     /**
-     * Close this window. For JFrame, this calls dispose().
+     * Close this window. 
+     * <p>
+     * For JFrame, this calls dispose().<br>
      * For JInternalFrame, this calls setClosed(true).
      */
     public void close();
