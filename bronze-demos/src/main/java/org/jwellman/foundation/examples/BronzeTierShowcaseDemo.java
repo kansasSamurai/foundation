@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -32,14 +33,14 @@ import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.model.PanelRegistration;
 import org.jwellman.foundation.swing.IWindow;
-import org.jwellman.foundation.swing.XPanel;
 
 /**
- * Comprehensive Bronze Tier showcase demonstrating three key features in one interactive demo:
+ * Comprehensive Bronze Tier showcase demonstrating four key features in one interactive demo:
  * <ol>
  * <li><b>Window Positioning</b> - CASCADE, CENTER, EXPLICIT positioning strategies</li>
  * <li><b>Panel Lifecycle</b> - onCreate, onShow, onHide, onClose event tracking</li>
  * <li><b>Dynamic Panel Management</b> - Runtime panel creation, removal, show/hide, registry queries</li>
+ * <li><b>Panel Detach/Attach</b> - Toggle panels between internal frames (desktop) and external frames (standalone windows)</li>
  * </ol>
  * <p>
  * This interactive demo provides:
@@ -47,9 +48,10 @@ import org.jwellman.foundation.swing.XPanel;
  * <li>Control panel for creating panels with different positioning strategies</li>
  * <li>Real-time lifecycle event log visible in the UI</li>
  * <li>Registry statistics showing namespace and panel counts</li>
- * <li>Interactive panel management (show/hide/close)</li>
+ * <li>Interactive panel management (show/hide/close/detach)</li>
  * <li>Visual demonstration of positioning strategies</li>
  * <li>Panel list showing all registered panels with controls</li>
+ * <li>IDE-like panel detaching - "pop out" panels to standalone windows or dock them back</li>
  * </ul>
  * <p>
  * Run with:
@@ -476,7 +478,15 @@ public class BronzeTierShowcaseDemo {
         contentArea.setLineWrap(true);
         contentArea.setWrapStyleWord(true);
 
-        // Close button
+        // Buttons
+        JButton detachButton = new JButton("Detach/Attach");
+        detachButton.setToolTipText("Toggle between internal frame (desktop) and external frame (standalone window)");
+        detachButton.addActionListener(e -> {
+            context.detachPanel("panel" + panelNum);
+            updateStats();
+            updatePanelList();
+        });
+
         JButton closeButton = new JButton("Close This Panel");
         closeButton.addActionListener(e -> {
             context.closePanel("panel" + panelNum);
@@ -484,8 +494,9 @@ public class BronzeTierShowcaseDemo {
             updatePanelList();
         });
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         buttonPanel.setOpaque(false);
+        buttonPanel.add(detachButton);
         buttonPanel.add(closeButton);
 
         panel.add(headerLabel, BorderLayout.NORTH);

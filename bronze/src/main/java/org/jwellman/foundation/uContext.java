@@ -344,6 +344,20 @@ public class uContext implements uiContext {
     }
 
     /**
+     * Detach or attach a panel by switching its container type.
+     * <p>
+     * If the panel is currently in a JInternalFrame (desktop mode), it will be
+     * moved to a standalone JFrame (window mode). If it's currently in a JFrame,
+     * it will be moved back to a JInternalFrame in the desktop.
+     *
+     * @param panelId The panel identifier
+     */
+    @Override
+    public void detachPanel(String panelId) {
+        foundation.detachPanel(namespace, panelId);
+    }
+
+    /**
      * Check if a panel is currently visible.
      *
      * @param panelId The panel identifier

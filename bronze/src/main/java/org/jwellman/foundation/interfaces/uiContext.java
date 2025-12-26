@@ -265,6 +265,28 @@ public interface uiContext {
     void closePanel(String panelId);
 
     /**
+     * Detach or attach a panel by switching its container type.
+     * <p>
+     * If the panel is currently in a JInternalFrame (desktop mode), it will be
+     * moved to a standalone JFrame (window mode). If it's currently in a JFrame,
+     * it will be moved back to a JInternalFrame in the desktop.
+     * <p>
+     * This enables IDE-like behavior where panels can be "popped out" into
+     * separate windows or "docked back" into the main desktop environment.
+     * <p>
+     * The operation preserves:
+     * <ul>
+     * <li>Window title</li>
+     * <li>Window size</li>
+     * <li>Window position (translated between desktop and screen coordinates)</li>
+     * <li>Visibility state</li>
+     * </ul>
+     *
+     * @param panelId The panel identifier
+     */
+    void detachPanel(String panelId);
+
+    /**
      * Check if a panel is currently visible.
      *
      * @param panelId The panel identifier

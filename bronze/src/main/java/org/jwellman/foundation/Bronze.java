@@ -1,5 +1,6 @@
 package org.jwellman.foundation;
 
+import java.awt.IllegalComponentStateException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -211,7 +212,7 @@ public class Bronze extends Stone {
      * TODO Eventually (but probably not soon), the PanelRegistration may
      * contain a reference to its parent uiContext in which case only the
      * PanelRegistration parameter will be necessary here.
-     * 
+     *
      * @param ctx The uiContext containing the PanelRegistration
      * @param reg The PanelRegistration to be removed from the uiContext
      */
@@ -227,6 +228,161 @@ public class Bronze extends Stone {
 
         // Remove from context's registry
         ctx.removePanelRegistration(reg.getPanelId());
+    }
+
+    /**
+     * Detach or attach a panel by switching its container type.
+     * <p>
+     * If the panel is currently in a JInternalFrame (desktop mode), it will be
+     * moved to a standalone JFrame (window mode). If it's currently in a JFrame,
+     * it will be moved back to a JInternalFrame in the desktop.
+     * <p>
+     * This enables IDE-like behavior where panels can be "popped out" into
+     * separate windows or "docked back" into the main desktop environment.
+     * <p>
+     * The operation preserves window title, size, position (translated between
+     * desktop and screen coordinates), and visibility state.
+     *
+     * @param namespace The namespace
+     * @param panelId The panel ID
+     */
+    public void detachPanel(String namespace, String panelId) {
+        PanelRegistration reg = getRegistration(namespace, panelId);
+        if (reg == null) {
+            log.warn("Cannot detach panel - not found: {}:{}", namespace, panelId);
+            return;
+        }
+
+        // Determine current type and switch
+        if (reg.getInternalFrame() != null) {
+            // Currently internal frame, switch to external frame
+            detachToExternalFrame(reg);
+        } else if (reg.getExternalFrame() != null) {
+            // Currently external frame, switch to internal frame
+            attachToInternalFrame(reg);
+        } else {
+            log.warn("Panel has no window container: {}:{}", namespace, panelId);
+        }
+    }
+
+    /**
+     * Detach a panel from its internal frame and create an external frame.
+     *
+     * @param reg The panel registration
+     */
+    private void detachToExternalFrame(PanelRegistration reg) {
+        XInternalFrame iframe = reg.getInternalFrame();
+        XPanel panel = reg.getPanel();
+
+        // Preserve state
+        boolean wasVisible = iframe.isVisible();
+        String windowTitle = iframe.getTitle();
+        java.awt.Dimension iframeSize = iframe.getSize();
+        java.awt.Point iframeLocation = iframe.getLocation();
+
+        // Convert desktop coordinates to screen coordinates
+        JDesktopPane desktop = this.getDesktop();
+        java.awt.Point screenLocation;
+        if (desktop != null) {
+            try {
+                java.awt.Point desktopScreenLocation = desktop.getLocationOnScreen();
+                screenLocation = new java.awt.Point(
+                    desktopScreenLocation.x + iframeLocation.x,
+                    desktopScreenLocation.y + iframeLocation.y
+                );
+            } catch (IllegalComponentStateException e) {
+                // Desktop not showing, use default location
+                screenLocation = new java.awt.Point(100, 100);
+            }
+        } else {
+            screenLocation = new java.awt.Point(100, 100);
+        }
+
+        // Hide internal frame
+        iframe.setVisible(false);
+
+        // Remove panel from internal frame
+        iframe.getContentPane().removeAll();
+
+        // Remove internal frame from desktop
+        if (desktop != null) {
+            desktop.remove(iframe);
+        }
+
+        // Create external frame
+        XFrame frame = new XFrame(windowTitle);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setContentPane(panel);
+        frame.setSize(iframeSize);
+        frame.setLocation(screenLocation);
+
+        // Update registration
+        reg.setInternalFrame(null);
+        reg.setExternalFrame(frame);
+        panel.setParent(frame);
+
+        // Restore visibility
+        if (wasVisible) {
+            frame.setVisible(true);
+        }
+
+        log.info("Detached panel to external frame: {}", reg.getFullId());
+    }
+
+    /**
+     * Attach a panel from its external frame back to an internal frame.
+     *
+     * @param reg The panel registration
+     */
+    private void attachToInternalFrame(PanelRegistration reg) {
+        JDesktopPane desktop = this.getDesktop();
+        if (desktop == null) {
+            log.warn("Cannot attach to desktop - no desktop available for: {}", reg.getFullId());
+            return;
+        }
+
+        XFrame frame = reg.getExternalFrame();
+
+        // Preserve state
+        boolean wasVisible = frame.isVisible();
+        java.awt.Dimension frameSize = frame.getSize();
+        java.awt.Point screenLocation = frame.getLocation();
+
+        // Convert screen coordinates to desktop coordinates
+        java.awt.Point desktopLocation;
+        try {
+            java.awt.Point desktopScreenLocation = desktop.getLocationOnScreen();
+            desktopLocation = new java.awt.Point(
+                screenLocation.x - desktopScreenLocation.x,
+                screenLocation.y - desktopScreenLocation.y
+            );
+        } catch (IllegalComponentStateException e) {
+            // Desktop not showing, use default location
+            desktopLocation = new java.awt.Point(10, 10);
+        }
+
+        // Hide and dispose external frame
+        frame.setVisible(false);
+        // frame.getContentPane().removeAll(); // leaving as a reminder that this causes a bug so do not use it for other implementations
+        frame.dispose();
+
+        // Clear external frame reference so createInternalFrameForPanel can proceed
+        reg.setExternalFrame(null);
+
+        // Reuse existing method to create internal frame with proper setup
+        createInternalFrameForPanel(reg);
+
+        // Override size and location with preserved values
+        XInternalFrame iframe = reg.getInternalFrame();
+        iframe.setSize(frameSize);
+        iframe.setLocation(desktopLocation);
+
+        // Restore visibility
+        if (wasVisible) {
+            iframe.setVisible(true);
+        }
+
+        log.info("Attached panel to internal frame: {}", reg.getFullId());
     }
 
     /**
@@ -663,6 +819,7 @@ public class Bronze extends Stone {
      * @param panelId
      */
     private void dumpFoundationStructure(String namespace, String panelId) {
+        log.warn("=== Foundation Object Search failed ===");
         System.out.println("=== Foundation Object Search failed ===");
         System.out.println(String.format("String namespace: %s, String panelId: %s",
                 namespace, panelId));
@@ -677,6 +834,7 @@ public class Bronze extends Stone {
      * Useful for debugging to see what contexts and panels are currently registered.
      */
     public void dumpFoundationStructure() {
+        log.info("=== Foundation Object Structure ===");
         System.out.println("=== Foundation Object Structure ===");
         System.out.println("Registered Contexts: " + contextRegistry.size());
 
