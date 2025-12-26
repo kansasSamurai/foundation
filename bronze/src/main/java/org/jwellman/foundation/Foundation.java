@@ -5,7 +5,6 @@ import java.awt.BorderLayout;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
-import org.jwellman.foundation.examples.SimpleWindowDemo;
 import org.jwellman.foundation.interfaces.uiContext;
 
 /**
@@ -182,7 +181,7 @@ public class Foundation extends Platinum {
     public static void demo(Class<? extends JComponent> c) {
 
         // Step 1 - Create an application context
-        uiContext app = Foundation.createContext(SimpleWindowDemo.class);
+        uiContext app = Foundation.createContext(c.getClass());
 
         // Step 2 - Initialize Foundation
         Foundation.init(app);

@@ -50,6 +50,18 @@ This project uses Maven. The project targets Java 8.
 - `mvn clean package` - Build JAR file (output: target/foundation-1.0.1-SNAPSHOT.jar)
 - `mvn clean install` - Install to local Maven repository
 
+**Selective builds (Maven reactor):**
+- `mvn install -pl bronze` - Build only the bronze module
+- `mvn install -pl bronze,bronze-demos` - Build bronze and bronze-demos
+- `mvn install -pl '!*-demos'` - Build all modules EXCEPT demos (excludes bronze-demos, future silver-demos, etc.)
+- `mvn install -pl stone,bronze` - Build only stone and bronze tiers
+
+**Why exclude demos?**
+- Demo modules depend on logging implementations (slf4j-simple)
+- Framework JARs should not bundle logging implementations
+- Excluding demos speeds up builds when only framework changes are needed
+- Use `-pl '!*-demos'` for CI/CD builds of framework artifacts
+
 ## Developer Workflow Preferences
 
 **Compilation:**
@@ -332,12 +344,22 @@ This aligns with Foundation's philosophy of interface-based, pluggable architect
 
 ### Package Structure
 
+**Framework Modules:**
+- `stone/` - Stone tier (minimal framework, no dependencies)
+- `bronze/` - Bronze tier (multi-panel registry, lifecycle, SLF4J API)
+- `silver/`, `gold/`, `platinum/` - Future tier enhancements
+
+**Demo Modules:**
+- `bronze-demos/` - Bronze tier demo applications (depends on bronze + slf4j-simple)
+
+**Framework Packages:**
 - `org.jwellman.foundation` - Core Foundation API and tiered classes
 - `org.jwellman.foundation.beans` - PropertyChange support utilities
 - `org.jwellman.foundation.extend` - Base classes for applications (AbstractSimpleApp, AbstractSimpleMain)
-- `org.jwellman.foundation.interfaces` - Provider interfaces (uiThemeProvider, uiDesktopProvider)
+- `org.jwellman.foundation.interfaces` - Provider interfaces (uiThemeProvider, uiDesktopProvider, uiPanelLifecycleListener)
 - `org.jwellman.foundation.swing` - Enhanced Swing components (XFrame, XPanel, XButton, etc.) and custom layouts
 - `org.jwellman.foundation.utility` - Drag-and-drop and moveable component utilities
+- `org.jwellman.foundation.provider` - Example provider implementations (CompanyBrandedDesktopProvider, etc.)
 
 ### Desktop vs Window Mode
 
@@ -640,32 +662,59 @@ The startup() method handles the entire Foundation lifecycle automatically.
 
 ### Example Applications
 
-The `org.jwellman.foundation.examples` package contains working demonstrations:
+Demo applications are located in the `bronze-demos` module (sibling to `bronze`).
 
-**SimpleWindowDemo.java** - Minimal window mode example
+**Why separate?**
+- Framework JARs remain lightweight (no logging implementation bundled)
+- Demos use SLF4J Simple for visible console logging output
+- Follows industry best practices for API vs. examples separation
+
+**Running demos:**
+```bash
+# Run default demo (BronzeTierShowcaseDemo)
+mvn exec:java -pl bronze-demos
+
+# Run specific demo
+mvn exec:java -pl bronze-demos -Dexec.mainClass="org.jwellman.foundation.examples.SimpleWindowDemo"
+```
+
+**Core Demos:**
+
+**SimpleWindowDemo** - Minimal window mode example
 - Basic Foundation lifecycle
 - Single JPanel in a JFrame
-- Run: `mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SimpleWindowDemo"`
 
-**SimpleDesktopDemo.java** - Minimal desktop mode example
+**SimpleDesktopDemo** - Minimal desktop mode example
 - Same UI as SimpleWindowDemo
 - Demonstrates deployment-agnostic design
-- Run: `mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SimpleDesktopDemo"`
 
-**MultiPanelDesktopDemo.java** - Bronze tier comprehensive demo
+**MultiPanelDesktopDemo** - Bronze tier comprehensive demo
 - Shows namespace:panelId registration (tool.calculator has "main" and "history")
 - Demonstrates panel lifecycle events (onCreate, onShow, onHide, onClose)
 - Shows window positioning strategies (CASCADE, CENTER, EXPLICIT)
 - Includes dynamic panel management (show/hide/toggle via control panel)
 - Registry queries (getPanels by namespace, getNamespaces)
 - Simulates multi-tool desktop environment
-- Run: `mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.MultiPanelDesktopDemo"`
 
-**LookAndFeelDemo.java** - LAF testing utility
-- Tests all 7 LAF integrations
+**BronzeTierShowcaseDemo** - Interactive comprehensive showcase
+- All Bronze tier features in one interactive demo
+- Panel attributes for categorization
+- Real-time event logging
+- Registry statistics
+
+**Provider Demos:**
+
+**CustomDesktopProviderDemo** - Custom desktop provider implementation
+**CustomSplashProviderDemo** - Custom splash screen provider
+**SplashScreenDemo** - Window mode with splash screen
+**SplashScreenDesktopDemo** - Desktop mode with splash screen
+
+**Utility Demos:**
+
+**LookAndFeelDemo** - LAF testing utility
+- Tests all LAF integrations
 - Validates LAF dependencies
-- Documents future dynamic LAF architecture
-- Run: `mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.LookAndFeelDemo"`
+- Documents LAF discovery architecture
 
 ## Dependencies
 
