@@ -246,7 +246,7 @@ public class Bronze extends Stone {
      * @param namespace The namespace
      * @param panelId The panel ID
      */
-    public void detachPanel(String namespace, String panelId) {
+    protected void detachPanel(String namespace, String panelId) {
         PanelRegistration reg = getRegistration(namespace, panelId);
         if (reg == null) {
             log.warn("Cannot detach panel - not found: {}:{}", namespace, panelId);
@@ -272,16 +272,14 @@ public class Bronze extends Stone {
      */
     private void detachToExternalFrame(PanelRegistration reg) {
         XInternalFrame iframe = reg.getInternalFrame();
-        XPanel panel = reg.getPanel();
+        JDesktopPane desktop = this.getDesktop();
 
         // Preserve state
         boolean wasVisible = iframe.isVisible();
-        String windowTitle = iframe.getTitle();
         java.awt.Dimension iframeSize = iframe.getSize();
         java.awt.Point iframeLocation = iframe.getLocation();
 
         // Convert desktop coordinates to screen coordinates
-        JDesktopPane desktop = this.getDesktop();
         java.awt.Point screenLocation;
         if (desktop != null) {
             try {
@@ -298,28 +296,22 @@ public class Bronze extends Stone {
             screenLocation = new java.awt.Point(100, 100);
         }
 
-        // Hide internal frame
+        // Hide internal frame and remove from desktop
         iframe.setVisible(false);
-
-        // Remove panel from internal frame
-        iframe.getContentPane().removeAll();
-
-        // Remove internal frame from desktop
         if (desktop != null) {
             desktop.remove(iframe);
         }
 
-        // Create external frame
-        XFrame frame = new XFrame(windowTitle);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setContentPane(panel);
+        // Clear internal frame reference so createFrameForPanel can proceed
+        reg.setInternalFrame(null);
+
+        // Reuse existing method to create external frame with proper setup
+        createFrameForPanel(reg);
+
+        // Override size and location with preserved values
+        XFrame frame = reg.getExternalFrame();
         frame.setSize(iframeSize);
         frame.setLocation(screenLocation);
-
-        // Update registration
-        reg.setInternalFrame(null);
-        reg.setExternalFrame(frame);
-        panel.setParent(frame);
 
         // Restore visibility
         if (wasVisible) {
