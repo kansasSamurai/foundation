@@ -10,12 +10,17 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.text.JTextComponent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * 
  * @author rwellman
  *
  */
 abstract public class XComponent implements IComponent {
+
+    private static final Logger log = LoggerFactory.getLogger(XComponent.class);
 
     protected JComponent wrapped;
 
@@ -46,7 +51,7 @@ abstract public class XComponent implements IComponent {
             final JLabel c = (JLabel) wrapped;
             c.setText(string);            
         } else {
-            System.out.println("WARNING - Wrapped JComponent does not implement setText(String)");
+            log.warn("Wrapped JComponent does not implement setText(String)");
         }
         return this;
     }
@@ -57,7 +62,7 @@ abstract public class XComponent implements IComponent {
             final AbstractButton b = (AbstractButton) wrapped;
             b.setAction(action);            
         } else {
-            System.out.println("WARNING - Wrapped JComponent does not implement setAction(AbstractAction)");
+            log.warn("Wrapped JComponent does not implement setAction(AbstractAction)");
         }
         return this;
     }
@@ -68,7 +73,7 @@ abstract public class XComponent implements IComponent {
             final AbstractButton b = (AbstractButton) wrapped;
             b.setSelected(value);            
         } else {
-            System.out.println("WARNING - Wrapped JComponent does not implement setSelected(boolean)");
+            log.warn("Wrapped JComponent does not implement setSelected(boolean)");
         }
         return this;
     }
@@ -79,7 +84,7 @@ abstract public class XComponent implements IComponent {
             final AbstractButton b = (AbstractButton) wrapped;
             bg.add(b);            
         } else {
-            System.out.println("WARNING - Wrapped JComponent cannot be added to ButtonGroup");
+            log.warn("Wrapped JComponent cannot be added to ButtonGroup");
         }
         return this;
     }

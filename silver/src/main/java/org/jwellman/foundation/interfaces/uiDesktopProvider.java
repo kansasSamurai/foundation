@@ -49,6 +49,13 @@ public interface uiDesktopProvider {
     JDesktopPane createDesktop();
 
     /**
+     * Return the desktop created by createDesktop().
+     * 
+     * @return The configured JDesktopPane
+     */
+    JDesktopPane getDesktop();
+
+    /**
      * Provides an optional menu bar for the desktop.
      *
      * Implementations can return a custom menu bar with desktop-level
@@ -73,16 +80,5 @@ public interface uiDesktopProvider {
      * @param desktop The initialized desktop pane
      */
     void onDesktopInitialized(JDesktopPane desktop);
-
-    /**
-     * Legacy method for backward compatibility.
-     *
-     * @deprecated Use {@link #createDesktop()} instead.
-     *             This method delegates to createDesktop() and ignores the parameter.
-     */
-    @Deprecated
-    default JDesktopPane doCustomDesktop(org.jwellman.foundation.swing.IWindow w) {
-        return createDesktop();
-    }
 
 }

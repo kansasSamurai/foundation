@@ -73,7 +73,16 @@ public interface IWindow {
     public Point getLocation();
 
     /**
-     * Close this window. For JFrame, this calls dispose().
+     * Get the title of this window.
+     * 
+     * @return the window title
+     */
+    public String getTitle();
+
+    /**
+     * Close this window. 
+     * <p>
+     * For JFrame, this calls dispose().<br>
      * For JInternalFrame, this calls setClosed(true).
      */
     public void close();
@@ -84,5 +93,15 @@ public interface IWindow {
      * @return
      */
     public Component getComponent();
+
+    /**
+     * Check if this window is currently visible.
+     * <p>
+     * This method provides a uniform way to query visibility state across
+     * both JFrame and JInternalFrame implementations.
+     *
+     * @return true if the window is visible, false otherwise
+     */
+    public boolean isVisible();
 
 }

@@ -4,6 +4,8 @@ import java.awt.Dimension;
 import java.awt.Point;
 import javax.swing.JDesktopPane;
 import org.jwellman.foundation.swing.IWindow;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Defines window positioning strategies for panels in Foundation framework.
@@ -18,6 +20,8 @@ import org.jwellman.foundation.swing.IWindow;
  * @author Foundation Framework
  */
 public class WindowPosition {
+
+    private static final Logger log = LoggerFactory.getLogger(WindowPosition.class);
 
     /**
      * Positioning strategy enumeration.
@@ -173,16 +177,14 @@ public class WindowPosition {
     }
 
     private void applyCascade(IWindow window, JDesktopPane desktop) {
-        int x = cascadeOffset;
-        int y = cascadeOffset;
-        cascadeOffset += CASCADE_INCREMENT;
+        window.setLocation(cascadeOffset, cascadeOffset);
+        log.debug("applyCascade: offset={}", cascadeOffset);
 
         // Reset cascade if we've gone too far
+        cascadeOffset += CASCADE_INCREMENT;
         if (cascadeOffset > 200) {
             cascadeOffset = 10;
         }
-
-        window.setLocation(x, y);
     }
 
     private void applyCenter(IWindow window, JDesktopPane desktop) {

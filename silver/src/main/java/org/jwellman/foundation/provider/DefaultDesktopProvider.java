@@ -70,6 +70,8 @@ import org.jwellman.foundation.interfaces.uiDesktopProvider;
  */
 public class DefaultDesktopProvider implements uiDesktopProvider {
 
+    private JDesktopPane desktop;
+
     /**
      * Creates a standard JDesktopPane with default configuration.
      *
@@ -83,7 +85,7 @@ public class DefaultDesktopProvider implements uiDesktopProvider {
      */
     @Override
     public JDesktopPane createDesktop() {
-        JDesktopPane desktop = new JDesktopPane();
+        desktop = new JDesktopPane();
 
         // Use OUTLINE_DRAG_MODE for better performance
         // This shows an outline while dragging instead of the full window
@@ -123,6 +125,14 @@ public class DefaultDesktopProvider implements uiDesktopProvider {
         // No post-initialization actions in the default implementation
         // Custom providers can override this to add desktop icons,
         // start background services, display welcome dialogs, etc.
+    }
+
+    /**
+     * 
+     */
+    @Override
+    public JDesktopPane getDesktop() {
+        return desktop;
     }
 
 }

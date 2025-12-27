@@ -1,7 +1,10 @@
 package org.jwellman.foundation.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.jwellman.foundation.framework.WindowPosition;
-import org.jwellman.foundation.interfaces.PanelLifecycleListener;
+import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
@@ -9,15 +12,16 @@ import org.jwellman.foundation.swing.XPanel;
 
 /**
  * Metadata container for a registered panel in the Foundation framework.
- *
- * This class tracks all information about a panel including:
- * - Namespace and panel ID for identification
- * - The panel itself (wrapped in XPanel)
- * - Window containers (JFrame or JInternalFrame)
- * - Visibility state
- * - Positioning preferences
- * - Lifecycle listeners
- *
+ * <p>
+ * This class tracks all information about a panel including:<br>
+ * - Namespace and panel ID for identification<br>
+ * - The panel itself (wrapped in XPanel)<br>
+ * - Window containers (JFrame or JInternalFrame)<br>
+ * - Visibility state<br>
+ * - Positioning preferences<br>
+ * - Lifecycle listeners<br>
+ * - Application-specific attributes (key-value pairs)<br>
+ * <p>
  * PanelRegistration supports the multi-window management capabilities
  * of the Bronze tier and above.
  *
@@ -31,6 +35,9 @@ public class PanelRegistration {
     /** Unique panel ID within namespace (e.g., "main", "settings", "history") */
     private final String panelId;
 
+    /** The title to display in the window decoration */
+    private String windowTitle;
+
     /** The wrapped panel */
     private final XPanel panel;
 
@@ -40,14 +47,17 @@ public class PanelRegistration {
     /** Window mode container (null in desktop mode) */
     private XFrame externalFrame;
 
-    /** Current visibility state */
-    private boolean visible;
+    /** Tracks whether show() has been called and completed at least once */
+    private boolean firstShowCompleted;
 
     /** Window positioning strategy */
     private WindowPosition windowPosition;
 
     /** Lifecycle event listener (optional) */
-    private PanelLifecycleListener lifecycleListener;
+    private uiPanelLifecycleListener lifecycleListener;
+
+    /** Application-specific attributes for storing custom metadata */
+    private final Map<String, Object> attributes;
 
     /**
      * Creates a new PanelRegistration.
@@ -70,7 +80,7 @@ public class PanelRegistration {
         this.namespace = namespace;
         this.panelId = panelId;
         this.panel = panel;
-        this.visible = false;
+        this.attributes = new HashMap<>();
 
         // Default positioning
         this.windowPosition = WindowPosition.cascade();
@@ -84,7 +94,7 @@ public class PanelRegistration {
      * @param panel The wrapped panel
      * @param listener Lifecycle event listener
      */
-    public PanelRegistration(String namespace, String panelId, XPanel panel, PanelLifecycleListener listener) {
+    public PanelRegistration(String namespace, String panelId, XPanel panel, uiPanelLifecycleListener listener) {
         this(namespace, panelId, panel);
         this.lifecycleListener = listener;
     }
@@ -159,6 +169,83 @@ public class PanelRegistration {
         }
     }
 
+    /**
+     * Show this panel's window.
+     * <p>
+     * On first show, applies window positioning and adds the internal frame to the desktop.
+     * Fires the onShow lifecycle event.
+     */
+    public void show() {
+        IWindow window = getWindow();
+        if (window == null) {
+            return; // No window to show
+        }
+
+        // Skip if already visible
+        if (isVisible()) {
+            return;
+        }
+
+        // First show: apply positioning and add to desktop
+        if (!firstShowCompleted && internalFrame != null) {
+            javax.swing.JDesktopPane desktop = internalFrame.getDesktopPane();
+
+            if (desktop != null) {
+                // Apply window positioning
+                if (windowPosition != null) {
+                    // This should already be applied during Bronze:createInternalFrameForPanel()
+                    // windowPosition.apply(internalFrame, desktop);
+                }
+
+                // Add to desktop if not already added
+                if (internalFrame.getParent() == null) {
+                    // This should already be applied during Bronze:createInternalFrameForPanel()
+                    // desktop.add(internalFrame);
+                }
+            }
+
+            firstShowCompleted = true;
+        }
+
+        // Make visible
+        window.setVisible(true);
+        fireOnShow();
+    }
+
+    /**
+     * Hide this panel's window.
+     * <p>
+     * Fires the onHide lifecycle event.
+     */
+    public void hide() {
+        IWindow window = getWindow();
+        if (window == null) {
+            return; // No window to hide
+        }
+
+        // Skip if already hidden
+        if (!isVisible()) {
+            return;
+        }
+
+        // Make invisible
+        window.setVisible(false);
+        fireOnHide();
+    }
+
+    /**
+     * Toggle visibility of this panel's window.
+     * <p>
+     * Calls show() if currently hidden, hide() if currently visible.
+     */
+    public void toggle() {
+        if (isVisible()) {
+            hide();
+        } else {
+            show();
+        }
+    }
+
     // Getters and setters
 
     public String getNamespace() {
@@ -167,6 +254,14 @@ public class PanelRegistration {
 
     public String getPanelId() {
         return panelId;
+    }
+
+    public String getWindowTitle() {
+        return windowTitle;
+    }
+
+    public void setWindowTitle(String windowTitle) {
+        this.windowTitle = windowTitle;
     }
 
     public XPanel getPanel() {
@@ -189,12 +284,33 @@ public class PanelRegistration {
         this.externalFrame = externalFrame;
     }
 
+    /**
+     * Check if this panel's window is currently visible.
+     * <p>
+     * This delegates to the actual window's visibility state to ensure
+     * synchronization between PanelRegistration and the window.
+     *
+     * @return true if the window exists and is visible, false otherwise
+     */
     public boolean isVisible() {
-        return visible;
+        IWindow window = getWindow();
+        return window != null && window.isVisible();
     }
 
+    /**
+     * Set the visibility of this panel's window.
+     * <p>
+     * This is a convenience wrapper that delegates to show() or hide()
+     * to ensure proper lifecycle event handling.
+     *
+     * @param visible true to show the panel, false to hide it
+     */
     public void setVisible(boolean visible) {
-        this.visible = visible;
+        if (visible) {
+            show();
+        } else {
+            hide();
+        }
     }
 
     public WindowPosition getWindowPosition() {
@@ -205,12 +321,66 @@ public class PanelRegistration {
         this.windowPosition = windowPosition;
     }
 
-    public PanelLifecycleListener getLifecycleListener() {
+    public uiPanelLifecycleListener getLifecycleListener() {
         return lifecycleListener;
     }
 
-    public void setLifecycleListener(PanelLifecycleListener lifecycleListener) {
+    public void setLifecycleListener(uiPanelLifecycleListener lifecycleListener) {
         this.lifecycleListener = lifecycleListener;
+    }
+
+    /**
+     * Get the attributes map for storing application-specific metadata.
+     * <p>
+     * This map can be used to associate arbitrary key-value pairs with a panel registration.
+     * Common use cases include:
+     * <ul>
+     * <li>Marking panels as "dynamic" vs "permanent"</li>
+     * <li>Storing panel category or type information</li>
+     * <li>Associating business objects with UI panels</li>
+     * <li>Storing panel-specific configuration data</li>
+     * </ul>
+     *
+     * @return the attributes map (never null)
+     */
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    /**
+     * Set an attribute value.
+     * <p>
+     * Convenience method for {@code getAttributes().put(key, value)}.
+     *
+     * @param key the attribute key
+     * @param value the attribute value
+     */
+    public void setAttribute(String key, Object value) {
+        attributes.put(key, value);
+    }
+
+    /**
+     * Get an attribute value.
+     * <p>
+     * Convenience method for {@code getAttributes().get(key)}.
+     *
+     * @param key the attribute key
+     * @return the attribute value, or null if not present
+     */
+    public Object getAttribute(String key) {
+        return attributes.get(key);
+    }
+
+    /**
+     * Check if an attribute exists.
+     * <p>
+     * Convenience method for {@code getAttributes().containsKey(key)}.
+     *
+     * @param key the attribute key
+     * @return true if the attribute exists, false otherwise
+     */
+    public boolean hasAttribute(String key) {
+        return attributes.containsKey(key);
     }
 
     @Override
@@ -218,7 +388,7 @@ public class PanelRegistration {
         return "PanelRegistration{" +
                 "namespace='" + namespace + '\'' +
                 ", panelId='" + panelId + '\'' +
-                ", visible=" + visible +
+                ", visible=" + isVisible() +
                 ", fullId='" + getFullId() + '\'' +
                 '}';
     }
