@@ -42,7 +42,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>org.jwellman.foundation.examples.BronzeTierShowcaseDemo</mainClass>
+                    <mainClass>org.jwellman.foundation.examples.SilverTierShowcaseDemo</mainClass>
                 </configuration>
             </plugin>
         </plugins>

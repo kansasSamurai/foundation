@@ -12,7 +12,7 @@ import javax.swing.SwingConstants;
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiContext;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.provider.DefaultSplashProvider;
 
 /**
@@ -43,14 +43,14 @@ public class SplashScreenDesktopDemo {
         Foundation.init(context);
 
         // Register panels (frames created but not visible)
-        PanelRegistration mainPanel = context.registerUI(
+        FrameDescriptor mainPanel = context.registerUI(
             "demo.app", 
             createMainPanel(),
             WindowPosition.center()
         );
         context.registerMasterPanel(mainPanel);
 
-        PanelRegistration toolPanel = context.registerUI(
+        FrameDescriptor toolPanel = context.registerUI(
             "demo.tool",  
             createToolPanel("Calculator"),
             WindowPosition.cascade()

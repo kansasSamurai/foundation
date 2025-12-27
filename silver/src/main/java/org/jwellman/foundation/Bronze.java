@@ -15,7 +15,7 @@ import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.framework.uUtility;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
@@ -46,7 +46,7 @@ public class Bronze extends Stone {
      * Value: uContext containing panel registry for that namespace
      *
      * This creates a drill-down structure:
-     * Bronze -> uContext (by namespace) -> PanelRegistration (by panelId)
+     * Bronze -> uContext (by namespace) -> FrameDescriptor (by panelId)
      */
     private final Map<String, uiContext> contextRegistry = new HashMap<>();
 
@@ -61,7 +61,7 @@ public class Bronze extends Stone {
         uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) return null;
 
-        PanelRegistration reg = ctx.getPanelRegistration(panelId);
+        FrameDescriptor reg = ctx.getFrameDescriptor(panelId);
         return reg != null ? reg.getPanel() : null;
     }
 
@@ -75,8 +75,8 @@ public class Bronze extends Stone {
         uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) return new ArrayList<>();
 
-        return ctx.getAllPanelRegistrations().values().stream()
-                .map(PanelRegistration::getPanel)
+        return ctx.getAllFrameDescriptors().values().stream()
+                .map(FrameDescriptor::getPanel)
                 .collect(Collectors.toList());
     }
 
@@ -84,13 +84,13 @@ public class Bronze extends Stone {
      * Get all panel registrations for a namespace.
      *
      * @param namespace The namespace
-     * @return List of PanelRegistrations (may be empty, never null)
+     * @return List of FrameDescriptors (may be empty, never null)
      */
-    public List<PanelRegistration> getRegistrations(String namespace) {
+    public List<FrameDescriptor> getRegistrations(String namespace) {
         uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) return new ArrayList<>();
 
-        return new ArrayList<>(ctx.getAllPanelRegistrations().values());
+        return new ArrayList<>(ctx.getAllFrameDescriptors().values());
     }
 
     /**
@@ -107,16 +107,16 @@ public class Bronze extends Stone {
      *
      * @param namespace The namespace
      * @param panelId The panel ID
-     * @return The PanelRegistration, or null if not found
+     * @return The FrameDescriptor, or null if not found
      */
-    public PanelRegistration getRegistration(String namespace, String panelId) {
+    public FrameDescriptor getRegistration(String namespace, String panelId) {
         uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) {
             dumpFoundationStructure(namespace, panelId);
             return null;
         }
 
-        PanelRegistration reg = ctx.getPanelRegistration(panelId);
+        FrameDescriptor reg = ctx.getFrameDescriptor(panelId);
         if (reg == null) {
             dumpFoundationStructure(namespace, panelId);
         }
@@ -142,7 +142,7 @@ public class Bronze extends Stone {
      * @param panelId The panel ID
      */
     protected void _showPanel(String namespace, String panelId) {
-        PanelRegistration reg = getRegistration(namespace, panelId);
+        FrameDescriptor reg = getRegistration(namespace, panelId);
         if (reg != null) {
             reg.show();
         }
@@ -156,7 +156,7 @@ public class Bronze extends Stone {
      * @param panelId The panel ID
      */
     protected void _hidePanel(String namespace, String panelId) {
-        PanelRegistration reg = getRegistration(namespace, panelId);
+        FrameDescriptor reg = getRegistration(namespace, panelId);
         if (reg != null) {
             reg.hide();
         }
@@ -169,7 +169,7 @@ public class Bronze extends Stone {
      * @param panelId The panel ID
      */
     protected void _togglePanel(String namespace, String panelId) {
-        PanelRegistration reg = getRegistration(namespace, panelId);
+        FrameDescriptor reg = getRegistration(namespace, panelId);
         if (reg != null) {
             reg.toggle();
         }
@@ -183,7 +183,7 @@ public class Bronze extends Stone {
      * @return true if visible, false otherwise
      */
     public boolean isPanelVisible(String namespace, String panelId) {
-        PanelRegistration reg = getRegistration(namespace, panelId);
+        FrameDescriptor reg = getRegistration(namespace, panelId);
         return reg != null && reg.isVisible();
     }
 
@@ -199,7 +199,7 @@ public class Bronze extends Stone {
         uiContext ctx = contextRegistry.get(namespace);
         if (ctx == null) return;
 
-        PanelRegistration reg = ctx.getPanelRegistration(panelId);
+        FrameDescriptor reg = ctx.getFrameDescriptor(panelId);
         if (reg != null) {
             closePanel(ctx, reg);
         }
@@ -209,14 +209,14 @@ public class Bronze extends Stone {
      * Close a panel and remove it from the registry.
      * <p>
      * Fires the onClose lifecycle event.
-     * TODO Eventually (but probably not soon), the PanelRegistration may
+     * TODO Eventually (but probably not soon), the FrameDescriptor may
      * contain a reference to its parent uiContext in which case only the
-     * PanelRegistration parameter will be necessary here.
+     * FrameDescriptor parameter will be necessary here.
      *
-     * @param ctx The uiContext containing the PanelRegistration
-     * @param reg The PanelRegistration to be removed from the uiContext
+     * @param ctx The uiContext containing the FrameDescriptor
+     * @param reg The FrameDescriptor to be removed from the uiContext
      */
-    public void closePanel(uiContext ctx, PanelRegistration reg) {
+    public void closePanel(uiContext ctx, FrameDescriptor reg) {
         // Fire lifecycle event
         reg.fireOnClose();
 
@@ -227,7 +227,7 @@ public class Bronze extends Stone {
         }
 
         // Remove from context's registry
-        ctx.removePanelRegistration(reg.getPanelId());
+        ctx.removeFrameDescriptor(reg.getPanelId());
     }
 
     /**
@@ -247,7 +247,7 @@ public class Bronze extends Stone {
      * @param panelId The panel ID
      */
     protected void detachPanel(String namespace, String panelId) {
-        PanelRegistration reg = getRegistration(namespace, panelId);
+        FrameDescriptor reg = getRegistration(namespace, panelId);
         if (reg == null) {
             log.warn("Cannot detach panel - not found: {}:{}", namespace, panelId);
             return;
@@ -270,7 +270,7 @@ public class Bronze extends Stone {
      *
      * @param reg The panel registration
      */
-    private void detachToExternalFrame(PanelRegistration reg) {
+    private void detachToExternalFrame(FrameDescriptor reg) {
         XInternalFrame iframe = reg.getInternalFrame();
         JDesktopPane desktop = this.getDesktop();
 
@@ -326,7 +326,7 @@ public class Bronze extends Stone {
      *
      * @param reg The panel registration
      */
-    private void attachToInternalFrame(PanelRegistration reg) {
+    private void attachToInternalFrame(FrameDescriptor reg) {
         JDesktopPane desktop = this.getDesktop();
         if (desktop == null) {
             log.warn("Cannot attach to desktop - no desktop available for: {}", reg.getFullId());
@@ -380,12 +380,12 @@ public class Bronze extends Stone {
     /**
      * Get all registrations (for internal use).
      *
-     * @return List of all PanelRegistrations across all contexts
+     * @return List of all FrameDescriptors across all contexts
      */
-    protected List<PanelRegistration> getAllRegistrations() {
-        List<PanelRegistration> allRegs = new ArrayList<>();
+    protected List<FrameDescriptor> getAllRegistrations() {
+        List<FrameDescriptor> allRegs = new ArrayList<>();
         for (uiContext ctx : contextRegistry.values()) {
-            allRegs.addAll(ctx.getAllPanelRegistrations().values());
+            allRegs.addAll(ctx.getAllFrameDescriptors().values());
         }
         return allRegs;
     }
@@ -437,7 +437,7 @@ public class Bronze extends Stone {
      *
      * @param reg The panel registration
      */
-    protected void createFrameForPanel(PanelRegistration reg) {
+    protected void createFrameForPanel(FrameDescriptor reg) {
         if (reg.getExternalFrame() != null) {
             // Already has an external frame, skip
             return;
@@ -496,7 +496,7 @@ public class Bronze extends Stone {
     public void showWindow(XPanel panel) {
 
         // Find existing registration
-        PanelRegistration reg = findRegistrationByPanel(panel);
+        FrameDescriptor reg = findRegistrationByPanel(panel);
 
         // Auto-register if not registered
         if (reg == null) {
@@ -563,11 +563,11 @@ public class Bronze extends Stone {
      * Find a panel registration by XPanel reference.
      *
      * @param panel The XPanel to search for
-     * @return The PanelRegistration, or null if not found
+     * @return The FrameDescriptor, or null if not found
      */
-    private PanelRegistration findRegistrationByPanel(XPanel panel) {
+    private FrameDescriptor findRegistrationByPanel(XPanel panel) {
         for (uiContext ctx : contextRegistry.values()) {
-            for (PanelRegistration reg : ctx.getAllPanelRegistrations().values()) {
+            for (FrameDescriptor reg : ctx.getAllFrameDescriptors().values()) {
                 if (reg.getPanel() == panel) {
                     return reg;
                 }
@@ -582,9 +582,9 @@ public class Bronze extends Stone {
      * @param namespace The namespace to use
      * @param panelId The panel ID to use
      * @param panel The XPanel to register
-     * @return The created PanelRegistration
+     * @return The created FrameDescriptor
      */
-    private PanelRegistration autoRegisterPanel(String namespace, String panelId, XPanel panel) {
+    private FrameDescriptor autoRegisterPanel(String namespace, String panelId, XPanel panel) {
 
         // Get or create context
         uiContext ctx = contextRegistry.get(namespace);
@@ -596,7 +596,7 @@ public class Bronze extends Stone {
         // Create registration
         String fullId = namespace + ":" + panelId;
         panel.setName(fullId);
-        PanelRegistration reg = new PanelRegistration(namespace, panelId, panel, null);
+        FrameDescriptor reg = new FrameDescriptor(namespace, panelId, panel, null);
         ctx.registerPanel(panelId, reg);
 
         // Create frame immediately based on mode
@@ -657,7 +657,7 @@ public class Bronze extends Stone {
      *
      * @param reg The panel registration
      */
-    protected void createInternalFrameForPanel(PanelRegistration reg) {
+    protected void createInternalFrameForPanel(FrameDescriptor reg) {
 
         if (reg.getInternalFrame() != null) {
             // Already has an internal frame, skip
@@ -744,13 +744,13 @@ public class Bronze extends Stone {
         if (this.isDesktop()) {
             // Desktop mode: Create splash as an internal frame
 
-            // Create splash screen as a PanelRegistration (just like any other panel)
+            // Create splash screen as a FrameDescriptor (just like any other panel)
             JPanel splashContent = splasher.createSplashContent();
             XPanel splashPanel = new XPanel(splashContent);
 
             // Register in the context so we can find it later to close it
             // Use CENTER positioning to center the splash on the desktop
-            PanelRegistration splashReg = ctx.registerUI(
+            FrameDescriptor splashReg = ctx.registerUI(
                     "splash",
                     splashPanel,
                     WindowPosition.center()
@@ -794,7 +794,7 @@ public class Bronze extends Stone {
         }
 
         // Find the splash panel registration
-        PanelRegistration splashReg = ctx.getPanelRegistration("splash");
+        FrameDescriptor splashReg = ctx.getFrameDescriptor("splash");
         if (splashReg != null) {
             // Close the panel (fires onClose event, closes window, removes from registry)
             closePanel(ctx, splashReg);
@@ -839,19 +839,19 @@ public class Bronze extends Stone {
 
                 System.out.println("  [Context] " + namespace);
 
-                Map<String, PanelRegistration> panels = ctx.getAllPanelRegistrations();
+                Map<String, FrameDescriptor> panels = ctx.getAllFrameDescriptors();
                 if (panels.isEmpty()) {
                     System.out.println("    └─ (no panels registered)");
                 } else {
                     int count = 0;
                     int total = panels.size();
-                    for (Map.Entry<String, PanelRegistration> panelEntry : panels.entrySet()) {
+                    for (Map.Entry<String, FrameDescriptor> panelEntry : panels.entrySet()) {
                         count++;
                         boolean isLast = (count == total);
                         String prefix = isLast ? "    └─" : "    ├─";
 
                         String panelId = panelEntry.getKey();
-                        PanelRegistration reg = panelEntry.getValue();
+                        FrameDescriptor reg = panelEntry.getValue();
 
                         System.out.println(prefix + " [Panel] " + panelId +
                             " (visible: " + reg.isVisible() + ")");

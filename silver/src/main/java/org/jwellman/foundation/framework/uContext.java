@@ -7,7 +7,7 @@ import java.util.Map;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.interfaces.uiThemeProvider;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 
 /**
  * A context for a Foundation application or tool.
@@ -26,9 +26,9 @@ public class uContext {
     /**
      * Panel registry for this context.
      * Key: panelId (e.g., "main", "settings", "history")
-     * Value: PanelRegistration metadata
+     * Value: FrameDescriptor metadata
      */
-    private final Map<String, PanelRegistration> panelRegistry = new HashMap<>();
+    private final Map<String, FrameDescriptor> panelRegistry = new HashMap<>();
 
     /** 
      * The look and feel class to use (will be ignored in 
@@ -127,7 +127,7 @@ public class uContext {
      * @param registration The panel registration
      * @throws IllegalArgumentException if panelId is already registered
      */
-    public void registerPanel(String panelId, PanelRegistration registration) {
+    public void registerPanel(String panelId, FrameDescriptor registration) {
         if (panelRegistry.containsKey(panelId)) {
             throw new IllegalArgumentException(
                     "Panel already registered in context '" + namespace + "': " + panelId);
@@ -139,18 +139,18 @@ public class uContext {
      * Get a panel registration by panelId.
      *
      * @param panelId The panel identifier
-     * @return The PanelRegistration, or null if not found
+     * @return The FrameDescriptor, or null if not found
      */
-    public PanelRegistration getPanelRegistration(String panelId) {
+    public FrameDescriptor getFrameDescriptor(String panelId) {
         return panelRegistry.get(panelId);
     }
 
     /**
      * Get all panel registrations in this context.
      *
-     * @return Map of panelId to PanelRegistration
+     * @return Map of panelId to FrameDescriptor
      */
-    public Map<String, PanelRegistration> getAllPanelRegistrations() {
+    public Map<String, FrameDescriptor> getAllFrameDescriptors() {
         return new HashMap<>(panelRegistry);
     }
 
@@ -158,9 +158,9 @@ public class uContext {
      * Remove a panel from this context's registry.
      *
      * @param panelId The panel identifier
-     * @return The removed PanelRegistration, or null if not found
+     * @return The removed FrameDescriptor, or null if not found
      */
-    public PanelRegistration removePanelRegistration(String panelId) {
+    public FrameDescriptor removeFrameDescriptor(String panelId) {
         return panelRegistry.remove(panelId);
     }
 
@@ -170,7 +170,7 @@ public class uContext {
      * @param panelId The panel identifier
      * @return true if registered, false otherwise
      */
-    public boolean hasPanelRegistration(String panelId) {
+    public boolean hasFrameDescriptor(String panelId) {
         return panelRegistry.containsKey(panelId);
     }
 

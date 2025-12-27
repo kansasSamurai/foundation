@@ -35,7 +35,7 @@ import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.swing.IWindow;
 
 /**
- * Comprehensive Bronze Tier showcase demonstrating four key features in one interactive demo:
+ * Comprehensive Silver Tier showcase demonstrating key features in one interactive demo:
  * <ol>
  * <li><b>Window Positioning</b> - CASCADE, CENTER, EXPLICIT positioning strategies</li>
  * <li><b>Panel Lifecycle</b> - onCreate, onShow, onHide, onClose event tracking</li>
@@ -56,12 +56,12 @@ import org.jwellman.foundation.swing.IWindow;
  * <p>
  * Run with:
  * <pre>
- * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.BronzeTierShowcaseDemo"
+ * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SilverTierShowcaseDemo"
  * </pre>
  *
  * @author Foundation Framework
  */
-public class BronzeTierShowcaseDemo {
+public class SilverTierShowcaseDemo {
 
     private static final AtomicInteger panelCounter = new AtomicInteger(1);
     private static DefaultListModel<String> eventLogModel;
@@ -89,7 +89,7 @@ public class BronzeTierShowcaseDemo {
         // Initialize context
         context = Foundation.createContext("showcase");
         context.setDesktopMode(true);
-        context.setDesktopTitle("Bronze Tier Framework Showcase - Interactive Demo");
+        context.setDesktopTitle("Silver Tier Framework Showcase - Interactive Demo");
 
         Foundation.init(context);
 

@@ -22,12 +22,12 @@ import org.jwellman.foundation.swing.XPanel;
  * - Lifecycle listeners<br>
  * - Application-specific attributes (key-value pairs)<br>
  * <p>
- * PanelRegistration supports the multi-window management capabilities
+ * FrameDescriptor supports the multi-window management capabilities
  * of the Bronze tier and above.
  *
  * @author Foundation Framework
  */
-public class PanelRegistration {
+public class FrameDescriptor {
 
     /** Tool/application identifier (e.g., "tool.calculator") */
     private final String namespace;
@@ -60,13 +60,13 @@ public class PanelRegistration {
     private final Map<String, Object> attributes;
 
     /**
-     * Creates a new PanelRegistration.
+     * Creates a new FrameDescriptor.
      *
      * @param namespace Tool/application identifier
      * @param panelId Unique ID within namespace
      * @param panel The wrapped panel
      */
-    public PanelRegistration(String namespace, String panelId, XPanel panel) {
+    public FrameDescriptor(String namespace, String panelId, XPanel panel) {
         if (namespace == null || namespace.trim().isEmpty()) {
             throw new IllegalArgumentException("Namespace cannot be null or empty");
         }
@@ -87,14 +87,14 @@ public class PanelRegistration {
     }
 
     /**
-     * Creates a new PanelRegistration with a lifecycle listener.
+     * Creates a new FrameDescriptor with a lifecycle listener.
      *
      * @param namespace Tool/application identifier
      * @param panelId Unique ID within namespace
      * @param panel The wrapped panel
      * @param listener Lifecycle event listener
      */
-    public PanelRegistration(String namespace, String panelId, XPanel panel, uiPanelLifecycleListener listener) {
+    public FrameDescriptor(String namespace, String panelId, XPanel panel, uiPanelLifecycleListener listener) {
         this(namespace, panelId, panel);
         this.lifecycleListener = listener;
     }
@@ -288,7 +288,7 @@ public class PanelRegistration {
      * Check if this panel's window is currently visible.
      * <p>
      * This delegates to the actual window's visibility state to ensure
-     * synchronization between PanelRegistration and the window.
+     * synchronization between FrameDescriptor and the window.
      *
      * @return true if the window exists and is visible, false otherwise
      */
@@ -385,7 +385,7 @@ public class PanelRegistration {
 
     @Override
     public String toString() {
-        return "PanelRegistration{" +
+        return "FrameDescriptor{" +
                 "namespace='" + namespace + '\'' +
                 ", panelId='" + panelId + '\'' +
                 ", visible=" + isVisible() +

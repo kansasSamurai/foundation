@@ -12,7 +12,7 @@ import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.provider.CompanyBrandedSplashProvider;
 
 /**
@@ -56,7 +56,7 @@ public class CustomSplashProviderDemo {
         JPanel mainUI = createMainUI();
 
         // Register the main panel
-        PanelRegistration mainPanel = context.registerUI("main", mainUI, WindowPosition.center());
+        FrameDescriptor mainPanel = context.registerUI("main", mainUI, WindowPosition.center());
         context.registerMasterPanel(mainPanel);
 
         // Simulate realistic application initialization with progress updates
