@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.jwellman</groupId>
+        <artifactId>foundation-parent</artifactId>
+        <version>1.0.2-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>foundation-research</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Foundation Framework - Research</name>
+    <description>Research and experimentation code for Foundation framework development</description>
+
+    <dependencies>
+        <!-- No Foundation API dependencies - pure Swing research -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Exec Maven Plugin for running research tests -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>org.jwellman.foundation.research.SimpleDesktopTest</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

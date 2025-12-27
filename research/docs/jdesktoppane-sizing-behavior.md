@@ -2,7 +2,8 @@
 
 **Date:** 2025-12-03
 **Research:** Claude (Sonnet 4.5)
-**Test File:** `src/main/java/org/jwellman/foundation/research/SimpleDesktopTest.java`
+**Test File:** `research/src/main/java/org/jwellman/foundation/research/SimpleDesktopTest.java`
+**Module:** foundation-research (standalone research module, no Foundation API dependencies)
 
 ---
 
@@ -228,7 +229,7 @@ frame.pack();  // Results in tiny/invisible window
 
 To reproduce the issue:
 ```bash
-mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.research.SimpleDesktopTest"
+mvn compile exec:java -pl research
 ```
 
 With `pack()` commented in (line 39), the window will be nearly invisible.
@@ -249,9 +250,9 @@ This distinction is part of the fundamental difference between window mode (stan
 ---
 
 **Related Files:**
-- `src/main/java/org/jwellman/foundation/Stone.java` - Core window/desktop creation (lines 205-296)
-- `src/main/java/org/jwellman/foundation/uContext.java` - Configuration including dimensions
-- `src/main/java/org/jwellman/foundation/research/SimpleDesktopTest.java` - Test case demonstrating behavior
+- `stone/src/main/java/org/jwellman/foundation/Stone.java` - Core window/desktop creation
+- `stone/src/main/java/org/jwellman/foundation/uContext.java` - Configuration including dimensions
+- `research/src/main/java/org/jwellman/foundation/research/SimpleDesktopTest.java` - Test case demonstrating behavior
 - `docs/architecture/analysis-2025-12-02.md` - Overall architecture analysis
 
 **References:**

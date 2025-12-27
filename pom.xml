@@ -19,10 +19,12 @@
     </properties>
 
     <modules>
+        <module>research</module>
         <module>stone</module>
         <module>bronze</module>
         <module>bronze-demos</module>
         <module>silver</module>
+        <module>silver-demos</module>
         <module>gold</module>
         <module>platinum</module>
     </modules>
