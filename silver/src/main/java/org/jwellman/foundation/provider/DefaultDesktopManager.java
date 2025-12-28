@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.zeus.ui.mdi.WindowManager;
+import gr.zeus.ui.mdi.WindowManagerOptions;
 
 /**
  * Default implementation of uiDesktopManager that wraps Zeus WindowManager.
@@ -78,7 +79,9 @@ public class DefaultDesktopManager implements uiDesktopManager {
         // Create Zeus WindowManager wrapper
         // If no window menu provided, create a dummy menu (WindowManager requires non-null)
         JMenu menuForWindowManager = (windowMenu != null) ? windowMenu : new JMenu("Windows");
-        this.windowManager = new WindowManager(desktop, menuForWindowManager);
+        WindowManagerOptions options = new WindowManagerOptions();
+        options.Chooser.EXCLUDE_FRAME_LIST.setSelected(true);
+        this.windowManager = new WindowManager(desktop, menuForWindowManager, options);
 
         // Set default policies
         this.windowManager.setOutlineDragMode(true); // Better performance

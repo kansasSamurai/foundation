@@ -25,10 +25,10 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
-		<dependency>
-			<groupId>gr.zeus</groupId>
-			<artifactId>core</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>gr.zeus</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
 
     </dependencies>
 
