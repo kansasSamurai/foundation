@@ -3,7 +3,6 @@ package org.jwellman.foundation.examples;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -32,19 +31,21 @@ import org.jwellman.foundation.model.FrameDescriptor;
  * <p>
  * This panel provides a comprehensive frame management UI with:
  * <ul>
- * <li>Visual list of all registered frames</li>
+ * <li>Visual list of all registered frames (except the control panel)</li>
  * <li>Per-frame visibility toggle (show/hide)</li>
  * <li>Per-frame attach/detach to external window</li>
  * <li>Editable frame titles via context menu or double-click</li>
- * <li>Visual indication of frame state</li>
+ * <li>Visual status indicator (green=visible, grey=hidden)</li>
+ * <li>Event-driven updates - automatically refreshes when frames change</li>
  * </ul>
  * <p>
  * Design:
  * <ul>
- * <li>Each frame is represented by a FrameEntryPanel</li>
+ * <li>Each frame is represented by a FrameEntryPanel with 20px status indicator</li>
  * <li>Entry panels are stacked vertically in a scrollable container</li>
  * <li>Right-click or double-click title to edit</li>
  * <li>Buttons provide quick access to common operations</li>
+ * <li>Automatically updates via lifecycle listeners (no manual refresh needed)</li>
  * </ul>
  * <p>
  * This demonstrates how to build rich desktop management UIs on top of
@@ -85,13 +86,6 @@ public class AdvancedFrameManagerPanel extends JPanel {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Footer with refresh button
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(e -> refresh());
-        footer.add(refreshButton);
-        add(footer, BorderLayout.SOUTH);
-
         // Initial population
         refresh();
     }
@@ -100,24 +94,37 @@ public class AdvancedFrameManagerPanel extends JPanel {
      * Refreshes the frame list from the registry.
      */
     public void refresh() {
-        entriesContainer.removeAll();
+        // Use SwingUtilities.invokeLater to ensure thread safety
+        SwingUtilities.invokeLater(() -> {
+            entriesContainer.removeAll();
 
-        List<FrameDescriptor> allFrames = context.getRegistrations();
-        if (allFrames.isEmpty()) {
-            JLabel emptyLabel = new JLabel("No frames registered");
-            emptyLabel.setForeground(Color.GRAY);
-            emptyLabel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
-            entriesContainer.add(emptyLabel);
-        } else {
+            List<FrameDescriptor> allFrames = context.getRegistrations();
+
+            // Filter out the control panel
+            List<FrameDescriptor> filteredFrames = new java.util.ArrayList<>();
             for (FrameDescriptor descriptor : allFrames) {
-                FrameEntryPanel entryPanel = new FrameEntryPanel(descriptor, context);
-                entriesContainer.add(entryPanel);
-                entriesContainer.add(Box.createVerticalStrut(5)); // Spacing
+                // Skip the control panel - it's permanent and shouldn't be managed
+                if (!"control".equals(descriptor.getPanelId())) {
+                    filteredFrames.add(descriptor);
+                }
             }
-        }
 
-        entriesContainer.revalidate();
-        entriesContainer.repaint();
+            if (filteredFrames.isEmpty()) {
+                JLabel emptyLabel = new JLabel("No frames registered");
+                emptyLabel.setForeground(Color.GRAY);
+                emptyLabel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
+                entriesContainer.add(emptyLabel);
+            } else {
+                for (FrameDescriptor descriptor : filteredFrames) {
+                    FrameEntryPanel entryPanel = new FrameEntryPanel(descriptor, context, this);
+                    entriesContainer.add(entryPanel);
+                    entriesContainer.add(Box.createVerticalStrut(5)); // Spacing
+                }
+            }
+
+            entriesContainer.revalidate();
+            entriesContainer.repaint();
+        });
     }
 
     /**
@@ -129,20 +136,33 @@ public class AdvancedFrameManagerPanel extends JPanel {
 
         private final FrameDescriptor descriptor;
         private final uiContext context;
+        private final AdvancedFrameManagerPanel parentPanel;
         private final JLabel titleLabel;
         private final JButton visibilityButton;
         private final JButton attachDetachButton;
+        private final JPanel statusIndicator;
 
-        public FrameEntryPanel(FrameDescriptor descriptor, uiContext context) {
-            super(new GridBagLayout());
+        // Colors for status indicator
+        private static final Color VISIBLE_COLOR = new Color(144, 238, 144);    // Light green
+        private static final Color HIDDEN_COLOR = new Color(105, 105, 105);     // Dark grey
+
+        public FrameEntryPanel(FrameDescriptor descriptor, uiContext context, AdvancedFrameManagerPanel parentPanel) {
+            super(new BorderLayout());
             this.descriptor = descriptor;
             this.context = context;
+            this.parentPanel = parentPanel;
 
-            setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-                BorderFactory.createEmptyBorder(8, 8, 8, 8)
-            ));
+            setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
             setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+
+            // Create status indicator (left side, 20px wide)
+            statusIndicator = new JPanel();
+            statusIndicator.setPreferredSize(new Dimension(20, 0));
+            add(statusIndicator, BorderLayout.WEST);
+
+            // Create content panel with GridBagLayout for the rest
+            JPanel contentPanel = new JPanel(new GridBagLayout());
+            contentPanel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
             GridBagConstraints gbc = new GridBagConstraints();
             gbc.insets = new Insets(2, 2, 2, 2);
@@ -156,6 +176,7 @@ public class AdvancedFrameManagerPanel extends JPanel {
 
             JPanel infoPanel = new JPanel();
             infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+            infoPanel.setOpaque(false);
 
             // Frame ID
             JLabel idLabel = new JLabel(descriptor.getFullId());
@@ -177,7 +198,7 @@ public class AdvancedFrameManagerPanel extends JPanel {
             // Add edit functionality to title
             addTitleEditListeners();
 
-            add(infoPanel, gbc);
+            contentPanel.add(infoPanel, gbc);
 
             // Column 2: Visibility Toggle Button
             gbc.gridx = 1;
@@ -187,7 +208,7 @@ public class AdvancedFrameManagerPanel extends JPanel {
             visibilityButton = new JButton(descriptor.isVisible() ? "Hide" : "Show");
             visibilityButton.setPreferredSize(new Dimension(70, 25));
             visibilityButton.addActionListener(this::toggleVisibility);
-            add(visibilityButton, gbc);
+            contentPanel.add(visibilityButton, gbc);
 
             // Column 3: Attach/Detach Button
             gbc.gridx = 2;
@@ -195,7 +216,9 @@ public class AdvancedFrameManagerPanel extends JPanel {
             attachDetachButton = new JButton(descriptor.isDetached() ? "Attach" : "Detach");
             attachDetachButton.setPreferredSize(new Dimension(80, 25));
             attachDetachButton.addActionListener(this::toggleAttachDetach);
-            add(attachDetachButton, gbc);
+            contentPanel.add(attachDetachButton, gbc);
+
+            add(contentPanel, BorderLayout.CENTER);
 
             updateButtonStates();
         }
@@ -277,6 +300,10 @@ public class AdvancedFrameManagerPanel extends JPanel {
             // Use context.detachPanel() which toggles between attached/detached
             context.detachPanel(descriptor.getPanelId());
             updateButtonStates();
+
+            // Trigger a full refresh since detach doesn't fire lifecycle events
+            // This ensures all entry states are current
+            parentPanel.refresh();
         }
 
         /**
@@ -286,11 +313,11 @@ public class AdvancedFrameManagerPanel extends JPanel {
             visibilityButton.setText(descriptor.isVisible() ? "Hide" : "Show");
             attachDetachButton.setText(descriptor.isDetached() ? "Attach" : "Detach");
 
-            // Highlight panel if visible
+            // Update status indicator color based on visibility
             if (descriptor.isVisible()) {
-                setBackground(new Color(240, 248, 255)); // Light blue
+                statusIndicator.setBackground(VISIBLE_COLOR);  // Light green
             } else {
-                setBackground(null); // Default
+                statusIndicator.setBackground(HIDDEN_COLOR);   // Dark grey
             }
         }
     }

@@ -78,6 +78,7 @@ public class SilverTierShowcaseDemo {
     private static JList<String> panelListComponent;
     private static DefaultListModel<String> panelListModel;
     private static uiContext context;
+    private static AdvancedFrameManagerPanel advancedFrameManager;
 
     // Color palette for dynamic panels
     private static final Color[] PANEL_COLORS = {
@@ -130,9 +131,10 @@ public class SilverTierShowcaseDemo {
         statsPanel.setAttribute("permanent", true);
 
         // Create the advanced frame manager panel (hidden by default)
+        advancedFrameManager = new AdvancedFrameManagerPanel(context);
         FrameDescriptor advancedManagerPanel = context.registerUI(
             "advancedmanager",
-            new AdvancedFrameManagerPanel(context),
+            advancedFrameManager,
             createLifecycleListener("Advanced Frame Manager"),
             WindowPosition.at(100, 100, 600, 500)
         );
@@ -532,6 +534,9 @@ public class SilverTierShowcaseDemo {
             context.detachPanel("panel" + panelNum);
             updateStats();
             updatePanelList();
+            if (advancedFrameManager != null) {
+                advancedFrameManager.refresh();
+            }
         });
         viewMenu.add(detachItem);
 
@@ -590,6 +595,9 @@ public class SilverTierShowcaseDemo {
             context.detachPanel("panel" + panelNum);
             updateStats();
             updatePanelList();
+            if (advancedFrameManager != null) {
+                advancedFrameManager.refresh();
+            }
         });
 
         JButton closeButton = new JButton("Close This Panel");
@@ -625,12 +633,18 @@ public class SilverTierShowcaseDemo {
             public void onShow(IWindow window) {
                 logEvent("onShow", panelName);
                 updatePanelList();
+                if (advancedFrameManager != null) {
+                    advancedFrameManager.refresh();
+                }
             }
 
             @Override
             public void onHide(IWindow window) {
                 logEvent("onHide", panelName);
                 updatePanelList();
+                if (advancedFrameManager != null) {
+                    advancedFrameManager.refresh();
+                }
             }
 
             @Override
@@ -638,6 +652,9 @@ public class SilverTierShowcaseDemo {
                 logEvent("onClose", panelName);
                 updateStats();
                 updatePanelList();
+                if (advancedFrameManager != null) {
+                    advancedFrameManager.refresh();
+                }
             }
         };
     }
@@ -700,6 +717,10 @@ public class SilverTierShowcaseDemo {
             panelListModel.clear();
             List<FrameDescriptor> panelList = context.getRegistrations();
             for (FrameDescriptor reg : panelList ) {
+                // Skip the control panel - it's permanent and shouldn't be managed
+                if ("control".equals(reg.getPanelId())) {
+                    continue;
+                }
                 String visibility = (reg != null && reg.isVisible()) ? "●" : "○";
                 String entry = String.format("%s showcase:%s", visibility, reg.getPanel().getName());
                 panelListModel.addElement(entry);
