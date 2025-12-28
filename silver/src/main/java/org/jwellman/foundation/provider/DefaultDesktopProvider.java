@@ -4,6 +4,7 @@ import java.awt.Color;
 import javax.swing.JDesktopPane;
 import javax.swing.JMenuBar;
 
+import org.jwellman.foundation.interfaces.uiDesktopManager;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 
 /**
@@ -71,6 +72,7 @@ import org.jwellman.foundation.interfaces.uiDesktopProvider;
 public class DefaultDesktopProvider implements uiDesktopProvider {
 
     private JDesktopPane desktop;
+    private DefaultDesktopManager desktopManager;
 
     /**
      * Creates a standard JDesktopPane with default configuration.
@@ -93,6 +95,10 @@ public class DefaultDesktopProvider implements uiDesktopProvider {
 
         // Set a standard desktop background color
         desktop.setBackground(Color.LIGHT_GRAY);
+
+        // Create the desktop manager
+        // Note: No window menu by default (custom providers can provide one)
+        desktopManager = new DefaultDesktopManager(desktop);
 
         return desktop;
     }
@@ -128,11 +134,26 @@ public class DefaultDesktopProvider implements uiDesktopProvider {
     }
 
     /**
-     * 
+     * Returns the desktop pane created by this provider.
+     *
+     * @return The desktop pane
      */
     @Override
     public JDesktopPane getDesktop() {
         return desktop;
+    }
+
+    /**
+     * Returns the desktop manager for this desktop.
+     * <p>
+     * The manager provides desktop-wide operations (cascade, tile, minimize all, etc.)
+     * and is created automatically when the desktop is created.
+     *
+     * @return The desktop manager, or null if desktop not yet created
+     */
+    @Override
+    public uiDesktopManager getDesktopManager() {
+        return desktopManager;
     }
 
 }

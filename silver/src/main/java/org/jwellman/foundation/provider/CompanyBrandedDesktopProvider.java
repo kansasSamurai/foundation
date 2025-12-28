@@ -12,6 +12,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
+import org.jwellman.foundation.interfaces.uiDesktopManager;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 
 /**
@@ -51,6 +52,7 @@ import org.jwellman.foundation.interfaces.uiDesktopProvider;
 public class CompanyBrandedDesktopProvider implements uiDesktopProvider {
 
     private JDesktopPane desktop;
+    private DefaultDesktopManager desktopManager;
 
     // Corporate color scheme (matching CompanyBrandedSplashProvider)
     private static final Color CORPORATE_GREEN = new Color(34, 139, 34);
@@ -107,6 +109,10 @@ public class CompanyBrandedDesktopProvider implements uiDesktopProvider {
         // Alternative: OUTLINE_DRAG_MODE (faster but shows only outline)
         desktop.setDragMode(JDesktopPane.LIVE_DRAG_MODE);
 
+        // Create the desktop manager
+        // Note: Window menu will be created separately in createMenuBar()
+        desktopManager = new DefaultDesktopManager(desktop);
+
         return desktop;
     }
 
@@ -125,13 +131,13 @@ public class CompanyBrandedDesktopProvider implements uiDesktopProvider {
      * <p>
      * This implementation creates a professional desktop-level menu bar with:
      * <ul>
-     * <li><b>File menu</b> - Exit action</li>
-     * <li><b>Window menu</b> - Cascade, Tile, and Minimize All actions</li>
+     * <li><b>File menu</b> - New and Exit actions</li>
+     * <li><b>Window menu</b> - Cascade, Tile (grid/horizontal/vertical), Minimize All, and Restore All actions</li>
      * <li><b>Help menu</b> - About action</li>
      * </ul>
      * <p>
-     * Note: Menu actions are basic demonstrations. Production applications
-     * would implement full functionality (actual cascade/tile logic, etc.).
+     * The Window menu items are fully functional and delegate to the desktop manager
+     * for actual window arrangement and state management operations.
      *
      * @return A JMenuBar with File, Window, and Help menus
      */
@@ -169,37 +175,53 @@ public class CompanyBrandedDesktopProvider implements uiDesktopProvider {
 
         JMenuItem cascadeMenuItem = new JMenuItem("Cascade");
         cascadeMenuItem.addActionListener((ActionEvent e) -> {
-            JOptionPane.showMessageDialog(desktop,
-                "Cascade would arrange windows diagonally.\n" +
-                "This is a demo placeholder - full implementation in Silver tier.",
-                "Cascade Windows", JOptionPane.INFORMATION_MESSAGE);
+            if (desktopManager != null) {
+                desktopManager.cascadeFrames();
+            }
         });
         windowMenu.add(cascadeMenuItem);
 
         JMenuItem tileMenuItem = new JMenuItem("Tile");
         tileMenuItem.addActionListener((ActionEvent e) -> {
-            JOptionPane.showMessageDialog(desktop,
-                "Tile would arrange windows in a grid.\n" +
-                "This is a demo placeholder - full implementation in Silver tier.",
-                "Tile Windows", JOptionPane.INFORMATION_MESSAGE);
+            if (desktopManager != null) {
+                desktopManager.tileFrames();
+            }
         });
         windowMenu.add(tileMenuItem);
+
+        JMenuItem tileHorizontalMenuItem = new JMenuItem("Tile Horizontally");
+        tileHorizontalMenuItem.addActionListener((ActionEvent e) -> {
+            if (desktopManager != null) {
+                desktopManager.tileFramesHorizontal();
+            }
+        });
+        windowMenu.add(tileHorizontalMenuItem);
+
+        JMenuItem tileVerticalMenuItem = new JMenuItem("Tile Vertically");
+        tileVerticalMenuItem.addActionListener((ActionEvent e) -> {
+            if (desktopManager != null) {
+                desktopManager.tileFramesVertical();
+            }
+        });
+        windowMenu.add(tileVerticalMenuItem);
 
         windowMenu.addSeparator();
 
         JMenuItem minimizeAllMenuItem = new JMenuItem("Minimize All");
         minimizeAllMenuItem.addActionListener((ActionEvent e) -> {
-            // Actually implement minimize all
-            try {
-                javax.swing.JInternalFrame[] frames = desktop.getAllFrames();
-                for (javax.swing.JInternalFrame frame : frames) {
-                    frame.setIcon(true);
-                }
-            } catch (java.beans.PropertyVetoException ex) {
-                // Ignore veto
+            if (desktopManager != null) {
+                desktopManager.minimizeAll();
             }
         });
         windowMenu.add(minimizeAllMenuItem);
+
+        JMenuItem restoreAllMenuItem = new JMenuItem("Restore All");
+        restoreAllMenuItem.addActionListener((ActionEvent e) -> {
+            if (desktopManager != null) {
+                desktopManager.restoreAll();
+            }
+        });
+        windowMenu.add(restoreAllMenuItem);
 
         // Help Menu
         JMenu helpMenu = new JMenu("Help");
@@ -251,6 +273,23 @@ public class CompanyBrandedDesktopProvider implements uiDesktopProvider {
         System.out.println("Menu bar: Enabled (File, Window, Help)");
         System.out.println("Background: Custom gradient (GRADIENT_START -> GRADIENT_END)");
         System.out.println("===========================================");
+    }
+
+    /**
+     * Returns the desktop manager for this desktop.
+     * <p>
+     * The manager provides desktop-wide operations (cascade, tile, minimize all, etc.)
+     * and is created automatically when the desktop is created.
+     * <p>
+     * Note: The Window menu in createMenuBar() currently shows placeholder messages.
+     * To integrate with the desktop manager, menu items can be updated to call
+     * desktopManager methods (e.g., desktopManager.cascadeFrames()).
+     *
+     * @return The desktop manager, or null if desktop not yet created
+     */
+    @Override
+    public uiDesktopManager getDesktopManager() {
+        return desktopManager;
     }
 
 }
