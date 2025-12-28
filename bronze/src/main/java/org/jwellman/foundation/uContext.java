@@ -12,7 +12,7 @@ import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.interfaces.uiThemeProvider;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.swing.XPanel;
 
 /**
@@ -38,9 +38,9 @@ public class uContext implements uiContext {
      * Panel registry for this context.
      * <p>
      * Key: panelId (e.g., "main", "settings", "history")
-     * Value: PanelRegistration metadata
+     * Value: FrameDescriptor metadata
      */
-    private final Map<String, PanelRegistration> panelRegistry = new HashMap<>();
+    private final Map<String, FrameDescriptor> panelRegistry = new HashMap<>();
 
     /**
      * The main user interface for this application context.
@@ -49,7 +49,7 @@ public class uContext implements uiContext {
      * 2) This user interface, by default, is considered to control the <br>
      *    application's lifecycle (particularly the ending)
      */
-    private PanelRegistration masterPanel;
+    private FrameDescriptor masterPanel;
 
     /**
      * The look and feel class to use (will be ignored in
@@ -177,7 +177,7 @@ public class uContext implements uiContext {
      * @throws IllegalArgumentException if panelId is already registered
      */
     @Override
-    public void registerPanel(String panelId, PanelRegistration registration) {
+    public void registerPanel(String panelId, FrameDescriptor registration) {
         if (panelRegistry.containsKey(panelId)) {
             throw new IllegalArgumentException(
                     "Panel already registered in context '" + namespace + "': " + panelId);
@@ -189,12 +189,12 @@ public class uContext implements uiContext {
      * 
      */
     @Override
-    public PanelRegistration registerMasterPanel(String panelId, JPanel panel) {
+    public FrameDescriptor registerMasterPanel(String panelId, JPanel panel) {
         if (panelRegistry.containsKey(panelId)) {
             throw new IllegalArgumentException(
                     "Panel already registered in context '" + namespace + "': " + panelId);
         }
-        PanelRegistration reg = registerUI(panelId, panel);
+        FrameDescriptor reg = registerUI(panelId, panel);
         return this.registerMasterPanel(reg);
     }
 
@@ -203,7 +203,7 @@ public class uContext implements uiContext {
      * @param reg
      */
     @Override
-    public PanelRegistration registerMasterPanel(PanelRegistration reg) {
+    public FrameDescriptor registerMasterPanel(FrameDescriptor reg) {
         masterPanel = reg;
         return reg;
     }
@@ -212,7 +212,7 @@ public class uContext implements uiContext {
      * 
      */
     @Override
-    public PanelRegistration getMasterPanel() {
+    public FrameDescriptor getMasterPanel() {
         return masterPanel;
     }
 
@@ -220,20 +220,20 @@ public class uContext implements uiContext {
      * Get a panel registration by panelId.
      *
      * @param panelId The panel identifier
-     * @return The PanelRegistration, or null if not found
+     * @return The FrameDescriptor, or null if not found
      */
     @Override
-    public PanelRegistration getPanelRegistration(String panelId) {
+    public FrameDescriptor getFrameDescriptor(String panelId) {
         return panelRegistry.get(panelId);
     }
 
     /**
      * Get all panel registrations in this context.
      *
-     * @return Map of panelId to PanelRegistration
+     * @return Map of panelId to FrameDescriptor
      */
     @Override
-    public Map<String, PanelRegistration> getAllPanelRegistrations() {
+    public Map<String, FrameDescriptor> getAllFrameDescriptors() {
         return new HashMap<>(panelRegistry);
     }
 
@@ -241,10 +241,10 @@ public class uContext implements uiContext {
      * Remove a panel from this context's registry.
      *
      * @param panelId The panel identifier
-     * @return The removed PanelRegistration, or null if not found
+     * @return The removed FrameDescriptor, or null if not found
      */
     @Override
-    public PanelRegistration removePanelRegistration(String panelId) {
+    public FrameDescriptor removeFrameDescriptor(String panelId) {
         return panelRegistry.remove(panelId);
     }
 
@@ -255,7 +255,7 @@ public class uContext implements uiContext {
      * @return true if registered, false otherwise
      */
     @Override
-    public boolean hasPanelRegistration(String panelId) {
+    public boolean hasFrameDescriptor(String panelId) {
         return panelRegistry.containsKey(panelId);
     }
 
@@ -264,9 +264,9 @@ public class uContext implements uiContext {
      *
      * @param panelId Unique ID within this context's namespace (e.g., "main", "settings", "history")
      * @param ui The JPanel to register
-     * @return The PanelRegistration for this panel
+     * @return The FrameDescriptor for this panel
      */
-    public PanelRegistration registerUI(String panelId, JPanel ui) {
+    public FrameDescriptor registerUI(String panelId, JPanel ui) {
         return registerUI(panelId, ui, null, null);
     }
 
@@ -276,9 +276,9 @@ public class uContext implements uiContext {
      * @param panelId Unique ID within this context's namespace
      * @param ui The JPanel to register
      * @param position Window positioning strategy
-     * @return The PanelRegistration for this panel
+     * @return The FrameDescriptor for this panel
      */
-    public PanelRegistration registerUI(String panelId, JPanel ui, WindowPosition position) {
+    public FrameDescriptor registerUI(String panelId, JPanel ui, WindowPosition position) {
         return registerUI(panelId, ui, null, position);
     }
 
@@ -289,15 +289,33 @@ public class uContext implements uiContext {
      * @param ui The JPanel to register
      * @param listener Lifecycle event listener (may be null)
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
-     * @return The PanelRegistration for this panel
+     * @return The FrameDescriptor for this panel
      */
-    public PanelRegistration registerUI(String panelId, JPanel ui, uiPanelLifecycleListener listener, WindowPosition position) {
+    public FrameDescriptor registerUI(String panelId, JPanel ui, uiPanelLifecycleListener listener, WindowPosition position) {
+        return registerUI(panelId, ui, null, listener, position);
+    }
+
+    /**
+     * Register a panel with menu bar, lifecycle listener, and window positioning.
+     * <p>
+     * This is the most complete registerUI overload, providing all optional parameters.
+     * The menu bar must be provided at registration time and cannot be changed later
+     * (FrameDescriptor is mostly immutable).
+     *
+     * @param panelId Unique ID within this context's namespace
+     * @param ui The JPanel to register
+     * @param menuBar Optional menu bar for this panel (may be null)
+     * @param listener Lifecycle event listener (may be null)
+     * @param position Window positioning strategy (may be null, defaults to CASCADE)
+     * @return The FrameDescriptor for this panel
+     */
+    public FrameDescriptor registerUI(String panelId, JPanel ui, javax.swing.JMenuBar menuBar, uiPanelLifecycleListener listener, WindowPosition position) {
 
         // Get or create the uContext for this namespace
         uiContext ctx = this;
 
         // Check if panel already registered in this context
-        if (ctx.hasPanelRegistration(panelId)) {
+        if (ctx.hasFrameDescriptor(panelId)) {
             throw new IllegalArgumentException(
                     "Panel already registered: " + namespace + ":" + panelId +
                     ". Each panel must have a unique namespace:panelId combination.");
@@ -310,7 +328,7 @@ public class uContext implements uiContext {
         xpanel.setName(fullId);
 
         // Create registration and immediately register in the context
-        PanelRegistration reg = new PanelRegistration(namespace, panelId, xpanel, listener);
+        FrameDescriptor reg = new FrameDescriptor(namespace, panelId, xpanel, menuBar, listener);
         ctx.registerPanel(panelId, reg);
 
         // Set positioning (or use default CASCADE)
@@ -383,12 +401,12 @@ public class uContext implements uiContext {
     /**
      * Get all panel registrations in this context as a list.
      * <p>
-     * Convenience method for getAllPanelRegistrations().values().
+     * Convenience method for getAllFrameDescriptors().values().
      *
-     * @return List of PanelRegistrations (may be empty, never null)
+     * @return List of FrameDescriptors (may be empty, never null)
      */
     @Override
-    public java.util.List<PanelRegistration> getRegistrations() {
+    public java.util.List<FrameDescriptor> getRegistrations() {
         return foundation.getRegistrations(namespace);
     }
 

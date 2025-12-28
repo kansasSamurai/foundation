@@ -14,7 +14,7 @@ import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.interfaces.uiContext;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.swing.IWindow;
 
 /**
@@ -54,14 +54,14 @@ public class MultiPanelDesktopDemo {
 
         // Step 2 - Register Calculator tool with main and history panels
         System.out.println("=== Registering Calculator Tool ===");
-        PanelRegistration calcMainPanel = context.registerUI(
+        FrameDescriptor calcMainPanel = context.registerUI(
                 "main", // "tool.calculator",
                 createCalculatorPanel(context),
                 createLifecycleListener("Calculator Main"),
                 WindowPosition.cascade()
         );
 
-        PanelRegistration calcHistoryPanel = context.registerUI(
+        FrameDescriptor calcHistoryPanel = context.registerUI(
                 "history", // "tool.calculator.history",
                 createHistoryPanel(),
                 createLifecycleListener("Calculator History"),
@@ -71,7 +71,7 @@ public class MultiPanelDesktopDemo {
         // Step 3 - Register Text Editor tool
         System.out.println("=== Registering Text Editor Tool ===");
         uiContext c2 = Foundation.createContext("tool.editor");
-        PanelRegistration editorPanel = c2.registerUI(
+        FrameDescriptor editorPanel = c2.registerUI(
                 "main",
                 createToolPanel("Text Editor", Color.WHITE),
                 createLifecycleListener("Text Editor"),
@@ -83,7 +83,7 @@ public class MultiPanelDesktopDemo {
 
         System.out.println("=== Registering File Browser Tool ===");
         uiContext c3 = Foundation.createContext("tool.browser");
-        PanelRegistration browserPanel = c3.registerUI(
+        FrameDescriptor browserPanel = c3.registerUI(
                 "main",
                 createToolPanel("File Browser", new Color(230, 240, 255)),
                 createLifecycleListener("File Browser"),
@@ -92,7 +92,7 @@ public class MultiPanelDesktopDemo {
         c3.registerMasterPanel(browserPanel);
 
         // Step 5 - Create control panel for managing panels
-        PanelRegistration controlPanel = context.registerUI(
+        FrameDescriptor controlPanel = context.registerUI(
                 "system",
                 createControlPanel(context, c2, c3),
                 createLifecycleListener("Control Panel"),

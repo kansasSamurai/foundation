@@ -6,7 +6,7 @@ import java.util.Map;
 import javax.swing.JPanel;
 
 import org.jwellman.foundation.framework.WindowPosition;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 
 /**
  * Strategy interface for a Foundation application context.
@@ -170,7 +170,7 @@ public interface uiContext {
      * @param registration The panel registration
      * @throws IllegalArgumentException if panelId is already registered
      */
-    void registerPanel(String panelId, PanelRegistration registration);
+    void registerPanel(String panelId, FrameDescriptor registration);
 
     /**
      * Register the "master" panel of an application context.
@@ -178,44 +178,44 @@ public interface uiContext {
      * @param panelId
      * @param panel
      */
-    PanelRegistration registerMasterPanel(String string, JPanel panel);
+    FrameDescriptor registerMasterPanel(String string, JPanel panel);
 
     /**
      * Register the "master" panel of an application context.
      *
-     * @param reg, the PanelRegistration designated as the master.
+     * @param reg, the FrameDescriptor designated as the master.
      */
-    PanelRegistration registerMasterPanel(PanelRegistration reg);
+    FrameDescriptor registerMasterPanel(FrameDescriptor reg);
 
     /**
      * Retrieve the "master" panel of an application context.
      *
-     * @return The master PanelRegistration
+     * @return The master FrameDescriptor
      */
-    PanelRegistration getMasterPanel();
+    FrameDescriptor getMasterPanel();
 
     /**
      * Get a panel registration by panelId.
      *
      * @param panelId The panel identifier
-     * @return The PanelRegistration, or null if not found
+     * @return The FrameDescriptor, or null if not found
      */
-    PanelRegistration getPanelRegistration(String panelId);
+    FrameDescriptor getFrameDescriptor(String panelId);
 
     /**
      * Get all panel registrations in this context.
      *
-     * @return Map of panelId to PanelRegistration
+     * @return Map of panelId to FrameDescriptor
      */
-    Map<String, PanelRegistration> getAllPanelRegistrations();
+    Map<String, FrameDescriptor> getAllFrameDescriptors();
 
     /**
      * Remove a panel from this context's registry.
      *
      * @param panelId The panel identifier
-     * @return The removed PanelRegistration, or null if not found
+     * @return The removed FrameDescriptor, or null if not found
      */
-    PanelRegistration removePanelRegistration(String panelId);
+    FrameDescriptor removeFrameDescriptor(String panelId);
 
     /**
      * Check if a panel is registered in this context.
@@ -223,16 +223,16 @@ public interface uiContext {
      * @param panelId The panel identifier
      * @return true if registered, false otherwise
      */
-    boolean hasPanelRegistration(String panelId);
+    boolean hasFrameDescriptor(String panelId);
 
     /**
      * Register a panel with required panel ID.
      *
      * @param panelId Unique ID within this context's namespace (e.g., "main", "settings", "history")
      * @param ui The JPanel to register
-     * @return The PanelRegistration for this panel
+     * @return The FrameDescriptor for this panel
      */
-    PanelRegistration registerUI(String panelId, JPanel ui);
+    FrameDescriptor registerUI(String panelId, JPanel ui);
 
     /**
      * Register a panel with window positioning.
@@ -240,9 +240,9 @@ public interface uiContext {
      * @param panelId Unique ID within this context's namespace
      * @param ui The JPanel to register
      * @param position Window positioning strategy
-     * @return The PanelRegistration for this panel
+     * @return The FrameDescriptor for this panel
      */
-    PanelRegistration registerUI(String panelId, JPanel ui, WindowPosition position);
+    FrameDescriptor registerUI(String panelId, JPanel ui, WindowPosition position);
 
     /**
      * Register a panel with lifecycle listener and window positioning.
@@ -251,9 +251,25 @@ public interface uiContext {
      * @param ui The JPanel to register
      * @param listener Lifecycle event listener (may be null)
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
-     * @return The PanelRegistration for this panel
+     * @return The FrameDescriptor for this panel
      */
-    PanelRegistration registerUI(String panelId, JPanel ui, uiPanelLifecycleListener listener, WindowPosition position);
+    FrameDescriptor registerUI(String panelId, JPanel ui, uiPanelLifecycleListener listener, WindowPosition position);
+
+    /**
+     * Register a panel with menu bar, lifecycle listener, and window positioning.
+     * <p>
+     * This is the most complete registerUI overload, providing all optional parameters.
+     * The menu bar must be provided at registration time and cannot be changed later
+     * (FrameDescriptor is mostly immutable).
+     *
+     * @param panelId Unique ID within this context's namespace
+     * @param ui The JPanel to register
+     * @param menuBar Optional menu bar for this panel (may be null)
+     * @param listener Lifecycle event listener (may be null)
+     * @param position Window positioning strategy (may be null, defaults to CASCADE)
+     * @return The FrameDescriptor for this panel
+     */
+    FrameDescriptor registerUI(String panelId, JPanel ui, javax.swing.JMenuBar menuBar, uiPanelLifecycleListener listener, WindowPosition position);
 
     /**
      * Close a panel and remove it from this context's registry.
@@ -306,10 +322,10 @@ public interface uiContext {
     /**
      * Get all panel registrations in this context as a list.
      * <p>
-     * Convenience method for getAllPanelRegistrations().values().
+     * Convenience method for getAllFrameDescriptors().values().
      *
-     * @return List of PanelRegistrations (may be empty, never null)
+     * @return List of FrameDescriptors (may be empty, never null)
      */
-    java.util.List<PanelRegistration> getRegistrations();
+    java.util.List<FrameDescriptor> getRegistrations();
 
 }

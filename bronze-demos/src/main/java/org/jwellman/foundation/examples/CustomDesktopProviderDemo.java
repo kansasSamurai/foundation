@@ -12,7 +12,7 @@ import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.provider.CompanyBrandedDesktopProvider;
 import org.jwellman.foundation.swing.IWindow;
 
@@ -63,7 +63,7 @@ public class CustomDesktopProviderDemo {
         System.out.println("\n=== Registering Application Panels ===");
 
         // Main application panel
-        PanelRegistration mainPanel = context.registerUI(
+        FrameDescriptor mainPanel = context.registerUI(
             "main",
             createApplicationPanel("Main Application", Color.WHITE,
                 "This is the main application window.\n\n" +
@@ -77,7 +77,7 @@ public class CustomDesktopProviderDemo {
         );
 
         // Tool panel 1
-        PanelRegistration toolPanel1 = context.registerUI(
+        FrameDescriptor toolPanel1 = context.registerUI(
             "tool1",
             createApplicationPanel("Calculator Tool", new Color(255, 250, 240),
                 "This simulates a calculator tool.\n\n" +
@@ -91,7 +91,7 @@ public class CustomDesktopProviderDemo {
         );
 
         // Tool panel 2
-        PanelRegistration toolPanel2 = context.registerUI(
+        FrameDescriptor toolPanel2 = context.registerUI(
             "tool2",
             createApplicationPanel("Editor Tool", new Color(240, 255, 240),
                 "This simulates an editor tool.\n\n" +
@@ -105,7 +105,7 @@ public class CustomDesktopProviderDemo {
         );
 
         // Info panel
-        PanelRegistration infoPanel = context.registerUI(
+        FrameDescriptor infoPanel = context.registerUI(
             "info",
             createInfoPanel(),
             createLifecycleListener("Info Panel"),

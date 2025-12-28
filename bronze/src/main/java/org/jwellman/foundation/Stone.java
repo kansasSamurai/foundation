@@ -20,7 +20,7 @@ import org.jwellman.foundation.framework.LAFDiscovery;
 import org.jwellman.foundation.framework.uUtility;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.provider.DefaultDesktopProvider;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
@@ -516,11 +516,11 @@ public class Stone {
     /**
      * UPDATE DEC 2025: I hate this name - needs to be showWindow but not conflict with bronze._showWindow()
      * 
-     * Overloaded launchWindow that takes PanelRegistration object.
+     * Overloaded launchWindow that takes FrameDescriptor object.
      * 
      * @param masterPanel
      */
-    public IWindow launchWindow(PanelRegistration reg) {
+    public IWindow launchWindow(FrameDescriptor reg) {
         reg.setVisible(true);
 
         IWindow w = reg.getWindow();
@@ -548,7 +548,7 @@ public class Stone {
      * UPDATE DEC 2025: I hate this name - needs to be showWindow but not conflict with bronze._showWindow()
      * Also, it is starting to feel like these launchWindow() methods may not be
      * the way I want to go since most show/hide window is done via the
-     * uiContext/PanelRegistration.
+     * uiContext/FrameDescriptor.
      * 
      * Launches multiple windows, making them visible to the user.
      * Primarily used in desktop mode to launch multiple internal frames.
@@ -610,7 +610,7 @@ public class Stone {
                     // temporary
                     w.setTitle(uUtility.valueOrDefault(w.getTitle(), "iwindow"));
 
-                    // need access to PanelRegistration to get WindowPosition and call apply()
+                    // need access to FrameDescriptor to get WindowPosition and call apply()
                     w.setVisible(true);
 
                     log.debug("JDesktopPane stone: {}", uUtility.objString(desktop));

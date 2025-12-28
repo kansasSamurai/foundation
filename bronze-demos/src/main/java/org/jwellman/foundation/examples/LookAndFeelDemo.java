@@ -20,7 +20,7 @@ import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.framework.LAFDiscovery.LAFInfo;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.provider.DefaultSplashProvider;
 
 /**
@@ -64,7 +64,7 @@ public class LookAndFeelDemo {
 
         // Create UI
         JPanel ui = createUI(selectedLAF);
-        PanelRegistration mainPanel = context.registerUI("master", ui, WindowPosition.center());
+        FrameDescriptor mainPanel = context.registerUI("master", ui, WindowPosition.center());
         context.registerMasterPanel(mainPanel);
 
         // Continue initializing the app (data, database, network, whatever)

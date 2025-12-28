@@ -17,8 +17,13 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -31,32 +36,34 @@ import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
-import org.jwellman.foundation.model.PanelRegistration;
+import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.swing.IWindow;
 
 /**
- * Comprehensive Bronze Tier showcase demonstrating four key features in one interactive demo:
+ * Comprehensive Silver Tier showcase demonstrating key features in one interactive demo:
  * <ol>
  * <li><b>Window Positioning</b> - CASCADE, CENTER, EXPLICIT positioning strategies</li>
  * <li><b>Panel Lifecycle</b> - onCreate, onShow, onHide, onClose event tracking</li>
  * <li><b>Dynamic Panel Management</b> - Runtime panel creation, removal, show/hide, registry queries</li>
  * <li><b>Panel Detach/Attach</b> - Toggle panels between internal frames (desktop) and external frames (standalone windows)</li>
+ * <li><b>Menu Bar Support</b> - Optional menu bars on panels that transfer during detach/attach operations</li>
  * </ol>
  * <p>
  * This interactive demo provides:
  * <ul>
  * <li>Control panel for creating panels with different positioning strategies</li>
+ * <li>Optional menu bar creation for dynamic panels</li>
  * <li>Real-time lifecycle event log visible in the UI</li>
  * <li>Registry statistics showing namespace and panel counts</li>
  * <li>Interactive panel management (show/hide/close/detach)</li>
  * <li>Visual demonstration of positioning strategies</li>
  * <li>Panel list showing all registered panels with controls</li>
- * <li>IDE-like panel detaching - "pop out" panels to standalone windows or dock them back</li>
+ * <li>IDE-like panel detaching - "pop out" panels to standalone windows or dock them back (menu bars transfer automatically)</li>
  * </ul>
  * <p>
  * Run with:
  * <pre>
- * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.BronzeTierShowcaseDemo"
+ * mvn compile exec:java -Dexec.mainClass="org.jwellman.foundation.examples.SilverTierShowcaseDemo"
  * </pre>
  *
  * @author Foundation Framework
@@ -89,12 +96,12 @@ public class BronzeTierShowcaseDemo {
         // Initialize context
         context = Foundation.createContext("showcase");
         context.setDesktopMode(true);
-        context.setDesktopTitle("Bronze Tier Framework Showcase - Interactive Demo");
+        context.setDesktopTitle("Silver Tier Framework Showcase - Interactive Demo");
 
         Foundation.init(context);
 
         // Create the main control panel (left side)
-        PanelRegistration controlPanel = context.registerUI(
+        FrameDescriptor controlPanel = context.registerUI(
             "control",
             createControlPanel(),
             createLifecycleListener("Control Panel"),
@@ -103,7 +110,7 @@ public class BronzeTierShowcaseDemo {
         controlPanel.setAttribute("permanent", true);
 
         // Create the event log panel (right side)
-        PanelRegistration eventLogPanel = context.registerUI(
+        FrameDescriptor eventLogPanel = context.registerUI(
             "eventlog",
             createEventLogPanel(),
             createLifecycleListener("Event Log"),
@@ -112,7 +119,7 @@ public class BronzeTierShowcaseDemo {
         eventLogPanel.setAttribute("permanent", true);
 
         // Create the registry stats panel (right side, below event log)
-        PanelRegistration statsPanel = context.registerUI(
+        FrameDescriptor statsPanel = context.registerUI(
             "stats",
             createStatsPanel(),
             createLifecycleListener("Registry Stats"),
@@ -242,6 +249,13 @@ public class BronzeTierShowcaseDemo {
         section.add(radioPanel);
         section.add(Box.createVerticalStrut(8));
 
+        // Menu bar option checkbox
+        JCheckBox menuBarCheckbox = new JCheckBox("Include menu bar with File and View menus");
+        menuBarCheckbox.setOpaque(false);
+        menuBarCheckbox.setAlignmentX(JCheckBox.LEFT_ALIGNMENT);
+        section.add(menuBarCheckbox);
+        section.add(Box.createVerticalStrut(8));
+
         // Create button
         JButton createButton = new JButton("Create Panel with Selected Strategy");
         createButton.setAlignmentX(JButton.LEFT_ALIGNMENT);
@@ -266,7 +280,8 @@ public class BronzeTierShowcaseDemo {
                 strategyName = "CASCADE";
             }
 
-            createDynamicPanel(strategyName, position);
+            boolean includeMenuBar = menuBarCheckbox.isSelected();
+            createDynamicPanel(strategyName, position, includeMenuBar);
         });
         section.add(createButton);
 
@@ -422,17 +437,21 @@ public class BronzeTierShowcaseDemo {
     /**
      * Creates a dynamic panel with the specified positioning strategy.
      */
-    private static void createDynamicPanel(String strategyName, WindowPosition position) {
+    private static void createDynamicPanel(String strategyName, WindowPosition position, boolean includeMenuBar) {
         int panelNum = panelCounter.getAndIncrement();
         String panelId = "panel" + panelNum;
 
         // Create panel content
         JPanel content = createDynamicPanelContent(panelNum, strategyName);
 
-        // Register panel
-        PanelRegistration registration = context.registerUI(
+        // Create menu bar if requested (must be created before registerUI)
+        JMenuBar menuBar = includeMenuBar ? createSampleMenuBar(panelNum) : null;
+
+        // Register panel with menu bar
+        FrameDescriptor registration = context.registerUI(
             panelId,
             content,
+            menuBar,
             createLifecycleListener("Dynamic Panel #" + panelNum),
             position
         );
@@ -446,6 +465,70 @@ public class BronzeTierShowcaseDemo {
         updatePanelList();
 
         logEvent("CREATED", "Panel #" + panelNum + " with " + strategyName + " positioning");
+    }
+
+    /**
+     * Creates a sample menu bar for demonstration purposes.
+     */
+    private static JMenuBar createSampleMenuBar(final int panelNum) {
+        JMenuBar menuBar = new JMenuBar();
+
+        // File menu
+        JMenu fileMenu = new JMenu("File");
+        JMenuItem newItem = new JMenuItem("New");
+        newItem.addActionListener(e ->
+            JOptionPane.showMessageDialog(null,
+                "New action for Panel #" + panelNum,
+                "File Menu",
+                JOptionPane.INFORMATION_MESSAGE));
+        fileMenu.add(newItem);
+
+        JMenuItem saveItem = new JMenuItem("Save");
+        saveItem.addActionListener(e ->
+            JOptionPane.showMessageDialog(null,
+                "Save action for Panel #" + panelNum,
+                "File Menu",
+                JOptionPane.INFORMATION_MESSAGE));
+        fileMenu.add(saveItem);
+
+        fileMenu.addSeparator();
+
+        JMenuItem exitItem = new JMenuItem("Close Panel");
+        exitItem.addActionListener(e -> {
+            context.closePanel("panel" + panelNum);
+            updateStats();
+            updatePanelList();
+        });
+        fileMenu.add(exitItem);
+
+        menuBar.add(fileMenu);
+
+        // View menu
+        JMenu viewMenu = new JMenu("View");
+        JMenuItem detachItem = new JMenuItem("Detach/Attach");
+        detachItem.addActionListener(e -> {
+            context.detachPanel("panel" + panelNum);
+            updateStats();
+            updatePanelList();
+        });
+        viewMenu.add(detachItem);
+
+        viewMenu.addSeparator();
+
+        JMenuItem aboutItem = new JMenuItem("About Panel");
+        aboutItem.addActionListener(e ->
+            JOptionPane.showMessageDialog(null,
+                "Dynamic Panel #" + panelNum + "\n" +
+                "Full ID: showcase:panel" + panelNum + "\n\n" +
+                "This menu bar is automatically transferred\n" +
+                "when detaching/attaching the panel!",
+                "About",
+                JOptionPane.INFORMATION_MESSAGE));
+        viewMenu.add(aboutItem);
+
+        menuBar.add(viewMenu);
+
+        return menuBar;
     }
 
     /**
@@ -560,8 +643,8 @@ public class BronzeTierShowcaseDemo {
         javax.swing.SwingUtilities.invokeLater(() -> {
             int visibleCount = 0;
             int hiddenCount = 0;
-            List<PanelRegistration> allPanels = context.getRegistrations();
-            for (PanelRegistration reg : allPanels ) {
+            List<FrameDescriptor> allPanels = context.getRegistrations();
+            for (FrameDescriptor reg : allPanels ) {
                 if (reg != null && reg.isVisible()) {
                     visibleCount++;
                 } else {
@@ -577,7 +660,7 @@ public class BronzeTierShowcaseDemo {
             stats.append("Hidden Panels: ").append(hiddenCount).append("<br><br>");
 
             stats.append("<br><b>All Panels:</b><br>");
-            for (PanelRegistration reg : allPanels ) {
+            for (FrameDescriptor reg : allPanels ) {
                 String visibility = (reg != null && reg.isVisible()) ? "VISIBLE" : "HIDDEN";
                 stats.append("• showcase:").append(reg.getPanel().getName()).append(" [").append(visibility).append("]<br>");
             }
@@ -593,8 +676,8 @@ public class BronzeTierShowcaseDemo {
     private static void updatePanelList() {
         javax.swing.SwingUtilities.invokeLater(() -> {
             panelListModel.clear();
-            List<PanelRegistration> panelList = context.getRegistrations();
-            for (PanelRegistration reg : panelList ) {
+            List<FrameDescriptor> panelList = context.getRegistrations();
+            for (FrameDescriptor reg : panelList ) {
                 String visibility = (reg != null && reg.isVisible()) ? "●" : "○";
                 String entry = String.format("%s showcase:%s", visibility, reg.getPanel().getName());
                 panelListModel.addElement(entry);
@@ -606,8 +689,8 @@ public class BronzeTierShowcaseDemo {
      * Shows all panels.
      */
     private static void showAllPanels() {
-        List<PanelRegistration> panelList = context.getRegistrations();
-        for (PanelRegistration panel : panelList ) {
+        List<FrameDescriptor> panelList = context.getRegistrations();
+        for (FrameDescriptor panel : panelList ) {
             panel.show();
         }
         updateStats();
@@ -620,8 +703,8 @@ public class BronzeTierShowcaseDemo {
      * Uses the "dynamic" attribute to identify which panels to hide.
      */
     private static void hideAllDynamicPanels() {
-        List<PanelRegistration> allPanels = context.getRegistrations();
-        for (PanelRegistration reg : allPanels ) {
+        List<FrameDescriptor> allPanels = context.getRegistrations();
+        for (FrameDescriptor reg : allPanels ) {
             if (isPanelDynamic(reg)) {
                 reg.hide();
             }
@@ -636,8 +719,8 @@ public class BronzeTierShowcaseDemo {
      * Uses the "dynamic" attribute to identify which panels to close.
      */
     private static void closeAllDynamicPanels() {
-        List<PanelRegistration> allPanels = context.getRegistrations();
-        for (PanelRegistration reg : allPanels ) {
+        List<FrameDescriptor> allPanels = context.getRegistrations();
+        for (FrameDescriptor reg : allPanels ) {
             if (isPanelDynamic(reg)) reg.getWindow().close();
             // This does not actual remove from uiContext but close enough for demo app
         }
@@ -654,7 +737,7 @@ public class BronzeTierShowcaseDemo {
      * @param reg the panel registration to check
      * @return true if the panel is dynamic, false if permanent
      */
-    private static boolean isPanelDynamic(PanelRegistration reg) {
+    private static boolean isPanelDynamic(FrameDescriptor reg) {
         return Boolean.TRUE.equals(reg.getAttribute("dynamic"));
     }
 
