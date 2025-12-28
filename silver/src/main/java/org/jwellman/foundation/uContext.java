@@ -1,12 +1,16 @@
 package org.jwellman.foundation;
 
 import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import org.jwellman.foundation.framework.WindowPosition;
+import org.jwellman.foundation.interfaces.RegistryChangeListener;
 import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
@@ -41,6 +45,14 @@ public class uContext implements uiContext {
      * Value: FrameDescriptor metadata
      */
     private final Map<String, FrameDescriptor> panelRegistry = new HashMap<>();
+
+    /**
+     * Registry change listeners (Silver tier feature).
+     * <p>
+     * Listeners are notified whenever the registry changes (panel added,
+     * removed, visibility changed, detached, etc.)
+     */
+    private final List<RegistryChangeListener> registryChangeListeners = new ArrayList<>();
 
     /**
      * The main user interface for this application context.
@@ -182,7 +194,14 @@ public class uContext implements uiContext {
             throw new IllegalArgumentException(
                     "Panel already registered in context '" + namespace + "': " + panelId);
         }
+
+        // Set owning context for registry change events (Silver tier)
+        registration.setOwningContext(this);
+
         panelRegistry.put(panelId, registration);
+
+        // Fire registry changed event (Silver tier)
+        fireRegistryChanged();
     }
 
     /**
@@ -408,6 +427,59 @@ public class uContext implements uiContext {
     @Override
     public java.util.List<FrameDescriptor> getRegistrations() {
         return foundation.getRegistrations(namespace);
+    }
+
+    // ========================================================================
+    // REGISTRY CHANGE LISTENERS (Silver Tier)
+    // ========================================================================
+
+    /**
+     * Adds a registry change listener to be notified of all registry changes.
+     *
+     * @param listener The listener to add (must not be null)
+     * @throws IllegalArgumentException if listener is null
+     */
+    @Override
+    public void addRegistryChangeListener(RegistryChangeListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("Registry change listener cannot be null");
+        }
+        registryChangeListeners.add(listener);
+    }
+
+    /**
+     * Removes a previously registered registry change listener.
+     *
+     * @param listener The listener to remove
+     */
+    @Override
+    public void removeRegistryChangeListener(RegistryChangeListener listener) {
+        registryChangeListeners.remove(listener);
+    }
+
+    /**
+     * Fires registry changed event to all registered listeners.
+     * <p>
+     * This is called internally by the framework whenever the registry changes.
+     * Listeners are always invoked on the EDT for thread safety.
+     */
+    public void fireRegistryChanged() {
+        // Make a copy to avoid ConcurrentModificationException if listeners
+        // add/remove other listeners during callback
+        List<RegistryChangeListener> listenersCopy = new ArrayList<>(registryChangeListeners);
+
+        // Always fire on EDT for thread safety
+        SwingUtilities.invokeLater(() -> {
+            for (RegistryChangeListener listener : listenersCopy) {
+                try {
+                    listener.onRegistryChanged();
+                } catch (Exception e) {
+                    // Log but don't let listener exceptions break other listeners
+                    System.err.println("Error in registry change listener: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
 }

@@ -66,6 +66,12 @@ public class FrameDescriptor {
     private JMenuBar menuBar;
 
     /**
+     * Optional reference to the owning context for firing registry change events (Silver tier).
+     * This is set when the descriptor is registered with a context.
+     */
+    private org.jwellman.foundation.uContext owningContext;
+
+    /**
      * Creates a new FrameDescriptor.
      *
      * @param namespace Tool/application identifier
@@ -233,6 +239,11 @@ public class FrameDescriptor {
         // Make visible
         window.setVisible(true);
         fireOnShow();
+
+        // Fire registry changed event (Silver tier)
+        if (owningContext != null) {
+            owningContext.fireRegistryChanged();
+        }
     }
 
     /**
@@ -254,6 +265,11 @@ public class FrameDescriptor {
         // Make invisible
         window.setVisible(false);
         fireOnHide();
+
+        // Fire registry changed event (Silver tier)
+        if (owningContext != null) {
+            owningContext.fireRegistryChanged();
+        }
     }
 
     /**
@@ -428,6 +444,18 @@ public class FrameDescriptor {
      */
     public boolean hasAttribute(String key) {
         return attributes.containsKey(key);
+    }
+
+    /**
+     * Sets the owning context reference (Silver tier).
+     * <p>
+     * This is called internally by the framework when the descriptor is registered.
+     * The context reference is used to fire registry change events when visibility changes.
+     *
+     * @param context The owning context
+     */
+    public void setOwningContext(org.jwellman.foundation.uContext context) {
+        this.owningContext = context;
     }
 
     @Override

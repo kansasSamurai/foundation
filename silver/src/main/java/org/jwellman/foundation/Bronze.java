@@ -229,6 +229,11 @@ public class Bronze extends Stone {
 
         // Remove from context's registry
         ctx.removeFrameDescriptor(reg.getPanelId());
+
+        // Fire registry changed event (Silver tier)
+        if (ctx instanceof org.jwellman.foundation.uContext) {
+            ((org.jwellman.foundation.uContext) ctx).fireRegistryChanged();
+        }
     }
 
     /**
@@ -263,6 +268,12 @@ public class Bronze extends Stone {
             attachToInternalFrame(reg);
         } else {
             log.warn("Panel has no window container: {}:{}", namespace, panelId);
+        }
+
+        // Fire registry changed event (Silver tier)
+        uiContext ctx = contextRegistry.get(namespace);
+        if (ctx instanceof org.jwellman.foundation.uContext) {
+            ((org.jwellman.foundation.uContext) ctx).fireRegistryChanged();
         }
     }
 

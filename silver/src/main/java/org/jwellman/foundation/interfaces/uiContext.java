@@ -328,4 +328,45 @@ public interface uiContext {
      */
     java.util.List<FrameDescriptor> getRegistrations();
 
+    // ========================================================================
+    // REGISTRY CHANGE LISTENERS (Silver Tier)
+    // ========================================================================
+
+    /**
+     * Adds a registry change listener to be notified of all registry changes.
+     * <p>
+     * The listener will be called whenever:
+     * <ul>
+     * <li>A panel is registered (new panel added)</li>
+     * <li>A panel is closed (removed from registry)</li>
+     * <li>A panel's visibility changes (show/hide)</li>
+     * <li>A panel is detached/attached (frame type changes)</li>
+     * </ul>
+     * <p>
+     * Listeners are always called on the EDT, making it safe to update UI
+     * components directly from the callback.
+     * <p>
+     * This is particularly useful for maintaining synchronized views of the
+     * registry (statistics panels, frame managers, taskbars, etc.) without
+     * manually calling update methods from every action handler.
+     *
+     * @param listener The listener to add (must not be null)
+     * @throws IllegalArgumentException if listener is null
+     * @since Silver Tier
+     * @see RegistryChangeListener
+     * @see #removeRegistryChangeListener(RegistryChangeListener)
+     */
+    void addRegistryChangeListener(RegistryChangeListener listener);
+
+    /**
+     * Removes a previously registered registry change listener.
+     * <p>
+     * If the listener is not currently registered, this method has no effect.
+     *
+     * @param listener The listener to remove
+     * @since Silver Tier
+     * @see #addRegistryChangeListener(RegistryChangeListener)
+     */
+    void removeRegistryChangeListener(RegistryChangeListener listener);
+
 }

@@ -103,6 +103,16 @@ public class SilverTierShowcaseDemo {
 
         Foundation.init(context);
 
+        // Register registry change listener (Silver tier feature)
+        // This automatically updates all UI components when the registry changes
+        context.addRegistryChangeListener(() -> {
+            updateStats();
+            updatePanelList();
+            if (advancedFrameManager != null) {
+                advancedFrameManager.refresh();
+            }
+        });
+
         // Create the main control panel (left side)
         FrameDescriptor controlPanel = context.registerUI(
             "control",
@@ -484,10 +494,6 @@ public class SilverTierShowcaseDemo {
         // Show the panel
         registration.show();
 
-        // Update stats and list
-        updateStats();
-        updatePanelList();
-
         logEvent("CREATED", "Panel #" + panelNum + " with " + strategyName + " positioning");
     }
 
@@ -520,8 +526,6 @@ public class SilverTierShowcaseDemo {
         JMenuItem exitItem = new JMenuItem("Close Panel");
         exitItem.addActionListener(e -> {
             context.closePanel("panel" + panelNum);
-            updateStats();
-            updatePanelList();
         });
         fileMenu.add(exitItem);
 
@@ -532,11 +536,6 @@ public class SilverTierShowcaseDemo {
         JMenuItem detachItem = new JMenuItem("Detach/Attach");
         detachItem.addActionListener(e -> {
             context.detachPanel("panel" + panelNum);
-            updateStats();
-            updatePanelList();
-            if (advancedFrameManager != null) {
-                advancedFrameManager.refresh();
-            }
         });
         viewMenu.add(detachItem);
 
@@ -593,18 +592,11 @@ public class SilverTierShowcaseDemo {
         detachButton.setToolTipText("Toggle between internal frame (desktop) and external frame (standalone window)");
         detachButton.addActionListener(e -> {
             context.detachPanel("panel" + panelNum);
-            updateStats();
-            updatePanelList();
-            if (advancedFrameManager != null) {
-                advancedFrameManager.refresh();
-            }
         });
 
         JButton closeButton = new JButton("Close This Panel");
         closeButton.addActionListener(e -> {
             context.closePanel("panel" + panelNum);
-            updateStats();
-            updatePanelList();
         });
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
@@ -632,29 +624,19 @@ public class SilverTierShowcaseDemo {
             @Override
             public void onShow(IWindow window) {
                 logEvent("onShow", panelName);
-                updatePanelList();
-                if (advancedFrameManager != null) {
-                    advancedFrameManager.refresh();
-                }
+                // Updates now handled by registry change listener
             }
 
             @Override
             public void onHide(IWindow window) {
                 logEvent("onHide", panelName);
-                updatePanelList();
-                if (advancedFrameManager != null) {
-                    advancedFrameManager.refresh();
-                }
+                // Updates now handled by registry change listener
             }
 
             @Override
             public void onClose(IWindow window) {
                 logEvent("onClose", panelName);
-                updateStats();
-                updatePanelList();
-                if (advancedFrameManager != null) {
-                    advancedFrameManager.refresh();
-                }
+                // Updates now handled by registry change listener
             }
         };
     }
@@ -736,8 +718,7 @@ public class SilverTierShowcaseDemo {
         for (FrameDescriptor panel : panelList ) {
             panel.show();
         }
-        updateStats();
-        updatePanelList();
+        // Updates now handled by registry change listener
     }
 
     /**
@@ -752,8 +733,7 @@ public class SilverTierShowcaseDemo {
                 reg.hide();
             }
         }
-        updateStats();
-        updatePanelList();
+        // Updates now handled by registry change listener
     }
 
     /**
@@ -767,8 +747,7 @@ public class SilverTierShowcaseDemo {
             if (isPanelDynamic(reg)) reg.getWindow().close();
             // This does not actual remove from uiContext but close enough for demo app
         }
-        updateStats();
-        updatePanelList();
+        // Updates now handled by registry change listener
     }
 
     /**
