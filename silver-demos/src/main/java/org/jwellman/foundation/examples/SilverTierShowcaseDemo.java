@@ -17,8 +17,13 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -41,17 +46,19 @@ import org.jwellman.foundation.swing.IWindow;
  * <li><b>Panel Lifecycle</b> - onCreate, onShow, onHide, onClose event tracking</li>
  * <li><b>Dynamic Panel Management</b> - Runtime panel creation, removal, show/hide, registry queries</li>
  * <li><b>Panel Detach/Attach</b> - Toggle panels between internal frames (desktop) and external frames (standalone windows)</li>
+ * <li><b>Menu Bar Support</b> - Optional menu bars on panels that transfer during detach/attach operations</li>
  * </ol>
  * <p>
  * This interactive demo provides:
  * <ul>
  * <li>Control panel for creating panels with different positioning strategies</li>
+ * <li>Optional menu bar creation for dynamic panels</li>
  * <li>Real-time lifecycle event log visible in the UI</li>
  * <li>Registry statistics showing namespace and panel counts</li>
  * <li>Interactive panel management (show/hide/close/detach)</li>
  * <li>Visual demonstration of positioning strategies</li>
  * <li>Panel list showing all registered panels with controls</li>
- * <li>IDE-like panel detaching - "pop out" panels to standalone windows or dock them back</li>
+ * <li>IDE-like panel detaching - "pop out" panels to standalone windows or dock them back (menu bars transfer automatically)</li>
  * </ul>
  * <p>
  * Run with:
@@ -242,6 +249,13 @@ public class SilverTierShowcaseDemo {
         section.add(radioPanel);
         section.add(Box.createVerticalStrut(8));
 
+        // Menu bar option checkbox
+        JCheckBox menuBarCheckbox = new JCheckBox("Include menu bar with File and View menus");
+        menuBarCheckbox.setOpaque(false);
+        menuBarCheckbox.setAlignmentX(JCheckBox.LEFT_ALIGNMENT);
+        section.add(menuBarCheckbox);
+        section.add(Box.createVerticalStrut(8));
+
         // Create button
         JButton createButton = new JButton("Create Panel with Selected Strategy");
         createButton.setAlignmentX(JButton.LEFT_ALIGNMENT);
@@ -266,7 +280,8 @@ public class SilverTierShowcaseDemo {
                 strategyName = "CASCADE";
             }
 
-            createDynamicPanel(strategyName, position);
+            boolean includeMenuBar = menuBarCheckbox.isSelected();
+            createDynamicPanel(strategyName, position, includeMenuBar);
         });
         section.add(createButton);
 
@@ -422,17 +437,21 @@ public class SilverTierShowcaseDemo {
     /**
      * Creates a dynamic panel with the specified positioning strategy.
      */
-    private static void createDynamicPanel(String strategyName, WindowPosition position) {
+    private static void createDynamicPanel(String strategyName, WindowPosition position, boolean includeMenuBar) {
         int panelNum = panelCounter.getAndIncrement();
         String panelId = "panel" + panelNum;
 
         // Create panel content
         JPanel content = createDynamicPanelContent(panelNum, strategyName);
 
-        // Register panel
+        // Create menu bar if requested (must be created before registerUI)
+        JMenuBar menuBar = includeMenuBar ? createSampleMenuBar(panelNum) : null;
+
+        // Register panel with menu bar
         FrameDescriptor registration = context.registerUI(
             panelId,
             content,
+            menuBar,
             createLifecycleListener("Dynamic Panel #" + panelNum),
             position
         );
@@ -446,6 +465,70 @@ public class SilverTierShowcaseDemo {
         updatePanelList();
 
         logEvent("CREATED", "Panel #" + panelNum + " with " + strategyName + " positioning");
+    }
+
+    /**
+     * Creates a sample menu bar for demonstration purposes.
+     */
+    private static JMenuBar createSampleMenuBar(final int panelNum) {
+        JMenuBar menuBar = new JMenuBar();
+
+        // File menu
+        JMenu fileMenu = new JMenu("File");
+        JMenuItem newItem = new JMenuItem("New");
+        newItem.addActionListener(e ->
+            JOptionPane.showMessageDialog(null,
+                "New action for Panel #" + panelNum,
+                "File Menu",
+                JOptionPane.INFORMATION_MESSAGE));
+        fileMenu.add(newItem);
+
+        JMenuItem saveItem = new JMenuItem("Save");
+        saveItem.addActionListener(e ->
+            JOptionPane.showMessageDialog(null,
+                "Save action for Panel #" + panelNum,
+                "File Menu",
+                JOptionPane.INFORMATION_MESSAGE));
+        fileMenu.add(saveItem);
+
+        fileMenu.addSeparator();
+
+        JMenuItem exitItem = new JMenuItem("Close Panel");
+        exitItem.addActionListener(e -> {
+            context.closePanel("panel" + panelNum);
+            updateStats();
+            updatePanelList();
+        });
+        fileMenu.add(exitItem);
+
+        menuBar.add(fileMenu);
+
+        // View menu
+        JMenu viewMenu = new JMenu("View");
+        JMenuItem detachItem = new JMenuItem("Detach/Attach");
+        detachItem.addActionListener(e -> {
+            context.detachPanel("panel" + panelNum);
+            updateStats();
+            updatePanelList();
+        });
+        viewMenu.add(detachItem);
+
+        viewMenu.addSeparator();
+
+        JMenuItem aboutItem = new JMenuItem("About Panel");
+        aboutItem.addActionListener(e ->
+            JOptionPane.showMessageDialog(null,
+                "Dynamic Panel #" + panelNum + "\n" +
+                "Full ID: showcase:panel" + panelNum + "\n\n" +
+                "This menu bar is automatically transferred\n" +
+                "when detaching/attaching the panel!",
+                "About",
+                JOptionPane.INFORMATION_MESSAGE));
+        viewMenu.add(aboutItem);
+
+        menuBar.add(viewMenu);
+
+        return menuBar;
     }
 
     /**

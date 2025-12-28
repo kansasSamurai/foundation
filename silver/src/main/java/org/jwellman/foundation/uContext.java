@@ -292,6 +292,24 @@ public class uContext implements uiContext {
      * @return The FrameDescriptor for this panel
      */
     public FrameDescriptor registerUI(String panelId, JPanel ui, uiPanelLifecycleListener listener, WindowPosition position) {
+        return registerUI(panelId, ui, null, listener, position);
+    }
+
+    /**
+     * Register a panel with menu bar, lifecycle listener, and window positioning.
+     * <p>
+     * This is the most complete registerUI overload, providing all optional parameters.
+     * The menu bar must be provided at registration time and cannot be changed later
+     * (FrameDescriptor is mostly immutable).
+     *
+     * @param panelId Unique ID within this context's namespace
+     * @param ui The JPanel to register
+     * @param menuBar Optional menu bar for this panel (may be null)
+     * @param listener Lifecycle event listener (may be null)
+     * @param position Window positioning strategy (may be null, defaults to CASCADE)
+     * @return The FrameDescriptor for this panel
+     */
+    public FrameDescriptor registerUI(String panelId, JPanel ui, javax.swing.JMenuBar menuBar, uiPanelLifecycleListener listener, WindowPosition position) {
 
         // Get or create the uContext for this namespace
         uiContext ctx = this;
@@ -310,7 +328,7 @@ public class uContext implements uiContext {
         xpanel.setName(fullId);
 
         // Create registration and immediately register in the context
-        FrameDescriptor reg = new FrameDescriptor(namespace, panelId, xpanel, listener);
+        FrameDescriptor reg = new FrameDescriptor(namespace, panelId, xpanel, menuBar, listener);
         ctx.registerPanel(panelId, reg);
 
         // Set positioning (or use default CASCADE)

@@ -1,5 +1,6 @@
 package org.jwellman.foundation;
 
+import java.awt.BorderLayout;
 import java.awt.IllegalComponentStateException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -279,6 +280,9 @@ public class Bronze extends Stone {
         java.awt.Dimension iframeSize = iframe.getSize();
         java.awt.Point iframeLocation = iframe.getLocation();
 
+        // Menu bar is already stored in FrameDescriptor
+        // (No need to extract from internal frame since it's in the wrapper panel)
+
         // Convert desktop coordinates to screen coordinates
         java.awt.Point screenLocation;
         if (desktop != null) {
@@ -339,6 +343,9 @@ public class Bronze extends Stone {
         boolean wasVisible = frame.isVisible();
         java.awt.Dimension frameSize = frame.getSize();
         java.awt.Point screenLocation = frame.getLocation();
+
+        // Menu bar is already stored in FrameDescriptor (set during registerUI)
+        // It will be automatically applied when createInternalFrameForPanel is called
 
         // Convert screen coordinates to desktop coordinates
         java.awt.Point desktopLocation;
@@ -456,6 +463,11 @@ public class Bronze extends Stone {
 
         // Set panel as content
         frame.setContentPane(reg.getPanel());
+
+        // Set menu bar if present
+        if (reg.getMenuBar() != null) {
+            frame.setJMenuBar(reg.getMenuBar());
+        }
 
         // Apply positioning
         frame.pack(); // Pack before positioning to get correct size
@@ -677,7 +689,23 @@ public class Bronze extends Stone {
         log.debug("Created internal frame: {}", title);
 
         // Add contents to internal frame
-        iframe.add(reg.getPanel());
+        XPanel wrapper;
+        if (reg.getPanel() instanceof XPanel) {
+            // Panel is already XPanel, use it as wrapper
+            wrapper = (XPanel) reg.getPanel();
+        } else {
+            // Panel is not XPanel, create wrapper and log warning
+            // Use XPanel as wrapper (has BorderLayout by default)
+            log.warn("Panel {} is not an XPanel - creating XPanel wrapper for menu bar", reg.getFullId());
+            wrapper = new XPanel(reg.getPanel());
+            wrapper.add(reg.getPanel(), BorderLayout.CENTER);
+        }
+
+        // For JInternalFrame, menu bar must be manually placed in BorderLayout
+        if (reg.getMenuBar() != null) {
+            wrapper.add(reg.getMenuBar(), BorderLayout.NORTH);
+        }
+        iframe.add(wrapper);
 
         // Configure frame properties
         // System panels (namespace "system") are not minimizable

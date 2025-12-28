@@ -3,6 +3,8 @@ package org.jwellman.foundation.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.JMenuBar;
+
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.swing.IWindow;
@@ -20,6 +22,7 @@ import org.jwellman.foundation.swing.XPanel;
  * - Visibility state<br>
  * - Positioning preferences<br>
  * - Lifecycle listeners<br>
+ * - Menu bar (optional)<br>
  * - Application-specific attributes (key-value pairs)<br>
  * <p>
  * FrameDescriptor supports the multi-window management capabilities
@@ -59,6 +62,9 @@ public class FrameDescriptor {
     /** Application-specific attributes for storing custom metadata */
     private final Map<String, Object> attributes;
 
+    /** Menu bar for this panel (optional) */
+    private JMenuBar menuBar;
+
     /**
      * Creates a new FrameDescriptor.
      *
@@ -96,6 +102,23 @@ public class FrameDescriptor {
      */
     public FrameDescriptor(String namespace, String panelId, XPanel panel, uiPanelLifecycleListener listener) {
         this(namespace, panelId, panel);
+        this.lifecycleListener = listener;
+    }
+
+    /**
+     * Creates a new FrameDescriptor with menu bar and lifecycle listener.
+     * <p>
+     * This is the most complete constructor providing all optional parameters.
+     *
+     * @param namespace Tool/application identifier
+     * @param panelId Unique ID within namespace
+     * @param panel The wrapped panel
+     * @param menuBar Optional menu bar for this panel (may be null)
+     * @param listener Lifecycle event listener (may be null)
+     */
+    public FrameDescriptor(String namespace, String panelId, XPanel panel, JMenuBar menuBar, uiPanelLifecycleListener listener) {
+        this(namespace, panelId, panel);
+        this.menuBar = menuBar;
         this.lifecycleListener = listener;
     }
 
@@ -327,6 +350,18 @@ public class FrameDescriptor {
 
     public void setLifecycleListener(uiPanelLifecycleListener lifecycleListener) {
         this.lifecycleListener = lifecycleListener;
+    }
+
+    /**
+     * Get the menu bar for this panel.
+     * <p>
+     * Menu bars are set at registration time via registerUI() and cannot be changed later.
+     * This supports the mostly-immutable design of FrameDescriptor.
+     *
+     * @return the menu bar, or null if not set
+     */
+    public JMenuBar getMenuBar() {
+        return menuBar;
     }
 
     /**
