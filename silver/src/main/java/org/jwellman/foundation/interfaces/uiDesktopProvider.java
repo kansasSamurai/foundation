@@ -69,6 +69,20 @@ public interface uiDesktopProvider {
     JMenuBar createMenuBar();
 
     /**
+     * Provides a desktop manager for orchestrating desktop-wide operations.
+     * <p>
+     * The desktop manager handles operations like cascading, tiling, minimizing all
+     * frames, navigation between frames, etc. The provider creates both the desktop
+     * and its manager together since they're related.
+     * <p>
+     * This method may be called multiple times and should return the same instance
+     * (desktop manager is typically a singleton per desktop).
+     *
+     * @return The uiDesktopManager for this desktop, or null for no manager
+     */
+    uiDesktopManager getDesktopManager();
+
+    /**
      * Called after the desktop is fully initialized and visible.
      *
      * Implementations can use this hook to perform post-initialization
