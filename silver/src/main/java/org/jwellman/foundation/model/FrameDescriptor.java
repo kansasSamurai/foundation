@@ -321,6 +321,18 @@ public class FrameDescriptor {
     }
 
     /**
+     * Check if this panel is currently detached (in an external window).
+     * <p>
+     * A panel is considered detached when it's displayed in a standalone
+     * JFrame (external window) rather than a JInternalFrame within the desktop.
+     *
+     * @return true if the panel is detached to an external window, false if attached to desktop
+     */
+    public boolean isDetached() {
+        return externalFrame != null;
+    }
+
+    /**
      * Set the visibility of this panel's window.
      * <p>
      * This is a convenience wrapper that delegates to show() or hide()

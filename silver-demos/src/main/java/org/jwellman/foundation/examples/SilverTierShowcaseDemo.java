@@ -47,6 +47,7 @@ import org.jwellman.foundation.swing.IWindow;
  * <li><b>Dynamic Panel Management</b> - Runtime panel creation, removal, show/hide, registry queries</li>
  * <li><b>Panel Detach/Attach</b> - Toggle panels between internal frames (desktop) and external frames (standalone windows)</li>
  * <li><b>Menu Bar Support</b> - Optional menu bars on panels that transfer during detach/attach operations</li>
+ * <li><b>Advanced Frame Manager</b> - Rich UI for managing all frames with visibility toggle, attach/detach, and editable titles</li>
  * </ol>
  * <p>
  * This interactive demo provides:
@@ -57,7 +58,8 @@ import org.jwellman.foundation.swing.IWindow;
  * <li>Registry statistics showing namespace and panel counts</li>
  * <li>Interactive panel management (show/hide/close/detach)</li>
  * <li>Visual demonstration of positioning strategies</li>
- * <li>Panel list showing all registered panels with controls</li>
+ * <li>Panel list showing all registered panels with controls (simple taskbar)</li>
+ * <li>Advanced Frame Manager with per-frame controls and editable titles</li>
  * <li>IDE-like panel detaching - "pop out" panels to standalone windows or dock them back (menu bars transfer automatically)</li>
  * </ul>
  * <p>
@@ -127,6 +129,16 @@ public class SilverTierShowcaseDemo {
         );
         statsPanel.setAttribute("permanent", true);
 
+        // Create the advanced frame manager panel (hidden by default)
+        FrameDescriptor advancedManagerPanel = context.registerUI(
+            "advancedmanager",
+            new AdvancedFrameManagerPanel(context),
+            createLifecycleListener("Advanced Frame Manager"),
+            WindowPosition.at(100, 100, 600, 500)
+        );
+        advancedManagerPanel.setWindowTitle("Advanced Frame Manager");
+        advancedManagerPanel.setAttribute("utility", true);
+
         // Set control panel as master
         context.registerMasterPanel(controlPanel);
 
@@ -135,6 +147,7 @@ public class SilverTierShowcaseDemo {
         controlPanel.show();
         eventLogPanel.show();
         statsPanel.show();
+        // Advanced manager is hidden by default - user can show via control panel
 
         // Update stats after initial setup
         updateStats();
@@ -304,10 +317,19 @@ public class SilverTierShowcaseDemo {
         section.add(Box.createVerticalStrut(8));
 
         // Buttons panel
-        JPanel buttonsPanel = new JPanel(new GridLayout(3, 1, 5, 5));
+        JPanel buttonsPanel = new JPanel(new GridLayout(4, 1, 5, 5));
         buttonsPanel.setOpaque(false);
-        buttonsPanel.setMaximumSize(new Dimension(350, 90));
+        buttonsPanel.setMaximumSize(new Dimension(350, 120));
         buttonsPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+
+        JButton showAdvancedManagerButton = new JButton("Show Advanced Frame Manager");
+        showAdvancedManagerButton.addActionListener(e -> {
+            FrameDescriptor manager = context.getFrameDescriptor("advancedmanager");
+            if (manager != null) {
+                manager.show();
+            }
+        });
+        buttonsPanel.add(showAdvancedManagerButton);
 
         JButton showAllButton = new JButton("Show All Panels");
         showAllButton.addActionListener(e -> showAllPanels());

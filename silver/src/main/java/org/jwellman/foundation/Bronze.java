@@ -247,7 +247,7 @@ public class Bronze extends Stone {
      * @param namespace The namespace
      * @param panelId The panel ID
      */
-    protected void detachPanel(String namespace, String panelId) {
+    public void detachPanel(String namespace, String panelId) {
         FrameDescriptor reg = getRegistration(namespace, panelId);
         if (reg == null) {
             log.warn("Cannot detach panel - not found: {}:{}", namespace, panelId);
