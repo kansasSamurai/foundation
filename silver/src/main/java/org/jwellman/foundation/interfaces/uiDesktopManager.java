@@ -285,16 +285,23 @@ public interface uiDesktopManager {
      * Sets the auto-position policy for new frames.
      * <p>
      * If true, newly added frames are automatically positioned using
-     * cascade pattern. If false, frames keep their original position.
+     * cascade pattern, OVERRIDING any explicit WindowPosition settings.
+     * If false (default), frames respect their WindowPosition (CASCADE, CENTER, EXPLICIT, etc.).
+     * <p>
+     * <b>Important:</b> When enabled, this overrides Foundation's WindowPosition system.
+     * Only enable if you want all frames to use cascade positioning regardless of
+     * their individual WindowPosition settings.
      *
-     * @param autoPosition true to auto-position new frames
+     * @param autoPosition true to auto-position new frames (overrides WindowPosition), false to respect WindowPosition
      */
     void setAutoPositionPolicy(boolean autoPosition);
 
     /**
      * Gets the auto-position policy.
+     * <p>
+     * Default is false to respect Foundation's WindowPosition system.
      *
-     * @return true if new frames are auto-positioned
+     * @return true if new frames are auto-positioned (ignoring WindowPosition), false if WindowPosition is respected
      */
     boolean getAutoPositionPolicy();
 

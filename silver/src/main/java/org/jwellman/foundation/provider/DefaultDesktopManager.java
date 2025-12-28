@@ -84,7 +84,7 @@ public class DefaultDesktopManager implements uiDesktopManager {
         this.windowManager.setOutlineDragMode(true); // Better performance
         this.windowManager.setDeiconifiablePolicy(false); // Don't force de-iconify during cascade
         this.windowManager.setClosePolicy(false); // Use default close action
-        this.windowManager.setAutoPositionPolicy(true); // Auto-position new frames
+        this.windowManager.setAutoPositionPolicy(false); // Disable - Foundation has its own WindowPosition system
 
         log.debug("DefaultDesktopManager created for desktop: {}", desktop);
     }
