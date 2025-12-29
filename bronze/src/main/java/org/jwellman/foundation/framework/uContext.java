@@ -174,4 +174,16 @@ public class uContext {
         return panelRegistry.containsKey(panelId);
     }
 
+    /**
+     * Fire registry changed event to notify listeners.
+     * <p>
+     * Bronze tier stub implementation - does nothing.
+     * Registry change listeners are a Silver tier feature.
+     * This method exists to satisfy the uiContext interface contract.
+     */
+    public void fireRegistryChanged() {
+        // No-op in Bronze tier
+        // Silver tier implements actual registry change listener notification
+    }
+
 }

@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.swing.JMenuBar;
 
 import org.jwellman.foundation.framework.WindowPosition;
+import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
@@ -69,7 +70,7 @@ public class FrameDescriptor {
      * Optional reference to the owning context for firing registry change events (Silver tier).
      * This is set when the descriptor is registered with a context.
      */
-    private org.jwellman.foundation.uContext owningContext;
+    private uiContext owningContext;
 
     /**
      * Creates a new FrameDescriptor.
@@ -454,7 +455,7 @@ public class FrameDescriptor {
      *
      * @param context The owning context
      */
-    public void setOwningContext(org.jwellman.foundation.uContext context) {
+    public void setOwningContext(uiContext context) {
         this.owningContext = context;
     }
 

@@ -231,9 +231,7 @@ public class Bronze extends Stone {
         ctx.removeFrameDescriptor(reg.getPanelId());
 
         // Fire registry changed event (Silver tier)
-        if (ctx instanceof org.jwellman.foundation.uContext) {
-            ((org.jwellman.foundation.uContext) ctx).fireRegistryChanged();
-        }
+        ctx.fireRegistryChanged();
     }
 
     /**
@@ -272,9 +270,7 @@ public class Bronze extends Stone {
 
         // Fire registry changed event (Silver tier)
         uiContext ctx = contextRegistry.get(namespace);
-        if (ctx instanceof org.jwellman.foundation.uContext) {
-            ((org.jwellman.foundation.uContext) ctx).fireRegistryChanged();
-        }
+        ctx.fireRegistryChanged();
     }
 
     /**

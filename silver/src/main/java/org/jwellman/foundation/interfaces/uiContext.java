@@ -369,4 +369,21 @@ public interface uiContext {
      */
     void removeRegistryChangeListener(RegistryChangeListener listener);
 
+    /**
+     * Fire registry changed event to notify listeners.
+     * <p>
+     * This method should be called whenever the panel registry changes
+     * (panels added, removed, or modified). Implementations should notify
+     * any registered listeners of the change.
+     * <p>
+     * Implementations should ensure this is called on the EDT for thread safety.
+     * <p>
+     * This method is called internally by the framework. Application code
+     * should rarely need to call this directly.
+     *
+     * @since Silver Tier
+     * @see #addRegistryChangeListener(RegistryChangeListener)
+     */
+    void fireRegistryChanged();
+
 }

@@ -463,6 +463,7 @@ public class uContext implements uiContext {
      * This is called internally by the framework whenever the registry changes.
      * Listeners are always invoked on the EDT for thread safety.
      */
+    @Override
     public void fireRegistryChanged() {
         // Make a copy to avoid ConcurrentModificationException if listeners
         // add/remove other listeners during callback

@@ -328,4 +328,18 @@ public interface uiContext {
      */
     java.util.List<FrameDescriptor> getRegistrations();
 
+    /**
+     * Fire registry changed event to notify listeners.
+     * <p>
+     * This method should be called whenever the panel registry changes
+     * (panels added, removed, or modified). Implementations should notify
+     * any registered listeners of the change.
+     * <p>
+     * Implementations should ensure this is called on the EDT for thread safety.
+     * <p>
+     * Bronze tier implementations may provide a no-op stub.
+     * Silver tier implementations provide full listener notification.
+     */
+    void fireRegistryChanged();
+
 }
