@@ -410,4 +410,10 @@ public class uContext implements uiContext {
         return foundation.getRegistrations(namespace);
     }
 
+    @Override
+    public void fireRegistryChanged() {
+        // TODO Auto-generated method stub backport from silver when needed
+        
+    }
+
 }
