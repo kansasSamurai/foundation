@@ -388,4 +388,66 @@ public interface uiContext {
      */
     void fireRegistryChanged();
 
+    // ========================================================================
+    // PLUGIN SYSTEM CONFIGURATION (Silver Tier)
+    // ========================================================================
+
+    /**
+     * Get the plugins directory path.
+     * <p>
+     * This directory is scanned for plugin subdirectories during plugin discovery.
+     * Defaults to "./plugins" relative to the working directory if not set.
+     *
+     * @return The plugins directory, or null if not set
+     * @since Silver Tier
+     */
+    java.io.File getPluginsDirectory();
+
+    /**
+     * Set the plugins directory path.
+     *
+     * @param pluginsDirectory The plugins directory
+     * @since Silver Tier
+     */
+    void setPluginsDirectory(java.io.File pluginsDirectory);
+
+    /**
+     * Get the plugin configuration directory path.
+     * <p>
+     * This directory stores the plugin registry (registry.json) and other
+     * plugin-related configuration. Defaults to "./config" if not set.
+     *
+     * @return The plugin config directory, or null if not set
+     * @since Silver Tier
+     */
+    java.io.File getPluginConfigDirectory();
+
+    /**
+     * Set the plugin configuration directory path.
+     *
+     * @param configDirectory The plugin config directory
+     * @since Silver Tier
+     */
+    void setPluginConfigDirectory(java.io.File configDirectory);
+
+    /**
+     * Check if auto-discovery is enabled for plugins.
+     * <p>
+     * When enabled, initPlugins() will automatically scan for new plugins
+     * and trigger discovery callbacks. When disabled, plugins must be
+     * registered manually. Defaults to true.
+     *
+     * @return true if auto-discovery is enabled, false otherwise
+     * @since Silver Tier
+     */
+    boolean isAutoDiscoverPlugins();
+
+    /**
+     * Set auto-discovery enabled for plugins.
+     *
+     * @param autoDiscover true to enable auto-discovery, false otherwise
+     * @since Silver Tier
+     */
+    void setAutoDiscoverPlugins(boolean autoDiscover);
+
 }

@@ -483,4 +483,47 @@ public class uContext implements uiContext {
         });
     }
 
+    // ========================================================================
+    // PLUGIN SYSTEM CONFIGURATION (Silver Tier)
+    // ========================================================================
+
+    /** The plugins directory path (defaults to "./plugins") */
+    private java.io.File pluginsDirectory = new java.io.File("./plugins");
+
+    /** The plugin configuration directory path (defaults to "./config") */
+    private java.io.File pluginConfigDirectory = new java.io.File("./config");
+
+    /** Whether to auto-discover plugins during initPlugins() (defaults to true) */
+    private boolean autoDiscoverPlugins = true;
+
+    @Override
+    public java.io.File getPluginsDirectory() {
+        return pluginsDirectory;
+    }
+
+    @Override
+    public void setPluginsDirectory(java.io.File pluginsDirectory) {
+        this.pluginsDirectory = pluginsDirectory;
+    }
+
+    @Override
+    public java.io.File getPluginConfigDirectory() {
+        return pluginConfigDirectory;
+    }
+
+    @Override
+    public void setPluginConfigDirectory(java.io.File configDirectory) {
+        this.pluginConfigDirectory = configDirectory;
+    }
+
+    @Override
+    public boolean isAutoDiscoverPlugins() {
+        return autoDiscoverPlugins;
+    }
+
+    @Override
+    public void setAutoDiscoverPlugins(boolean autoDiscover) {
+        this.autoDiscoverPlugins = autoDiscover;
+    }
+
 }
