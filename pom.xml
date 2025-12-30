@@ -114,11 +114,20 @@
             <!-- SLF4J Simple implementation for demos -->
             <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
             <dependency>
-                <groupId>org.slf4j</groupId>
+                <groupId>
+                    org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>2.0.17</version>
             </dependency>
 
+            <!-- JSON processing -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.13.5</version>
+            </dependency>
+
+            <!-- Window Manager and Console -->
             <dependency>
                 <groupId>gr.zeus</groupId>
                 <artifactId>core</artifactId>
