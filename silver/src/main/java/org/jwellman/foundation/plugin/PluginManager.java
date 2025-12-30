@@ -55,6 +55,7 @@ public class PluginManager implements uiPluginManager {
     private final Map<String, LoadedPlugin> loadedPlugins;
     private final File configDir;
     private final File pluginsDir;
+    private final PluginActionRegistry actionRegistry;
 
     private boolean initialized = false;
 
@@ -71,6 +72,7 @@ public class PluginManager implements uiPluginManager {
         this.discovery = new PluginDiscoveryService(pluginsDir, registry);
         this.launcher = new PluginLauncher();
         this.loadedPlugins = new HashMap<>();
+        this.actionRegistry = new PluginActionRegistry(this);
     }
 
     // ========== Initialization and Lifecycle ==========
@@ -453,6 +455,15 @@ public class PluginManager implements uiPluginManager {
      */
     public PluginLauncher getLauncher() {
         return launcher;
+    }
+
+    /**
+     * Gets the plugin action registry for UI integration.
+     *
+     * @return the plugin action registry
+     */
+    public PluginActionRegistry getPluginActionRegistry() {
+        return actionRegistry;
     }
 
     /**

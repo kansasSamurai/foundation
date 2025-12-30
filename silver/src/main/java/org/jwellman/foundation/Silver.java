@@ -1,7 +1,7 @@
 package org.jwellman.foundation;
 
 import org.jwellman.foundation.interfaces.uiContext;
-import org.jwellman.foundation.plugin.PluginActionRegistry;
+import org.jwellman.foundation.interfaces.uiPluginManager;
 import org.jwellman.foundation.plugin.PluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +27,6 @@ public class Silver extends Bronze {
 
     /** The plugin manager (initialized by initPlugins()) */
     private PluginManager pluginManager;
-
-    /** The plugin action registry (initialized by initPlugins()) */
-    private PluginActionRegistry pluginActionRegistry;
 
     /** Flag to track if plugin system has been initialized */
     private boolean pluginSystemInitialized = false;
@@ -84,12 +81,9 @@ public class Silver extends Bronze {
         log.info("Config directory: {}", configDir.getAbsolutePath());
         log.info("Auto-discover: {}", autoDiscover);
 
-        // Create plugin manager
+        // Create plugin manager (action registry is created internally)
         pluginManager = new PluginManager(configDir, pluginsDir);
         pluginManager.initialize();
-
-        // Create action registry
-        pluginActionRegistry = new PluginActionRegistry(pluginManager);
 
         pluginSystemInitialized = true;
 
@@ -102,17 +96,8 @@ public class Silver extends Bronze {
      *
      * @return the plugin manager, or null if plugin system not initialized
      */
-    public PluginManager getPluginManager() {
+    protected uiPluginManager _getPluginManager() {
         return pluginManager;
-    }
-
-    /**
-     * Gets the plugin action registry.
-     *
-     * @return the plugin action registry, or null if plugin system not initialized
-     */
-    public PluginActionRegistry getPluginActionRegistry() {
-        return pluginActionRegistry;
     }
 
     /**

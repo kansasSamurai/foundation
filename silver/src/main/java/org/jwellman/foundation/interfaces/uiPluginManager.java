@@ -108,4 +108,39 @@ public interface uiPluginManager {
      * @return list of loaded plugins
      */
     List<LoadedPlugin> getLoadedPlugins();
+
+    /**
+     * Checks if the plugin manager has been initialized.
+     *
+     * @return true if initialized, false otherwise
+     */
+    boolean isInitialized();
+
+    /**
+     * Gets the number of registered plugins.
+     *
+     * @return the registered plugin count
+     */
+    int getRegisteredPluginCount();
+
+    /**
+     * Gets the number of loaded plugins.
+     *
+     * @return the loaded plugin count
+     */
+    int getLoadedPluginCount();
+
+    /**
+     * Rescans the plugins directory for new plugins.
+     *
+     * @return list of newly discovered plugins
+     */
+    List<UnregisteredPlugin> rescanPlugins();
+
+    /**
+     * Gets the plugin action registry for UI integration.
+     *
+     * @return the plugin action registry
+     */
+    org.jwellman.foundation.plugin.PluginActionRegistry getPluginActionRegistry();
 }

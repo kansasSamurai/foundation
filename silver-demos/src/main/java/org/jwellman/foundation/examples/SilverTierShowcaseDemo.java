@@ -36,10 +36,10 @@ import javax.swing.SwingConstants;
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiContext;
+import org.jwellman.foundation.interfaces.uiPluginManager;
 import org.jwellman.foundation.listener.PanelLifecycleListener;
 import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.plugin.PluginActionRegistry;
-import org.jwellman.foundation.plugin.PluginManager;
 import org.jwellman.foundation.plugin.PluginRegistration;
 import org.jwellman.foundation.plugin.UnregisteredPlugin;
 import org.jwellman.foundation.swing.IWindow;
@@ -115,7 +115,7 @@ public class SilverTierShowcaseDemo {
             logEvent("PLUGIN", "Plugin system initialized successfully");
 
             // Log discovered plugins
-            PluginManager pluginManager = Foundation.getPluginManager();
+            uiPluginManager pluginManager = Foundation.getPluginManager();
             if (pluginManager != null) {
                 List<UnregisteredPlugin> discovered = pluginManager.getDiscoveredPlugins();
                 logEvent("PLUGIN", "Discovered " + discovered.size() + " new plugin(s)");
@@ -424,7 +424,7 @@ public class SilverTierShowcaseDemo {
         pluginStatus.setWrapStyleWord(true);
 
         // Update plugin status
-        PluginManager pluginManager = Foundation.getPluginManager();
+        uiPluginManager pluginManager = Foundation.getPluginManager();
         if (pluginManager != null && pluginManager.isInitialized()) {
             int registered = pluginManager.getRegisteredPluginCount();
             int loaded = pluginManager.getLoadedPluginCount();
@@ -479,7 +479,7 @@ public class SilverTierShowcaseDemo {
      * Shows a list of all plugins in a dialog.
      */
     private static void showPluginList() {
-        PluginManager pluginManager = Foundation.getPluginManager();
+        uiPluginManager pluginManager = Foundation.getPluginManager();
         if (pluginManager == null || !pluginManager.isInitialized()) {
             JOptionPane.showMessageDialog(null,
                 "Plugin system not initialized",
@@ -530,14 +530,16 @@ public class SilverTierShowcaseDemo {
      * Registers all enabled plugins with the action registry.
      */
     private static void registerAllPluginActions() {
-        PluginActionRegistry actionRegistry = Foundation.getPluginActionRegistry();
-        if (actionRegistry == null) {
+        uiPluginManager pluginManager = Foundation.getPluginManager();
+        if (pluginManager == null) {
             JOptionPane.showMessageDialog(null,
-                "Plugin action registry not available",
+                "Plugin system not initialized",
                 "Plugin System",
                 JOptionPane.WARNING_MESSAGE);
             return;
         }
+
+        PluginActionRegistry actionRegistry = pluginManager.getPluginActionRegistry();
 
         List<javax.swing.Action> actions = actionRegistry.registerAllEnabledPlugins();
         logEvent("PLUGIN", "Registered " + actions.size() + " plugin action(s)");
@@ -552,14 +554,16 @@ public class SilverTierShowcaseDemo {
      * Shows the plugin menu in a dialog (for demonstration).
      */
     private static void showPluginMenu() {
-        PluginActionRegistry actionRegistry = Foundation.getPluginActionRegistry();
-        if (actionRegistry == null) {
+        uiPluginManager pluginManager = Foundation.getPluginManager();
+        if (pluginManager == null) {
             JOptionPane.showMessageDialog(null,
-                "Plugin action registry not available",
+                "Plugin system not initialized",
                 "Plugin System",
                 JOptionPane.WARNING_MESSAGE);
             return;
         }
+
+        PluginActionRegistry actionRegistry = pluginManager.getPluginActionRegistry();
 
         // Register actions if not already done
         if (actionRegistry.getAllActions().isEmpty()) {
@@ -592,7 +596,7 @@ public class SilverTierShowcaseDemo {
      * Rescans the plugins directory for new plugins.
      */
     private static void rescanPlugins() {
-        PluginManager pluginManager = Foundation.getPluginManager();
+        uiPluginManager pluginManager = Foundation.getPluginManager();
         if (pluginManager == null || !pluginManager.isInitialized()) {
             JOptionPane.showMessageDialog(null,
                 "Plugin system not initialized",

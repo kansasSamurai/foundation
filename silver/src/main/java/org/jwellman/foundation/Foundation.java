@@ -6,6 +6,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 
 import org.jwellman.foundation.interfaces.uiContext;
+import org.jwellman.foundation.interfaces.uiPluginManager;
 
 /**
  * A micro-framework for Swing applications.
@@ -194,28 +195,22 @@ public class Foundation extends Platinum {
 
     /**
      * Gets the plugin manager (Silver tier feature).
+     * <p>
+     * Use the returned plugin manager to access plugin-related functionality:
+     * <ul>
+     *   <li>{@code getPluginActionRegistry()} - Get the action registry for UI integration</li>
+     *   <li>{@code getAllRegisteredPlugins()} - Get all registered plugins</li>
+     *   <li>{@code launchPlugin(id)} - Launch a plugin</li>
+     * </ul>
      *
      * @return the plugin manager, or null if plugin system not initialized
      * @since Silver Tier
      */
-    public static org.jwellman.foundation.plugin.PluginManager getPluginManager() {
+    public static uiPluginManager getPluginManager() {
         if (instance == null) {
             return null;
         }
-        return instance.getPluginManager();
-    }
-
-    /**
-     * Gets the plugin action registry (Silver tier feature).
-     *
-     * @return the plugin action registry, or null if plugin system not initialized
-     * @since Silver Tier
-     */
-    public static org.jwellman.foundation.plugin.PluginActionRegistry getPluginActionRegistry() {
-        if (instance == null) {
-            return null;
-        }
-        return instance.getPluginActionRegistry();
+        return instance._getPluginManager();
     }
 
     /**
