@@ -18,6 +18,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
@@ -37,6 +38,10 @@ import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.listener.PanelLifecycleListener;
 import org.jwellman.foundation.model.FrameDescriptor;
+import org.jwellman.foundation.plugin.PluginActionRegistry;
+import org.jwellman.foundation.plugin.PluginManager;
+import org.jwellman.foundation.plugin.PluginRegistration;
+import org.jwellman.foundation.plugin.UnregisteredPlugin;
 import org.jwellman.foundation.swing.IWindow;
 
 /**
@@ -48,6 +53,7 @@ import org.jwellman.foundation.swing.IWindow;
  * <li><b>Panel Detach/Attach</b> - Toggle panels between internal frames (desktop) and external frames (standalone windows)</li>
  * <li><b>Menu Bar Support</b> - Optional menu bars on panels that transfer during detach/attach operations</li>
  * <li><b>Advanced Frame Manager</b> - Rich UI for managing all frames with visibility toggle, attach/detach, and editable titles</li>
+ * <li><b>Plugin System</b> - Plugin discovery, registration, and launching with action registry integration</li>
  * </ol>
  * <p>
  * This interactive demo provides:
@@ -102,6 +108,28 @@ public class SilverTierShowcaseDemo {
         context.setDesktopTitle("Silver Tier Framework Showcase - Interactive Demo");
 
         Foundation.init(context);
+
+        // Initialize plugin system (Silver tier feature)
+        try {
+            Foundation.initPlugins();
+            logEvent("PLUGIN", "Plugin system initialized successfully");
+
+            // Log discovered plugins
+            PluginManager pluginManager = Foundation.getPluginManager();
+            if (pluginManager != null) {
+                List<UnregisteredPlugin> discovered = pluginManager.getDiscoveredPlugins();
+                logEvent("PLUGIN", "Discovered " + discovered.size() + " new plugin(s)");
+
+                for (UnregisteredPlugin plugin : discovered) {
+                    logEvent("PLUGIN", "Found: " + plugin.getName() + " v" + plugin.getVersion());
+                }
+
+                logEvent("PLUGIN", "Registered plugins: " + pluginManager.getRegisteredPluginCount());
+            }
+        } catch (Exception e) {
+            logEvent("PLUGIN", "Plugin system initialization failed: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         // Register registry change listener (Silver tier feature)
         // This automatically updates all UI components when the registry changes
@@ -204,8 +232,16 @@ public class SilverTierShowcaseDemo {
         contentPanel.add(new JSeparator());
         contentPanel.add(Box.createVerticalStrut(10));
 
-        // Section 3: Registered Panels List
-        contentPanel.add(createSectionHeader("3. Panel Registry"));
+        // Section 3: Plugin System
+        contentPanel.add(createSectionHeader("3. Plugin System"));
+        contentPanel.add(Box.createVerticalStrut(5));
+        contentPanel.add(createPluginSection());
+        contentPanel.add(Box.createVerticalStrut(10));
+        contentPanel.add(new JSeparator());
+        contentPanel.add(Box.createVerticalStrut(10));
+
+        // Section 4: Registered Panels List
+        contentPanel.add(createSectionHeader("4. Panel Registry"));
         contentPanel.add(Box.createVerticalStrut(5));
         contentPanel.add(createPanelListSection());
 
@@ -358,6 +394,220 @@ public class SilverTierShowcaseDemo {
         section.add(buttonsPanel);
 
         return section;
+    }
+
+    /**
+     * Creates the plugin system section.
+     */
+    private static JPanel createPluginSection() {
+        JPanel section = new JPanel();
+        section.setLayout(new BoxLayout(section, BoxLayout.Y_AXIS));
+        section.setOpaque(false);
+        section.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+
+        JLabel infoLabel = new JLabel("<html><i>Silver tier plugin management:</i></html>");
+        infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        infoLabel.setAlignmentX(JLabel.LEFT_ALIGNMENT);
+        section.add(infoLabel);
+        section.add(Box.createVerticalStrut(8));
+
+        // Plugin status panel
+        JPanel statusPanel = new JPanel(new BorderLayout(5, 5));
+        statusPanel.setOpaque(false);
+        statusPanel.setMaximumSize(new Dimension(350, 80));
+        statusPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+
+        JTextArea pluginStatus = new JTextArea(3, 30);
+        pluginStatus.setEditable(false);
+        pluginStatus.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        pluginStatus.setLineWrap(true);
+        pluginStatus.setWrapStyleWord(true);
+
+        // Update plugin status
+        PluginManager pluginManager = Foundation.getPluginManager();
+        if (pluginManager != null && pluginManager.isInitialized()) {
+            int registered = pluginManager.getRegisteredPluginCount();
+            int loaded = pluginManager.getLoadedPluginCount();
+            List<UnregisteredPlugin> discovered = pluginManager.getDiscoveredPlugins();
+
+            pluginStatus.setText(String.format(
+                "Registered: %d | Loaded: %d | Discovered: %d\n" +
+                "Plugins dir: %s\n" +
+                "Config dir: %s",
+                registered, loaded, discovered.size(),
+                pluginManager.getPluginsDir().getPath(),
+                pluginManager.getConfigDir().getPath()
+            ));
+        } else {
+            pluginStatus.setText("Plugin system not initialized");
+        }
+
+        JScrollPane statusScroll = new JScrollPane(pluginStatus);
+        statusScroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        statusPanel.add(statusScroll, BorderLayout.CENTER);
+        section.add(statusPanel);
+        section.add(Box.createVerticalStrut(8));
+
+        // Plugin buttons
+        JPanel buttonsPanel = new JPanel(new GridLayout(4, 1, 5, 5));
+        buttonsPanel.setOpaque(false);
+        buttonsPanel.setMaximumSize(new Dimension(350, 120));
+        buttonsPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+
+        JButton showPluginsButton = new JButton("Show Plugin List");
+        showPluginsButton.addActionListener(e -> showPluginList());
+        buttonsPanel.add(showPluginsButton);
+
+        JButton registerAllButton = new JButton("Register All Actions");
+        registerAllButton.addActionListener(e -> registerAllPluginActions());
+        buttonsPanel.add(registerAllButton);
+
+        JButton showPluginMenuButton = new JButton("Show Plugin Menu");
+        showPluginMenuButton.addActionListener(e -> showPluginMenu());
+        buttonsPanel.add(showPluginMenuButton);
+
+        JButton rescanButton = new JButton("Rescan for Plugins");
+        rescanButton.addActionListener(e -> rescanPlugins());
+        buttonsPanel.add(rescanButton);
+
+        section.add(buttonsPanel);
+
+        return section;
+    }
+
+    /**
+     * Shows a list of all plugins in a dialog.
+     */
+    private static void showPluginList() {
+        PluginManager pluginManager = Foundation.getPluginManager();
+        if (pluginManager == null || !pluginManager.isInitialized()) {
+            JOptionPane.showMessageDialog(null,
+                "Plugin system not initialized",
+                "Plugin System",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        StringBuilder message = new StringBuilder();
+        message.append("=== Registered Plugins ===\n\n");
+
+        List<PluginRegistration> registered = pluginManager.getAllRegisteredPlugins();
+        if (registered.isEmpty()) {
+            message.append("(No registered plugins)\n\n");
+        } else {
+            for (PluginRegistration reg : registered) {
+                message.append(String.format("• %s\n", reg.getName()));
+                message.append(String.format("  ID: %s\n", reg.getId()));
+                message.append(String.format("  Mode: %s\n", reg.getLaunchMode()));
+                message.append(String.format("  Enabled: %s\n", reg.isEnabled()));
+                message.append(String.format("  Dir: %s\n\n", reg.getPluginDir().getName()));
+            }
+        }
+
+        message.append("=== Discovered Plugins ===\n\n");
+        List<UnregisteredPlugin> discovered = pluginManager.getDiscoveredPlugins();
+        if (discovered.isEmpty()) {
+            message.append("(No unregistered plugins found)");
+        } else {
+            for (UnregisteredPlugin plugin : discovered) {
+                message.append(String.format("• %s v%s\n", plugin.getName(), plugin.getVersion()));
+                message.append(String.format("  ID: %s\n", plugin.getId()));
+                message.append(String.format("  Suggested Mode: %s\n\n",
+                    plugin.getSuggestedLaunchMode()));
+            }
+        }
+
+        JTextArea textArea = new JTextArea(message.toString(), 20, 50);
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        JScrollPane scrollPane = new JScrollPane(textArea);
+
+        JOptionPane.showMessageDialog(null, scrollPane,
+            "Plugin List", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * Registers all enabled plugins with the action registry.
+     */
+    private static void registerAllPluginActions() {
+        PluginActionRegistry actionRegistry = Foundation.getPluginActionRegistry();
+        if (actionRegistry == null) {
+            JOptionPane.showMessageDialog(null,
+                "Plugin action registry not available",
+                "Plugin System",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        List<javax.swing.Action> actions = actionRegistry.registerAllEnabledPlugins();
+        logEvent("PLUGIN", "Registered " + actions.size() + " plugin action(s)");
+
+        JOptionPane.showMessageDialog(null,
+            "Registered " + actions.size() + " plugin actions",
+            "Plugin Actions",
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * Shows the plugin menu in a dialog (for demonstration).
+     */
+    private static void showPluginMenu() {
+        PluginActionRegistry actionRegistry = Foundation.getPluginActionRegistry();
+        if (actionRegistry == null) {
+            JOptionPane.showMessageDialog(null,
+                "Plugin action registry not available",
+                "Plugin System",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Register actions if not already done
+        if (actionRegistry.getAllActions().isEmpty()) {
+            actionRegistry.registerAllEnabledPlugins();
+        }
+
+        JMenu pluginMenu = actionRegistry.createPluginMenu("Plugins");
+
+        // Create a simple frame to show the menu
+        JFrame menuFrame = new JFrame("Plugin Menu Demo");
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(pluginMenu);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.add(new JLabel(
+            "<html><center>Plugin menu is shown above.<br>" +
+            "Click a plugin to launch it.</center></html>",
+            JLabel.CENTER), BorderLayout.CENTER);
+
+        menuFrame.setJMenuBar(menuBar);
+        menuFrame.setContentPane(panel);
+        menuFrame.setSize(400, 200);
+        menuFrame.setLocationRelativeTo(null);
+        menuFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        menuFrame.setVisible(true);
+    }
+
+    /**
+     * Rescans the plugins directory for new plugins.
+     */
+    private static void rescanPlugins() {
+        PluginManager pluginManager = Foundation.getPluginManager();
+        if (pluginManager == null || !pluginManager.isInitialized()) {
+            JOptionPane.showMessageDialog(null,
+                "Plugin system not initialized",
+                "Plugin System",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        List<UnregisteredPlugin> discovered = pluginManager.rescanPlugins();
+        logEvent("PLUGIN", "Rescan complete: " + discovered.size() + " new plugin(s) found");
+
+        JOptionPane.showMessageDialog(null,
+            "Found " + discovered.size() + " new plugin(s)",
+            "Plugin Rescan",
+            JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**

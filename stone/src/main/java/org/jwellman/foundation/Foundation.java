@@ -118,6 +118,15 @@ public class Foundation extends Platinum {
     }
 
     /**
+     * Checks if Foundation has been initialized.
+     *
+     * @return true if init() has been called, false otherwise
+     */
+    public static boolean isInitialized() {
+        return instance != null;
+    }
+
+    /**
      * Get the master application context.
      *
      * @return The master uiContext, or null if not initialized

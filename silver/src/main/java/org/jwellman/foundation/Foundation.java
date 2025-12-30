@@ -134,6 +134,15 @@ public class Foundation extends Platinum {
     }
 
     /**
+     * Checks if Foundation has been initialized.
+     *
+     * @return true if init() has been called, false otherwise
+     */
+    public static boolean isInitialized() {
+        return instance != null;
+    }
+
+    /**
      * Get the master application context.
      *
      * @return The master uiContext, or null if not initialized
@@ -152,6 +161,61 @@ public class Foundation extends Platinum {
 
     public static void togglePanel(String namespace, String panelId) {
         instance._togglePanel(namespace, panelId);
+    }
+
+    // ========================================================================
+    // PLUGIN SYSTEM (Silver Tier)
+    // ========================================================================
+
+    /**
+     * Initializes the plugin system (Silver tier feature).
+     * <p>
+     * This method must be called AFTER {@link #init(uiContext)} to ensure
+     * the Foundation framework is properly initialized before loading plugins.
+     * <p>
+     * The plugin system uses directories configured in the master uContext:
+     * <ul>
+     *   <li>{@code pluginsDirectory} - Scanned for plugin subdirectories</li>
+     *   <li>{@code pluginConfigDirectory} - Stores registry.json</li>
+     * </ul>
+     *
+     * @throws IllegalStateException if init() has not been called first
+     * @throws java.io.IOException if plugin system initialization fails
+     * @since Silver Tier
+     */
+    public static void initPlugins() throws java.io.IOException {
+        if (instance == null) {
+            throw new IllegalStateException(
+                "Foundation must be initialized (call init()) before calling initPlugins()");
+        }
+
+        instance._initPlugins();
+    }
+
+    /**
+     * Gets the plugin manager (Silver tier feature).
+     *
+     * @return the plugin manager, or null if plugin system not initialized
+     * @since Silver Tier
+     */
+    public static org.jwellman.foundation.plugin.PluginManager getPluginManager() {
+        if (instance == null) {
+            return null;
+        }
+        return instance.getPluginManager();
+    }
+
+    /**
+     * Gets the plugin action registry (Silver tier feature).
+     *
+     * @return the plugin action registry, or null if plugin system not initialized
+     * @since Silver Tier
+     */
+    public static org.jwellman.foundation.plugin.PluginActionRegistry getPluginActionRegistry() {
+        if (instance == null) {
+            return null;
+        }
+        return instance.getPluginActionRegistry();
     }
 
     /**

@@ -62,7 +62,7 @@ public class Silver extends Bronze {
      */
     protected void _initPlugins() throws IOException {
         // Verify init() has been called
-        if (!isInitialized()) {
+        if (!Foundation.isInitialized()) {
             throw new IllegalStateException(
                     "Foundation.init() must be called before initPlugins(). " +
                     "The plugin system requires the Swing framework to be initialized first.");
