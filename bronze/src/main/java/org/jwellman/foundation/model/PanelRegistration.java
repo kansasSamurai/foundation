@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jwellman.foundation.framework.WindowPosition;
-import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
+import org.jwellman.foundation.listener.PanelLifecycleListener;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
 import org.jwellman.foundation.swing.XInternalFrame;
@@ -54,7 +54,7 @@ public class PanelRegistration {
     private WindowPosition windowPosition;
 
     /** Lifecycle event listener (optional) */
-    private uiPanelLifecycleListener lifecycleListener;
+    private PanelLifecycleListener lifecycleListener;
 
     /** Application-specific attributes for storing custom metadata */
     private final Map<String, Object> attributes;
@@ -94,7 +94,7 @@ public class PanelRegistration {
      * @param panel The wrapped panel
      * @param listener Lifecycle event listener
      */
-    public PanelRegistration(String namespace, String panelId, XPanel panel, uiPanelLifecycleListener listener) {
+    public PanelRegistration(String namespace, String panelId, XPanel panel, PanelLifecycleListener listener) {
         this(namespace, panelId, panel);
         this.lifecycleListener = listener;
     }
@@ -321,11 +321,11 @@ public class PanelRegistration {
         this.windowPosition = windowPosition;
     }
 
-    public uiPanelLifecycleListener getLifecycleListener() {
+    public PanelLifecycleListener getLifecycleListener() {
         return lifecycleListener;
     }
 
-    public void setLifecycleListener(uiPanelLifecycleListener lifecycleListener) {
+    public void setLifecycleListener(PanelLifecycleListener lifecycleListener) {
         this.lifecycleListener = lifecycleListener;
     }
 

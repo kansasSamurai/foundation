@@ -1,9 +1,11 @@
-package org.jwellman.foundation.interfaces;
+package org.jwellman.foundation.listener;
+
+import org.jwellman.foundation.interfaces.uiContext;
 
 /**
  * Listener interface for registry-level change events in Foundation framework.
  * <p>
- * Unlike {@link uiPanelLifecycleListener} which tracks individual panel events,
+ * Unlike {@link PanelLifecycleListener} which tracks individual panel events,
  * RegistryChangeListener provides a global view of all registry changes including:
  * <ul>
  * <li>Panel registration (new panels added)</li>
@@ -50,7 +52,7 @@ package org.jwellman.foundation.interfaces;
  *
  * @author Foundation Framework
  * @since Silver Tier
- * @see uiPanelLifecycleListener
+ * @see PanelLifecycleListener
  * @see uiContext#addRegistryChangeListener(RegistryChangeListener)
  * @see uiContext#removeRegistryChangeListener(RegistryChangeListener)
  */

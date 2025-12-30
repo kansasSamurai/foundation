@@ -10,12 +10,12 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.jwellman.foundation.framework.WindowPosition;
-import org.jwellman.foundation.interfaces.RegistryChangeListener;
-import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.interfaces.uiThemeProvider;
+import org.jwellman.foundation.listener.PanelLifecycleListener;
+import org.jwellman.foundation.listener.RegistryChangeListener;
 import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.swing.XPanel;
 
@@ -310,7 +310,7 @@ public class uContext implements uiContext {
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
      * @return The FrameDescriptor for this panel
      */
-    public FrameDescriptor registerUI(String panelId, JPanel ui, uiPanelLifecycleListener listener, WindowPosition position) {
+    public FrameDescriptor registerUI(String panelId, JPanel ui, PanelLifecycleListener listener, WindowPosition position) {
         return registerUI(panelId, ui, null, listener, position);
     }
 
@@ -328,7 +328,7 @@ public class uContext implements uiContext {
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
      * @return The FrameDescriptor for this panel
      */
-    public FrameDescriptor registerUI(String panelId, JPanel ui, javax.swing.JMenuBar menuBar, uiPanelLifecycleListener listener, WindowPosition position) {
+    public FrameDescriptor registerUI(String panelId, JPanel ui, javax.swing.JMenuBar menuBar, PanelLifecycleListener listener, WindowPosition position) {
 
         // Get or create the uContext for this namespace
         uiContext ctx = this;

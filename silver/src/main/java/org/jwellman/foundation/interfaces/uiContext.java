@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.swing.JPanel;
 
 import org.jwellman.foundation.framework.WindowPosition;
+import org.jwellman.foundation.listener.PanelLifecycleListener;
+import org.jwellman.foundation.listener.RegistryChangeListener;
 import org.jwellman.foundation.model.FrameDescriptor;
 
 /**
@@ -253,7 +255,7 @@ public interface uiContext {
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
      * @return The FrameDescriptor for this panel
      */
-    FrameDescriptor registerUI(String panelId, JPanel ui, uiPanelLifecycleListener listener, WindowPosition position);
+    FrameDescriptor registerUI(String panelId, JPanel ui, PanelLifecycleListener listener, WindowPosition position);
 
     /**
      * Register a panel with menu bar, lifecycle listener, and window positioning.
@@ -269,7 +271,7 @@ public interface uiContext {
      * @param position Window positioning strategy (may be null, defaults to CASCADE)
      * @return The FrameDescriptor for this panel
      */
-    FrameDescriptor registerUI(String panelId, JPanel ui, javax.swing.JMenuBar menuBar, uiPanelLifecycleListener listener, WindowPosition position);
+    FrameDescriptor registerUI(String panelId, JPanel ui, javax.swing.JMenuBar menuBar, PanelLifecycleListener listener, WindowPosition position);
 
     /**
      * Close a panel and remove it from this context's registry.

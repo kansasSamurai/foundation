@@ -35,7 +35,7 @@ import javax.swing.SwingConstants;
 import org.jwellman.foundation.Foundation;
 import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.interfaces.uiContext;
-import org.jwellman.foundation.interfaces.uiPanelLifecycleListener;
+import org.jwellman.foundation.listener.PanelLifecycleListener;
 import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.swing.IWindow;
 
@@ -614,8 +614,8 @@ public class SilverTierShowcaseDemo {
     /**
      * Creates a lifecycle listener that logs events.
      */
-    private static uiPanelLifecycleListener createLifecycleListener(final String panelName) {
-        return new uiPanelLifecycleListener() {
+    private static PanelLifecycleListener createLifecycleListener(final String panelName) {
+        return new PanelLifecycleListener() {
             @Override
             public void onCreate(IWindow window) {
                 logEvent("onCreate", panelName);
