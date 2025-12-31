@@ -181,15 +181,15 @@ public class SilverTierShowcaseDemo {
         advancedManagerPanel.setWindowTitle("Advanced Frame Manager");
         advancedManagerPanel.setAttribute("utility", true);
 
-        // Create the plugin menu panel (hidden by default)
+        // Create the plugin management panel (hidden by default)
         FrameDescriptor pluginMenuPanel = context.registerUI(
             "pluginmenu",
             createPluginMenuPanel(),
             createPluginMenuBar(),
-            createLifecycleListener("Plugin Menu"),
-            WindowPosition.at(300, 200, 450, 300)
+            createLifecycleListener("Plugin Management"),
+            WindowPosition.at(300, 200, 650, 400)
         );
-        pluginMenuPanel.setWindowTitle("Plugin Menu");
+        pluginMenuPanel.setWindowTitle("Plugin Management");
         pluginMenuPanel.setAttribute("utility", true);
 
         // Set control panel as master
@@ -424,124 +424,16 @@ public class SilverTierShowcaseDemo {
         section.add(infoLabel);
         section.add(Box.createVerticalStrut(8));
 
-        // Plugin status panel
-        JPanel statusPanel = new JPanel(new BorderLayout(5, 5));
-        statusPanel.setOpaque(false);
-        statusPanel.setMaximumSize(new Dimension(350, 80));
-        statusPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-
-        JTextArea pluginStatus = new JTextArea(3, 30);
-        pluginStatus.setEditable(false);
-        pluginStatus.setFont(new Font("Monospaced", Font.PLAIN, 10));
-        pluginStatus.setLineWrap(true);
-        pluginStatus.setWrapStyleWord(true);
-
-        // Update plugin status
-        uiPluginManager pluginManager = Foundation.getPluginManager();
-        if (pluginManager != null && pluginManager.isInitialized()) {
-            int registered = pluginManager.getRegisteredPluginCount();
-            int loaded = pluginManager.getLoadedPluginCount();
-            List<UnregisteredPlugin> discovered = pluginManager.getDiscoveredPlugins();
-
-            pluginStatus.setText(String.format(
-                "Registered: %d | Loaded: %d | Discovered: %d\n" +
-                "Plugins dir: %s\n" +
-                "Config dir: %s",
-                registered, loaded, discovered.size(),
-                pluginManager.getPluginsDir().getPath(),
-                pluginManager.getConfigDir().getPath()
-            ));
-        } else {
-            pluginStatus.setText("Plugin system not initialized");
-        }
-
-        JScrollPane statusScroll = new JScrollPane(pluginStatus);
-        statusScroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        statusPanel.add(statusScroll, BorderLayout.CENTER);
-        section.add(statusPanel);
-        section.add(Box.createVerticalStrut(8));
-
-        // Plugin buttons
-        JPanel buttonsPanel = new JPanel(new GridLayout(5, 1, 5, 5));
-        buttonsPanel.setOpaque(false);
-        buttonsPanel.setMaximumSize(new Dimension(350, 150));
-        buttonsPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-
-        JButton registerDiscoveredButton = new JButton("Register Discovered Plugins");
-        registerDiscoveredButton.addActionListener(e -> showPluginRegistrationWizard());
-        buttonsPanel.add(registerDiscoveredButton);
-
-        JButton showPluginsButton = new JButton("Show Plugin List");
-        showPluginsButton.addActionListener(e -> showPluginList());
-        buttonsPanel.add(showPluginsButton);
-
-        JButton registerAllButton = new JButton("Register All Actions");
-        registerAllButton.addActionListener(e -> registerAllPluginActions());
-        buttonsPanel.add(registerAllButton);
-
-        JButton showPluginMenuButton = new JButton("Show Plugin Menu");
+        // Single button to open plugin management panel
+        JButton showPluginMenuButton = new JButton("Show Plugin Management");
+        showPluginMenuButton.setAlignmentX(JButton.LEFT_ALIGNMENT);
+        showPluginMenuButton.setMaximumSize(new Dimension(350, 30));
         showPluginMenuButton.addActionListener(e -> showPluginMenu());
-        buttonsPanel.add(showPluginMenuButton);
-
-        JButton rescanButton = new JButton("Rescan for Plugins");
-        rescanButton.addActionListener(e -> rescanPlugins());
-        buttonsPanel.add(rescanButton);
-
-        section.add(buttonsPanel);
+        section.add(showPluginMenuButton);
 
         return section;
     }
 
-    /**
-     * Shows a list of all plugins in a dialog.
-     */
-    private static void showPluginList() {
-        uiPluginManager pluginManager = Foundation.getPluginManager();
-        if (pluginManager == null || !pluginManager.isInitialized()) {
-            JOptionPane.showMessageDialog(null,
-                "Plugin system not initialized",
-                "Plugin System",
-                JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        StringBuilder message = new StringBuilder();
-        message.append("=== Registered Plugins ===\n\n");
-
-        List<PluginRegistration> registered = pluginManager.getAllRegisteredPlugins();
-        if (registered.isEmpty()) {
-            message.append("(No registered plugins)\n\n");
-        } else {
-            for (PluginRegistration reg : registered) {
-                message.append(String.format("• %s\n", reg.getName()));
-                message.append(String.format("  ID: %s\n", reg.getId()));
-                message.append(String.format("  Mode: %s\n", reg.getLaunchMode()));
-                message.append(String.format("  Enabled: %s\n", reg.isEnabled()));
-                message.append(String.format("  Dir: %s\n\n", reg.getPluginDir().getName()));
-            }
-        }
-
-        message.append("=== Discovered Plugins ===\n\n");
-        List<UnregisteredPlugin> discovered = pluginManager.getDiscoveredPlugins();
-        if (discovered.isEmpty()) {
-            message.append("(No unregistered plugins found)");
-        } else {
-            for (UnregisteredPlugin plugin : discovered) {
-                message.append(String.format("• %s v%s\n", plugin.getName(), plugin.getVersion()));
-                message.append(String.format("  ID: %s\n", plugin.getId()));
-                message.append(String.format("  Suggested Mode: %s\n\n",
-                    plugin.getSuggestedLaunchMode()));
-            }
-        }
-
-        JTextArea textArea = new JTextArea(message.toString(), 20, 50);
-        textArea.setEditable(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        JScrollPane scrollPane = new JScrollPane(textArea);
-
-        JOptionPane.showMessageDialog(null, scrollPane,
-            "Plugin List", JOptionPane.INFORMATION_MESSAGE);
-    }
 
     /**
      * Registers all enabled plugins with the action registry.
@@ -875,7 +767,7 @@ public class SilverTierShowcaseDemo {
         ));
 
         // Header
-        JLabel headerLabel = new JLabel("Plugin Menu");
+        JLabel headerLabel = new JLabel("Plugin Management");
         headerLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         headerLabel.setForeground(new Color(70, 130, 180));
         headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -894,80 +786,144 @@ public class SilverTierShowcaseDemo {
             return panel;
         }
 
-        PluginActionRegistry actionRegistry = pluginManager.getPluginActionRegistry();
+        // Create plugin table
+        String[] columnNames = {"State", "Name", "ID", "Mode", "Enabled", "Dir"};
+        Object[][] data = buildPluginTableData(pluginManager);
 
-        // Info panel
-        JPanel infoPanel = new JPanel(new BorderLayout(5, 5));
-        infoPanel.setOpaque(false);
+        javax.swing.table.DefaultTableModel tableModel = new javax.swing.table.DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table read-only
+            }
+        };
 
+        javax.swing.JTable pluginTable = new javax.swing.JTable(tableModel);
+        pluginTable.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        pluginTable.setRowHeight(22);
+        pluginTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 11));
+
+        // Set column widths
+        pluginTable.getColumnModel().getColumn(0).setPreferredWidth(80);  // State
+        pluginTable.getColumnModel().getColumn(1).setPreferredWidth(120); // Name
+        pluginTable.getColumnModel().getColumn(2).setPreferredWidth(100); // ID
+        pluginTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Mode
+        pluginTable.getColumnModel().getColumn(4).setPreferredWidth(60);  // Enabled
+        pluginTable.getColumnModel().getColumn(5).setPreferredWidth(150); // Dir
+
+        JScrollPane tableScrollPane = new JScrollPane(pluginTable);
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+
+        // Info label above table
         JLabel infoLabel = new JLabel(
             "<html><center><i>Use the 'Plugins' menu above to launch registered plugins</i></center></html>",
             JLabel.CENTER
         );
         infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
 
-        // Show registered plugins list
-        List<PluginRegistration> registered = pluginManager.getAllRegisteredPlugins();
-        StringBuilder pluginListHtml = new StringBuilder("<html><body style='padding: 10px;'>");
-        pluginListHtml.append("<b>Registered Plugins:</b><br>");
+        // Table panel
+        JPanel tablePanel = new JPanel(new BorderLayout(5, 5));
+        tablePanel.setOpaque(false);
+        tablePanel.add(infoLabel, BorderLayout.NORTH);
+        tablePanel.add(tableScrollPane, BorderLayout.CENTER);
 
-        if (registered.isEmpty()) {
-            pluginListHtml.append("<i>No plugins registered yet.</i><br>");
-        } else {
-            for (PluginRegistration reg : registered) {
-                String status = reg.isEnabled() ? "✓" : "✗";
-                pluginListHtml.append(status).append(" ")
-                    .append(reg.getName())
-                    .append(" (").append(reg.getLaunchMode()).append(")<br>");
-            }
-        }
+        // Action buttons
+        JPanel buttonsPanel = new JPanel(new GridLayout(2, 2, 5, 5));
+        buttonsPanel.setOpaque(false);
 
-        pluginListHtml.append("<br><b>Available Actions:</b> ").append(actionRegistry.getAllActions().size());
-        pluginListHtml.append("</body></html>");
-
-        JLabel pluginListLabel = new JLabel(pluginListHtml.toString());
-        pluginListLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        pluginListLabel.setVerticalAlignment(SwingConstants.TOP);
-
-        JScrollPane listScrollPane = new JScrollPane(pluginListLabel);
-        listScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-
-        infoPanel.add(infoLabel, BorderLayout.NORTH);
-        infoPanel.add(listScrollPane, BorderLayout.CENTER);
-
-        // Refresh button
-        JButton refreshButton = new JButton("Refresh Plugin List");
-        refreshButton.addActionListener(e -> {
-            // Re-register the panel to refresh its content
-            FrameDescriptor descriptor = context.getFrameDescriptor("pluginmenu");
-            if (descriptor != null) {
-                WindowPosition currentPos = WindowPosition.at(
-                    descriptor.getWindow().getX(),
-                    descriptor.getWindow().getY(),
-                    descriptor.getWindow().getWidth(),
-                    descriptor.getWindow().getHeight()
-                );
-
-                context.closePanel("pluginmenu");
-                FrameDescriptor newPanel = context.registerUI(
-                    "pluginmenu",
-                    createPluginMenuPanel(),
-                    createPluginMenuBar(),
-                    createLifecycleListener("Plugin Menu"),
-                    currentPos
-                );
-                newPanel.setWindowTitle("Plugin Menu");
-                newPanel.setAttribute("utility", true);
-                newPanel.show();
-            }
+        JButton registerDiscoveredButton = new JButton("Register Discovered");
+        registerDiscoveredButton.addActionListener(e -> {
+            showPluginRegistrationWizard();
+            refreshPluginPanel();
         });
+
+        JButton registerAllActionsButton = new JButton("Register All Actions");
+        registerAllActionsButton.addActionListener(e -> {
+            registerAllPluginActions();
+            refreshPluginPanel();
+        });
+
+        JButton rescanButton = new JButton("Rescan for Plugins");
+        rescanButton.addActionListener(e -> {
+            rescanPlugins();
+            refreshPluginPanel();
+        });
+
+        JButton refreshButton = new JButton("Refresh Display");
+        refreshButton.addActionListener(e -> refreshPluginPanel());
+
+        buttonsPanel.add(registerDiscoveredButton);
+        buttonsPanel.add(registerAllActionsButton);
+        buttonsPanel.add(rescanButton);
+        buttonsPanel.add(refreshButton);
 
         // Layout
         panel.add(headerLabel, BorderLayout.NORTH);
-        panel.add(infoPanel, BorderLayout.CENTER);
-        panel.add(refreshButton, BorderLayout.SOUTH);
+        panel.add(tablePanel, BorderLayout.CENTER);
+        panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    /**
+     * Builds the data array for the plugin table.
+     */
+    private static Object[][] buildPluginTableData(uiPluginManager pluginManager) {
+        List<Object[]> rows = new ArrayList<>();
+
+        // Add registered plugins
+        List<PluginRegistration> registered = pluginManager.getAllRegisteredPlugins();
+        for (PluginRegistration reg : registered) {
+            rows.add(new Object[]{
+                "Registered",
+                reg.getName(),
+                reg.getId(),
+                reg.getLaunchMode().toString(),
+                reg.isEnabled() ? "Yes" : "No",
+                reg.getPluginDir().getName()
+            });
+        }
+
+        // Add discovered plugins
+        List<UnregisteredPlugin> discovered = pluginManager.getDiscoveredPlugins();
+        for (UnregisteredPlugin plugin : discovered) {
+            rows.add(new Object[]{
+                "Discovered",
+                plugin.getName(),
+                plugin.getId(),
+                plugin.getSuggestedLaunchMode().toString(),
+                "-",
+                plugin.getPluginDir().getName()
+            });
+        }
+
+        return rows.toArray(new Object[0][]);
+    }
+
+    /**
+     * Refreshes the plugin panel by re-registering it.
+     */
+    private static void refreshPluginPanel() {
+        FrameDescriptor descriptor = context.getFrameDescriptor("pluginmenu");
+        if (descriptor != null) {
+            WindowPosition currentPos = WindowPosition.at(
+                descriptor.getWindow().getX(),
+                descriptor.getWindow().getY(),
+                descriptor.getWindow().getWidth(),
+                descriptor.getWindow().getHeight()
+            );
+
+            context.closePanel("pluginmenu");
+            FrameDescriptor newPanel = context.registerUI(
+                "pluginmenu",
+                createPluginMenuPanel(),
+                createPluginMenuBar(),
+                createLifecycleListener("Plugin Menu"),
+                currentPos
+            );
+            newPanel.setWindowTitle("Plugin Management");
+            newPanel.setAttribute("utility", true);
+            newPanel.show();
+        }
     }
 
     /**
