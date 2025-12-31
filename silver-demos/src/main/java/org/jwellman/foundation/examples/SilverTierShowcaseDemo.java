@@ -7,6 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,6 +19,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -39,6 +41,7 @@ import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiPluginManager;
 import org.jwellman.foundation.listener.PanelLifecycleListener;
 import org.jwellman.foundation.model.FrameDescriptor;
+import org.jwellman.foundation.plugin.LaunchMode;
 import org.jwellman.foundation.plugin.PluginActionRegistry;
 import org.jwellman.foundation.plugin.PluginRegistration;
 import org.jwellman.foundation.plugin.UnregisteredPlugin;
@@ -449,10 +452,14 @@ public class SilverTierShowcaseDemo {
         section.add(Box.createVerticalStrut(8));
 
         // Plugin buttons
-        JPanel buttonsPanel = new JPanel(new GridLayout(4, 1, 5, 5));
+        JPanel buttonsPanel = new JPanel(new GridLayout(5, 1, 5, 5));
         buttonsPanel.setOpaque(false);
-        buttonsPanel.setMaximumSize(new Dimension(350, 120));
+        buttonsPanel.setMaximumSize(new Dimension(350, 150));
         buttonsPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+
+        JButton registerDiscoveredButton = new JButton("Register Discovered Plugins");
+        registerDiscoveredButton.addActionListener(e -> showPluginRegistrationWizard());
+        buttonsPanel.add(registerDiscoveredButton);
 
         JButton showPluginsButton = new JButton("Show Plugin List");
         showPluginsButton.addActionListener(e -> showPluginList());
@@ -612,6 +619,132 @@ public class SilverTierShowcaseDemo {
             "Found " + discovered.size() + " new plugin(s)",
             "Plugin Rescan",
             JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * Shows the plugin registration wizard for discovered plugins.
+     */
+    private static void showPluginRegistrationWizard() {
+        uiPluginManager pluginManager = Foundation.getPluginManager();
+        if (pluginManager == null || !pluginManager.isInitialized()) {
+            JOptionPane.showMessageDialog(null,
+                "Plugin system not initialized",
+                "Plugin System",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        List<UnregisteredPlugin> discovered = pluginManager.getDiscoveredPlugins();
+
+        if (discovered.isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                "No unregistered plugins found.\n\n" +
+                "Place plugin directories in:\n" +
+                pluginManager.getPluginsDir().getAbsolutePath(),
+                "Plugin Registration",
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Create registration dialog
+        JPanel wizardPanel = new JPanel(new BorderLayout(10, 10));
+        wizardPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Header
+        JLabel headerLabel = new JLabel(
+            "<html><b>Register Discovered Plugins</b><br>" +
+            "Select plugins to register and configure their launch settings.</html>");
+        headerLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        wizardPanel.add(headerLabel, BorderLayout.NORTH);
+
+        // Plugin list with checkboxes and launch mode selectors
+        JPanel pluginListPanel = new JPanel();
+        pluginListPanel.setLayout(new BoxLayout(pluginListPanel, BoxLayout.Y_AXIS));
+
+        List<JCheckBox> checkboxes = new ArrayList<>();
+        List<JComboBox<LaunchMode>> launchModeBoxes = new ArrayList<>();
+
+        for (UnregisteredPlugin plugin : discovered) {
+            JPanel pluginPanel = new JPanel(new BorderLayout(5, 5));
+            pluginPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                BorderFactory.createEmptyBorder(8, 8, 8, 8)
+            ));
+
+            // Checkbox with plugin info
+            JCheckBox checkbox = new JCheckBox(
+                String.format("<html><b>%s</b> v%s<br><i>%s</i></html>",
+                    plugin.getName(),
+                    plugin.getVersion(),
+                    plugin.getDescription() != null ? plugin.getDescription() : "No description")
+            );
+            checkbox.setSelected(true); // Default to selected
+            checkboxes.add(checkbox);
+
+            // Launch mode selector
+            JPanel settingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+            settingsPanel.add(new JLabel("Launch Mode:"));
+
+            JComboBox<LaunchMode> launchModeBox = new JComboBox<>(new LaunchMode[] {
+                LaunchMode.AUTO,
+                LaunchMode.ISOLATED_JVM,
+                LaunchMode.EXTERNAL_PROCESS,
+                LaunchMode.SHARED_LIBS_JVM,
+                LaunchMode.SHARED_JVM
+            });
+            launchModeBox.setSelectedItem(plugin.getSuggestedLaunchMode());
+            launchModeBoxes.add(launchModeBox);
+            settingsPanel.add(launchModeBox);
+
+            pluginPanel.add(checkbox, BorderLayout.CENTER);
+            pluginPanel.add(settingsPanel, BorderLayout.SOUTH);
+
+            pluginListPanel.add(pluginPanel);
+            pluginListPanel.add(Box.createVerticalStrut(5));
+        }
+
+        JScrollPane scrollPane = new JScrollPane(pluginListPanel);
+        scrollPane.setPreferredSize(new Dimension(500, 300));
+        wizardPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Show dialog
+        int result = JOptionPane.showConfirmDialog(
+            null,
+            wizardPanel,
+            "Plugin Registration Wizard",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (result == JOptionPane.OK_OPTION) {
+            // Register selected plugins
+            int registered = 0;
+            for (int i = 0; i < discovered.size(); i++) {
+                if (checkboxes.get(i).isSelected()) {
+                    UnregisteredPlugin plugin = discovered.get(i);
+                    LaunchMode selectedMode = (LaunchMode) launchModeBoxes.get(i).getSelectedItem();
+
+                    try {
+                        pluginManager.registerPlugin(plugin, selectedMode, true);
+                        logEvent("PLUGIN", "Registered: " + plugin.getName() + " (" + selectedMode + ")");
+                        registered++;
+                    } catch (Exception ex) {
+                        logEvent("PLUGIN", "Failed to register: " + plugin.getName() + " - " + ex.getMessage());
+                        JOptionPane.showMessageDialog(null,
+                            "Failed to register plugin: " + plugin.getName() + "\n" + ex.getMessage(),
+                            "Registration Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+
+            if (registered > 0) {
+                JOptionPane.showMessageDialog(null,
+                    "Successfully registered " + registered + " plugin(s)",
+                    "Registration Complete",
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
     }
 
     /**
