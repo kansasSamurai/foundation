@@ -73,6 +73,34 @@ public interface IWindow {
     public Point getLocation();
 
     /**
+     * Get the x coordinate of this window's position.
+     *
+     * @return the x coordinate
+     */
+    public int getX();
+
+    /**
+     * Get the y coordinate of this window's position.
+     *
+     * @return the y coordinate
+     */
+    public int getY();
+
+    /**
+     * Get the width of this window.
+     *
+     * @return the width in pixels
+     */
+    public int getWidth();
+
+    /**
+     * Get the height of this window.
+     *
+     * @return the height in pixels
+     */
+    public int getHeight();
+
+    /**
      * Close this window. For JFrame, this calls dispose().
      * For JInternalFrame, this calls setClosed(true).
      */
