@@ -219,7 +219,8 @@ public class LAFDiscovery {
                     String className = name.replace('/', '.')
                                           .substring(0, name.length() - 6);
 
-                    // Skip module-info (Java 9+ module descriptor, not compatible with Java 8)
+                    // JAVA8-COMPAT: Skip module-info (Java 9+ module descriptor, not compatible with Java 8)
+                    // See: docs/migration/java9-upgrade-notes.md
                     if (className.equals("module-info") || className.endsWith(".module-info")) {
                         continue;
                     }
@@ -243,8 +244,9 @@ public class LAFDiscovery {
                     } catch (ClassNotFoundException | NoClassDefFoundError e) {
                         // Class not loadable, skip it
                     } catch (UnsupportedClassVersionError e) {
-                        // Java 9+ class encountered while running on Java 8, skip it
+                        // JAVA8-COMPAT: Java 9+ class encountered while running on Java 8, skip it
                         // This can happen with module-info or other Java 9+ specific classes
+                        // See: docs/migration/java9-upgrade-notes.md
                     } catch (Exception e) {
                         // Other error, log and continue
                         System.err.println("  Error checking class " + className + ": " + e.getMessage());
@@ -294,7 +296,8 @@ public class LAFDiscovery {
             } catch (ClassNotFoundException e) {
                 // LAF not available, skip
             } catch (UnsupportedClassVersionError e) {
-                // LAF compiled with newer Java version, skip
+                // JAVA8-COMPAT: LAF compiled with newer Java version, skip
+                // See: docs/migration/java9-upgrade-notes.md
             }
         }
 
