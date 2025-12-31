@@ -86,10 +86,10 @@ import org.jwellman.foundation.swing.IWindow;
 public class SilverTierShowcaseDemo {
 
     private static final AtomicInteger panelCounter = new AtomicInteger(1);
-    private static DefaultListModel<String> eventLogModel;
-    private static JLabel statsLabel;
+    private static DefaultListModel<String> eventLogModel = new DefaultListModel<>();
+    private static JLabel statsLabel = new JLabel();
     private static JList<String> panelListComponent;
-    private static DefaultListModel<String> panelListModel;
+    private static DefaultListModel<String> panelListModel = new DefaultListModel<>();
     private static uiContext context;
     private static AdvancedFrameManagerPanel advancedFrameManager;
     private static PluginManagementPanel pluginManagementPanel;
@@ -650,7 +650,7 @@ public class SilverTierShowcaseDemo {
         JLabel infoLabel = new JLabel("<html><i>Registered panels (click to toggle visibility):</i></html>");
         infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
 
-        panelListModel = new DefaultListModel<>();
+        // Panel list model is already initialized at field declaration
         panelListComponent = new JList<>(panelListModel);
         panelListComponent.setFont(new Font("Monospaced", Font.PLAIN, 12));
         panelListComponent.addListSelectionListener(e -> {
@@ -689,8 +689,7 @@ public class SilverTierShowcaseDemo {
         headerLabel.setForeground(new Color(34, 139, 34));
         headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Event log list
-        eventLogModel = new DefaultListModel<>();
+        // Event log list (model is already initialized at field declaration)
         JList<String> eventList = new JList<>(eventLogModel);
         eventList.setFont(new Font("Monospaced", Font.PLAIN, 11));
         eventList.setBackground(Color.WHITE);
@@ -727,8 +726,7 @@ public class SilverTierShowcaseDemo {
         headerLabel.setForeground(new Color(139, 69, 19));
         headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Stats text area
-        statsLabel = new JLabel();
+        // Stats label is already initialized at field declaration, just configure it
         statsLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
         statsLabel.setVerticalAlignment(SwingConstants.TOP);
 

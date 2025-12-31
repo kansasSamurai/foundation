@@ -718,6 +718,20 @@ mvn exec:java -pl bronze-demos -Dexec.mainClass="org.jwellman.foundation.example
 
 ## Dependencies
 
+### Core Framework Dependencies
+
+**Zeus Window Manager (Custom Fork):**
+- **Location:** `C:\dev\workspaces\git\zeus\core`
+- **Group ID:** `gr.zeus`
+- **Artifact ID:** `core`
+- **Version:** `8.0.0-SNAPSHOT`
+- **Note:** Foundation uses a custom fork of Zeus maintained by the developer. This fork includes bug fixes and enhancements not present in the original Zeus library.
+- **Key fixes in fork:**
+  - Fixed `selectNext()`/`selectPrevious()` to properly check both `isVisible()` and `isIcon()` status when cycling through frames (invisible frames were incorrectly included in navigation)
+- **Access:** If you need to examine or modify Zeus code, use the path above. The developer has permission to modify this fork.
+
+### Look and Feel Libraries
+
 The project depends on several Look and Feel libraries:
 - **napkinlaf** (1.2) - Not in Maven Central, requires local repository
 - **weblaf** (1.27)
