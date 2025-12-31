@@ -1,0 +1,3 @@
+echo "Main-Class: org.jwellman.foundation.plugins.HelloWorldPlugin" > MANIFEST.MF
+jar cfm ../../hello-world-plugin.jar MANIFEST.MF org/jwellman/foundation/plugins/HelloWorldPlugin.class
+cd ../..

@@ -143,4 +143,18 @@ public interface uiPluginManager {
      * @return the plugin action registry
      */
     org.jwellman.foundation.plugin.PluginActionRegistry getPluginActionRegistry();
+
+    /**
+     * Gets the plugins directory path.
+     *
+     * @return the plugins directory
+     */
+    java.io.File getPluginsDir();
+
+    /**
+     * Gets the plugin configuration directory path.
+     *
+     * @return the config directory
+     */
+    java.io.File getConfigDir();
 }
