@@ -3,10 +3,8 @@ package org.jwellman.foundation.provider;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.util.List;
 
 import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -15,7 +13,6 @@ import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 
 import org.jwellman.foundation.interfaces.uiDesktopManager;
-import org.jwellman.foundation.model.FrameDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -237,15 +234,17 @@ public class DefaultDesktopUI {
      * @param text The menu item text
      * @param mnemonic The mnemonic key code (or 0 for none)
      * @param accelerator The keyboard accelerator (or null for none)
-     * @param action The action to perform
+     * @param actionHandler The action handler (receives ActionEvent)
      * @return A configured JMenuItem
      */
-    protected JMenuItem createMenuItem(String text, int mnemonic, KeyStroke accelerator, Action action) {
+    @SuppressWarnings("serial")
+    protected JMenuItem createMenuItem(String text, int mnemonic, KeyStroke accelerator,
+            java.awt.event.ActionListener actionHandler) {
         JMenuItem item = new JMenuItem(new AbstractAction(text) {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    action.actionPerformed(e);
+                    actionHandler.actionPerformed(e);
                 } catch (Exception ex) {
                     log.error("Error executing menu action: {}", text, ex);
                 }
@@ -270,15 +269,17 @@ public class DefaultDesktopUI {
      *
      * @param text The button text
      * @param tooltip The tooltip text
-     * @param action The action to perform
+     * @param actionHandler The action handler (receives ActionEvent)
      * @return A configured JButton
      */
-    protected JButton createToolbarButton(String text, String tooltip, Action action) {
+    @SuppressWarnings("serial")
+    protected JButton createToolbarButton(String text, String tooltip,
+            java.awt.event.ActionListener actionHandler) {
         JButton button = new JButton(new AbstractAction(text) {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    action.actionPerformed(e);
+                    actionHandler.actionPerformed(e);
                 } catch (Exception ex) {
                     log.error("Error executing toolbar action: {}", text, ex);
                 }

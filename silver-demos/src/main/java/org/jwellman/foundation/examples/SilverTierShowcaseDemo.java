@@ -42,7 +42,6 @@ import org.jwellman.foundation.listener.PanelLifecycleListener;
 import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.plugin.LaunchMode;
 import org.jwellman.foundation.plugin.PluginActionRegistry;
-import org.jwellman.foundation.plugin.PluginRegistration;
 import org.jwellman.foundation.plugin.UnregisteredPlugin;
 import org.jwellman.foundation.swing.IWindow;
 
@@ -55,6 +54,7 @@ import org.jwellman.foundation.swing.IWindow;
  * <li><b>Panel Detach/Attach</b> - Toggle panels between internal frames (desktop) and external frames (standalone windows)</li>
  * <li><b>Menu Bar Support</b> - Optional menu bars on panels that transfer during detach/attach operations</li>
  * <li><b>Advanced Frame Manager</b> - Rich UI for managing all frames with visibility toggle, attach/detach, and editable titles</li>
+ * <li><b>Desktop Management UI</b> - Window menu with cascade, tile, minimize all, navigation (via DefaultDesktopUI)</li>
  * <li><b>Plugin System</b> - Plugin discovery, registration, and launching with action registry integration</li>
  * </ol>
  * <p>
@@ -69,7 +69,12 @@ import org.jwellman.foundation.swing.IWindow;
  * <li>Panel list showing all registered panels with controls (simple taskbar)</li>
  * <li>Advanced Frame Manager with per-frame controls and editable titles</li>
  * <li>IDE-like panel detaching - "pop out" panels to standalone windows or dock them back (menu bars transfer automatically)</li>
+ * <li>Desktop Window menu - Cascade, Tile, Minimize All, etc. with keyboard shortcuts</li>
  * </ul>
+ * <p>
+ * <b>Desktop Management:</b> The demo uses {@link ShowcaseDesktopProvider} which integrates
+ * {@link org.jwellman.foundation.provider.DefaultDesktopUI} to provide a Window menu with
+ * desktop management features. This demonstrates the reference implementation pattern.
  * <p>
  * Run with:
  * <pre>
@@ -109,6 +114,9 @@ public class SilverTierShowcaseDemo {
         context = Foundation.createContext("showcase");
         context.setDesktopMode(true);
         context.setDesktopTitle("Silver Tier Framework Showcase - Interactive Demo");
+
+        // Use custom desktop provider that integrates DefaultDesktopUI
+        context.setDesktopProvider(new ShowcaseDesktopProvider());
 
         Foundation.init(context);
 
