@@ -20,7 +20,6 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
@@ -181,6 +180,16 @@ public class SilverTierShowcaseDemo {
         );
         advancedManagerPanel.setWindowTitle("Advanced Frame Manager");
         advancedManagerPanel.setAttribute("utility", true);
+
+        // Create the plugin menu panel (hidden by default)
+        FrameDescriptor pluginMenuPanel = context.registerUI(
+            "pluginmenu",
+            createPluginMenuPanel(),
+            createLifecycleListener("Plugin Menu"),
+            WindowPosition.at(300, 200, 450, 300)
+        );
+        pluginMenuPanel.setWindowTitle("Plugin Menu");
+        pluginMenuPanel.setAttribute("utility", true);
 
         // Set control panel as master
         context.registerMasterPanel(controlPanel);
@@ -558,45 +567,19 @@ public class SilverTierShowcaseDemo {
     }
 
     /**
-     * Shows the plugin menu in a dialog (for demonstration).
+     * Shows the plugin menu panel (Framework-managed).
      */
     private static void showPluginMenu() {
-        uiPluginManager pluginManager = Foundation.getPluginManager();
-        if (pluginManager == null) {
+        // Get the plugin menu panel descriptor
+        FrameDescriptor menuPanel = context.getFrameDescriptor("pluginmenu");
+        if (menuPanel != null) {
+            menuPanel.show();
+        } else {
             JOptionPane.showMessageDialog(null,
-                "Plugin system not initialized",
+                "Plugin menu panel not found",
                 "Plugin System",
                 JOptionPane.WARNING_MESSAGE);
-            return;
         }
-
-        PluginActionRegistry actionRegistry = pluginManager.getPluginActionRegistry();
-
-        // Register actions if not already done
-        if (actionRegistry.getAllActions().isEmpty()) {
-            actionRegistry.registerAllEnabledPlugins();
-        }
-
-        JMenu pluginMenu = actionRegistry.createPluginMenu("Plugins");
-
-        // Create a simple frame to show the menu
-        JFrame menuFrame = new JFrame("Plugin Menu Demo");
-        JMenuBar menuBar = new JMenuBar();
-        menuBar.add(pluginMenu);
-
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        panel.add(new JLabel(
-            "<html><center>Plugin menu is shown above.<br>" +
-            "Click a plugin to launch it.</center></html>",
-            JLabel.CENTER), BorderLayout.CENTER);
-
-        menuFrame.setJMenuBar(menuBar);
-        menuFrame.setContentPane(panel);
-        menuFrame.setSize(400, 200);
-        menuFrame.setLocationRelativeTo(null);
-        menuFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        menuFrame.setVisible(true);
     }
 
     /**
@@ -850,6 +833,127 @@ public class SilverTierShowcaseDemo {
 
         panel.add(headerLabel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(refreshButton, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    /**
+     * Creates the plugin menu panel showing available plugins.
+     */
+    private static JPanel createPluginMenuPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(new Color(248, 248, 250));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
+
+        // Header
+        JLabel headerLabel = new JLabel("Plugin Menu");
+        headerLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        headerLabel.setForeground(new Color(70, 130, 180));
+        headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Get plugin manager
+        uiPluginManager pluginManager = Foundation.getPluginManager();
+
+        if (pluginManager == null || !pluginManager.isInitialized()) {
+            JLabel errorLabel = new JLabel(
+                "<html><center>Plugin system not initialized</center></html>",
+                JLabel.CENTER
+            );
+            errorLabel.setForeground(Color.RED);
+            panel.add(headerLabel, BorderLayout.NORTH);
+            panel.add(errorLabel, BorderLayout.CENTER);
+            return panel;
+        }
+
+        PluginActionRegistry actionRegistry = pluginManager.getPluginActionRegistry();
+
+        // Register actions if not already done
+        if (actionRegistry.getAllActions().isEmpty()) {
+            actionRegistry.registerAllEnabledPlugins();
+        }
+
+        // Create a menu bar to display in the panel
+        JMenu pluginMenu = actionRegistry.createPluginMenu("Plugins");
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(pluginMenu);
+
+        // Info panel
+        JPanel infoPanel = new JPanel(new BorderLayout(5, 5));
+        infoPanel.setOpaque(false);
+
+        JLabel infoLabel = new JLabel(
+            "<html><center><i>Click 'Plugins' menu above to launch registered plugins</i></center></html>",
+            JLabel.CENTER
+        );
+        infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+
+        // Show registered plugins list
+        List<PluginRegistration> registered = pluginManager.getAllRegisteredPlugins();
+        StringBuilder pluginListHtml = new StringBuilder("<html><body style='padding: 10px;'>");
+        pluginListHtml.append("<b>Registered Plugins:</b><br>");
+
+        if (registered.isEmpty()) {
+            pluginListHtml.append("<i>No plugins registered yet.</i><br>");
+        } else {
+            for (PluginRegistration reg : registered) {
+                String status = reg.isEnabled() ? "✓" : "✗";
+                pluginListHtml.append(status).append(" ")
+                    .append(reg.getName())
+                    .append(" (").append(reg.getLaunchMode()).append(")<br>");
+            }
+        }
+
+        pluginListHtml.append("<br><b>Available Actions:</b> ").append(actionRegistry.getAllActions().size());
+        pluginListHtml.append("</body></html>");
+
+        JLabel pluginListLabel = new JLabel(pluginListHtml.toString());
+        pluginListLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        pluginListLabel.setVerticalAlignment(SwingConstants.TOP);
+
+        JScrollPane listScrollPane = new JScrollPane(pluginListLabel);
+        listScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+
+        infoPanel.add(infoLabel, BorderLayout.NORTH);
+        infoPanel.add(listScrollPane, BorderLayout.CENTER);
+
+        // Refresh button
+        JButton refreshButton = new JButton("Refresh Plugin List");
+        refreshButton.addActionListener(e -> {
+            // Re-register the panel to refresh its content
+            FrameDescriptor descriptor = context.getFrameDescriptor("pluginmenu");
+            if (descriptor != null) {
+                WindowPosition currentPos = WindowPosition.at(
+                    descriptor.getWindow().getX(),
+                    descriptor.getWindow().getY(),
+                    descriptor.getWindow().getWidth(),
+                    descriptor.getWindow().getHeight()
+                );
+
+                context.closePanel("pluginmenu");
+                FrameDescriptor newPanel = context.registerUI(
+                    "pluginmenu",
+                    createPluginMenuPanel(),
+                    createLifecycleListener("Plugin Menu"),
+                    currentPos
+                );
+                newPanel.setWindowTitle("Plugin Menu");
+                newPanel.setAttribute("utility", true);
+                newPanel.show();
+            }
+        });
+
+        // Layout
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setOpaque(false);
+        topPanel.add(headerLabel, BorderLayout.NORTH);
+        topPanel.add(menuBar, BorderLayout.CENTER);
+
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(infoPanel, BorderLayout.CENTER);
         panel.add(refreshButton, BorderLayout.SOUTH);
 
         return panel;
