@@ -87,6 +87,7 @@ public class SilverTierShowcaseDemo {
     private static DefaultListModel<String> panelListModel;
     private static uiContext context;
     private static AdvancedFrameManagerPanel advancedFrameManager;
+    private static PluginManagementPanel pluginManagementPanel;
 
     // Color palette for dynamic panels
     private static final Color[] PANEL_COLORS = {
@@ -182,9 +183,15 @@ public class SilverTierShowcaseDemo {
         advancedManagerPanel.setAttribute("utility", true);
 
         // Create the plugin management panel (hidden by default)
+        pluginManagementPanel = new PluginManagementPanel(
+            () -> { showPluginRegistrationWizard(); refreshPluginPanel(); },
+            () -> { registerAllPluginActions(); refreshPluginPanel(); },
+            () -> { rescanPlugins(); refreshPluginPanel(); },
+            () -> refreshPluginPanel()
+        );
         FrameDescriptor pluginMenuPanel = context.registerUI(
             "pluginmenu",
-            createPluginMenuPanel(),
+            pluginManagementPanel,
             createPluginMenuBar(),
             createLifecycleListener("Plugin Management"),
             WindowPosition.at(300, 200, 650, 400)
@@ -756,173 +763,11 @@ public class SilverTierShowcaseDemo {
     }
 
     /**
-     * Creates the plugin menu panel showing available plugins.
-     */
-    private static JPanel createPluginMenuPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(new Color(248, 248, 250));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
-            BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        ));
-
-        // Header
-        JLabel headerLabel = new JLabel("Plugin Management");
-        headerLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        headerLabel.setForeground(new Color(70, 130, 180));
-        headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-        // Get plugin manager
-        uiPluginManager pluginManager = Foundation.getPluginManager();
-
-        if (pluginManager == null || !pluginManager.isInitialized()) {
-            JLabel errorLabel = new JLabel(
-                "<html><center>Plugin system not initialized</center></html>",
-                JLabel.CENTER
-            );
-            errorLabel.setForeground(Color.RED);
-            panel.add(headerLabel, BorderLayout.NORTH);
-            panel.add(errorLabel, BorderLayout.CENTER);
-            return panel;
-        }
-
-        // Create plugin table
-        String[] columnNames = {"State", "Name", "ID", "Mode", "Enabled", "Dir"};
-        Object[][] data = buildPluginTableData(pluginManager);
-
-        javax.swing.table.DefaultTableModel tableModel = new javax.swing.table.DefaultTableModel(data, columnNames) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // Make table read-only
-            }
-        };
-
-        javax.swing.JTable pluginTable = new javax.swing.JTable(tableModel);
-        pluginTable.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        pluginTable.setRowHeight(22);
-        pluginTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 11));
-
-        // Set column widths
-        pluginTable.getColumnModel().getColumn(0).setPreferredWidth(80);  // State
-        pluginTable.getColumnModel().getColumn(1).setPreferredWidth(120); // Name
-        pluginTable.getColumnModel().getColumn(2).setPreferredWidth(100); // ID
-        pluginTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Mode
-        pluginTable.getColumnModel().getColumn(4).setPreferredWidth(60);  // Enabled
-        pluginTable.getColumnModel().getColumn(5).setPreferredWidth(150); // Dir
-
-        JScrollPane tableScrollPane = new JScrollPane(pluginTable);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-
-        // Info label above table
-        JLabel infoLabel = new JLabel(
-            "<html><center><i>Use the 'Plugins' menu above to launch registered plugins</i></center></html>",
-            JLabel.CENTER
-        );
-        infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
-
-        // Table panel
-        JPanel tablePanel = new JPanel(new BorderLayout(5, 5));
-        tablePanel.setOpaque(false);
-        tablePanel.add(infoLabel, BorderLayout.NORTH);
-        tablePanel.add(tableScrollPane, BorderLayout.CENTER);
-
-        // Action buttons
-        JPanel buttonsPanel = new JPanel(new GridLayout(2, 2, 5, 5));
-        buttonsPanel.setOpaque(false);
-
-        JButton registerDiscoveredButton = new JButton("Register Discovered");
-        registerDiscoveredButton.addActionListener(e -> {
-            showPluginRegistrationWizard();
-            refreshPluginPanel();
-        });
-
-        JButton registerAllActionsButton = new JButton("Register All Actions");
-        registerAllActionsButton.addActionListener(e -> {
-            registerAllPluginActions();
-            refreshPluginPanel();
-        });
-
-        JButton rescanButton = new JButton("Rescan for Plugins");
-        rescanButton.addActionListener(e -> {
-            rescanPlugins();
-            refreshPluginPanel();
-        });
-
-        JButton refreshButton = new JButton("Refresh Display");
-        refreshButton.addActionListener(e -> refreshPluginPanel());
-
-        buttonsPanel.add(registerDiscoveredButton);
-        buttonsPanel.add(registerAllActionsButton);
-        buttonsPanel.add(rescanButton);
-        buttonsPanel.add(refreshButton);
-
-        // Layout
-        panel.add(headerLabel, BorderLayout.NORTH);
-        panel.add(tablePanel, BorderLayout.CENTER);
-        panel.add(buttonsPanel, BorderLayout.SOUTH);
-
-        return panel;
-    }
-
-    /**
-     * Builds the data array for the plugin table.
-     */
-    private static Object[][] buildPluginTableData(uiPluginManager pluginManager) {
-        List<Object[]> rows = new ArrayList<>();
-
-        // Add registered plugins
-        List<PluginRegistration> registered = pluginManager.getAllRegisteredPlugins();
-        for (PluginRegistration reg : registered) {
-            rows.add(new Object[]{
-                "Registered",
-                reg.getName(),
-                reg.getId(),
-                reg.getLaunchMode().toString(),
-                reg.isEnabled() ? "Yes" : "No",
-                reg.getPluginDir().getName()
-            });
-        }
-
-        // Add discovered plugins
-        List<UnregisteredPlugin> discovered = pluginManager.getDiscoveredPlugins();
-        for (UnregisteredPlugin plugin : discovered) {
-            rows.add(new Object[]{
-                "Discovered",
-                plugin.getName(),
-                plugin.getId(),
-                plugin.getSuggestedLaunchMode().toString(),
-                "-",
-                plugin.getPluginDir().getName()
-            });
-        }
-
-        return rows.toArray(new Object[0][]);
-    }
-
-    /**
-     * Refreshes the plugin panel by re-registering it.
+     * Refreshes the plugin panel's table data.
      */
     private static void refreshPluginPanel() {
-        FrameDescriptor descriptor = context.getFrameDescriptor("pluginmenu");
-        if (descriptor != null) {
-            WindowPosition currentPos = WindowPosition.at(
-                descriptor.getWindow().getX(),
-                descriptor.getWindow().getY(),
-                descriptor.getWindow().getWidth(),
-                descriptor.getWindow().getHeight()
-            );
-
-            context.closePanel("pluginmenu");
-            FrameDescriptor newPanel = context.registerUI(
-                "pluginmenu",
-                createPluginMenuPanel(),
-                createPluginMenuBar(),
-                createLifecycleListener("Plugin Menu"),
-                currentPos
-            );
-            newPanel.setWindowTitle("Plugin Management");
-            newPanel.setAttribute("utility", true);
-            newPanel.show();
+        if (pluginManagementPanel != null) {
+            pluginManagementPanel.refreshTableData();
         }
     }
 
