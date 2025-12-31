@@ -219,6 +219,11 @@ public class LAFDiscovery {
                     String className = name.replace('/', '.')
                                           .substring(0, name.length() - 6);
 
+                    // Skip module-info (Java 9+ module descriptor, not compatible with Java 8)
+                    if (className.equals("module-info") || className.endsWith(".module-info")) {
+                        continue;
+                    }
+
                     // Try to load and check if it extends LookAndFeel
                     try {
                         Class<?> clazz = classLoader.loadClass(className);
@@ -237,6 +242,9 @@ public class LAFDiscovery {
                         }
                     } catch (ClassNotFoundException | NoClassDefFoundError e) {
                         // Class not loadable, skip it
+                    } catch (UnsupportedClassVersionError e) {
+                        // Java 9+ class encountered while running on Java 8, skip it
+                        // This can happen with module-info or other Java 9+ specific classes
                     } catch (Exception e) {
                         // Other error, log and continue
                         System.err.println("  Error checking class " + className + ": " + e.getMessage());
@@ -285,6 +293,8 @@ public class LAFDiscovery {
                 ));
             } catch (ClassNotFoundException e) {
                 // LAF not available, skip
+            } catch (UnsupportedClassVersionError e) {
+                // LAF compiled with newer Java version, skip
             }
         }
 
