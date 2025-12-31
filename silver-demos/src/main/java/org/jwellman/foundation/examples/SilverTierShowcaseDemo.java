@@ -185,6 +185,7 @@ public class SilverTierShowcaseDemo {
         FrameDescriptor pluginMenuPanel = context.registerUI(
             "pluginmenu",
             createPluginMenuPanel(),
+            createPluginMenuBar(),
             createLifecycleListener("Plugin Menu"),
             WindowPosition.at(300, 200, 450, 300)
         );
@@ -839,6 +840,30 @@ public class SilverTierShowcaseDemo {
     }
 
     /**
+     * Creates the menu bar for the plugin menu panel.
+     */
+    private static JMenuBar createPluginMenuBar() {
+        uiPluginManager pluginManager = Foundation.getPluginManager();
+
+        if (pluginManager == null || !pluginManager.isInitialized()) {
+            return null;
+        }
+
+        PluginActionRegistry actionRegistry = pluginManager.getPluginActionRegistry();
+
+        // Register actions if not already done
+        if (actionRegistry.getAllActions().isEmpty()) {
+            actionRegistry.registerAllEnabledPlugins();
+        }
+
+        JMenu pluginMenu = actionRegistry.createPluginMenu("Plugins");
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(pluginMenu);
+
+        return menuBar;
+    }
+
+    /**
      * Creates the plugin menu panel showing available plugins.
      */
     private static JPanel createPluginMenuPanel() {
@@ -871,22 +896,12 @@ public class SilverTierShowcaseDemo {
 
         PluginActionRegistry actionRegistry = pluginManager.getPluginActionRegistry();
 
-        // Register actions if not already done
-        if (actionRegistry.getAllActions().isEmpty()) {
-            actionRegistry.registerAllEnabledPlugins();
-        }
-
-        // Create a menu bar to display in the panel
-        JMenu pluginMenu = actionRegistry.createPluginMenu("Plugins");
-        JMenuBar menuBar = new JMenuBar();
-        menuBar.add(pluginMenu);
-
         // Info panel
         JPanel infoPanel = new JPanel(new BorderLayout(5, 5));
         infoPanel.setOpaque(false);
 
         JLabel infoLabel = new JLabel(
-            "<html><center><i>Click 'Plugins' menu above to launch registered plugins</i></center></html>",
+            "<html><center><i>Use the 'Plugins' menu above to launch registered plugins</i></center></html>",
             JLabel.CENTER
         );
         infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
@@ -937,6 +952,7 @@ public class SilverTierShowcaseDemo {
                 FrameDescriptor newPanel = context.registerUI(
                     "pluginmenu",
                     createPluginMenuPanel(),
+                    createPluginMenuBar(),
                     createLifecycleListener("Plugin Menu"),
                     currentPos
                 );
@@ -947,12 +963,7 @@ public class SilverTierShowcaseDemo {
         });
 
         // Layout
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setOpaque(false);
-        topPanel.add(headerLabel, BorderLayout.NORTH);
-        topPanel.add(menuBar, BorderLayout.CENTER);
-
-        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(headerLabel, BorderLayout.NORTH);
         panel.add(infoPanel, BorderLayout.CENTER);
         panel.add(refreshButton, BorderLayout.SOUTH);
 
