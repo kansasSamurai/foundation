@@ -118,11 +118,19 @@ public class SilverTierShowcaseDemo {
         // Use custom desktop provider that integrates DefaultDesktopUI
         context.setDesktopProvider(new ShowcaseDesktopProvider());
 
+        // Use custom splash screen provider for showcase demo
+        ShowcaseSplashProvider splashProvider = new ShowcaseSplashProvider();
+        context.setSplashProvider(splashProvider);
+
+        // Initialize framework - splash screen appears
+        updateProgressWithDelay(splashProvider, 10, "Initializing framework | Setting up Look and Feel");
         Foundation.init(context);
+        updateProgressWithDelay(splashProvider, 30, "Framework initialized | Loading plugin system");
 
         // Initialize plugin system (Silver tier feature)
         try {
             Foundation.initPlugins();
+            updateProgressWithDelay(splashProvider, 50, "Plugin system ready | Discovering plugins");
             logEvent("PLUGIN", "Plugin system initialized successfully");
 
             // Log discovered plugins
@@ -130,20 +138,24 @@ public class SilverTierShowcaseDemo {
             if (pluginManager != null) {
                 List<UnregisteredPlugin> discovered = pluginManager.getDiscoveredPlugins();
                 logEvent("PLUGIN", "Discovered " + discovered.size() + " new plugin(s)");
+                updateProgressWithDelay(splashProvider, 60, "Plugin discovery complete | Found " + discovered.size() + " plugin(s)");
 
                 for (UnregisteredPlugin plugin : discovered) {
                     logEvent("PLUGIN", "Found: " + plugin.getName() + " v" + plugin.getVersion());
                 }
 
                 logEvent("PLUGIN", "Registered plugins: " + pluginManager.getRegisteredPluginCount());
+                updateProgressWithDelay(splashProvider, 70, "Plugins loaded | " + pluginManager.getRegisteredPluginCount() + " registered");
             }
         } catch (Exception e) {
             logEvent("PLUGIN", "Plugin system initialization failed: " + e.getMessage());
+            updateProgressWithDelay(splashProvider, 70, "Plugin system error | Continuing initialization");
             e.printStackTrace();
         }
 
         // Register registry change listener (Silver tier feature)
         // This automatically updates all UI components when the registry changes
+        updateProgressWithDelay(splashProvider, 75, "Configuring registry | Setting up change listeners");
         context.addRegistryChangeListener(() -> {
             updateStats();
             updatePanelList();
@@ -151,6 +163,9 @@ public class SilverTierShowcaseDemo {
                 advancedFrameManager.refresh();
             }
         });
+
+        // Create showcase panels
+        updateProgressWithDelay(splashProvider, 80, "Creating showcase panels | Building UI components");
 
         // Create the main control panel (left side)
         FrameDescriptor controlPanel = context.registerUI(
@@ -179,6 +194,8 @@ public class SilverTierShowcaseDemo {
         );
         statsPanel.setAttribute("permanent", true);
 
+        updateProgressWithDelay(splashProvider, 85, "Creating utility panels | Advanced frame manager");
+
         // Create the advanced frame manager panel (hidden by default)
         advancedFrameManager = new AdvancedFrameManagerPanel(context);
         FrameDescriptor advancedManagerPanel = context.registerUI(
@@ -189,6 +206,8 @@ public class SilverTierShowcaseDemo {
         );
         advancedManagerPanel.setWindowTitle("Advanced Frame Manager");
         advancedManagerPanel.setAttribute("utility", true);
+
+        updateProgressWithDelay(splashProvider, 90, "Creating utility panels | Plugin management");
 
         // Create the plugin management panel (hidden by default)
         pluginManagementPanel = new PluginManagementPanel(
@@ -207,10 +226,13 @@ public class SilverTierShowcaseDemo {
         pluginMenuPanel.setWindowTitle("Plugin Management");
         pluginMenuPanel.setAttribute("utility", true);
 
+        updateProgressWithDelay(splashProvider, 95, "Finalizing setup | Preparing desktop");
+
         // Set control panel as master
         context.registerMasterPanel(controlPanel);
 
-        // Launch and show all panels
+        // Launch and show all panels - splash screen will close
+        updateProgressWithDelay(splashProvider, 100, "Initialization complete | Launching showcase");
         Foundation.launch(context);
         controlPanel.show();
         eventLogPanel.show();
@@ -964,6 +986,27 @@ public class SilverTierShowcaseDemo {
                 eventLogModel.remove(eventLogModel.size() - 1); // Keep max 100 entries
             }
         });
+    }
+
+    /**
+     * Updates splash screen progress with a small delay to ensure visibility.
+     * <p>
+     * This utility method wraps the splash provider's updateProgress() call
+     * with a 700ms delay to ensure users have time to read the splash screen
+     * messages during initialization. This is purely for demonstration purposes
+     * in the showcase demo.
+     *
+     * @param splashProvider The splash provider instance
+     * @param percent Progress percentage (0-100)
+     * @param message Status message
+     */
+    private static void updateProgressWithDelay(ShowcaseSplashProvider splashProvider, int percent, String message) {
+        splashProvider.updateProgress(percent, message);
+        try {
+            Thread.sleep(700); // 0.7 seconds delay for visibility
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**
