@@ -1,6 +1,7 @@
 package org.jwellman.foundation;
 
 import java.awt.Dimension;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 import org.jwellman.foundation.interfaces.uiThemeProvider;
+import org.jwellman.foundation.interfaces.uiViewProvider;
 import org.jwellman.foundation.listener.PanelLifecycleListener;
 import org.jwellman.foundation.listener.RegistryChangeListener;
 import org.jwellman.foundation.model.FrameDescriptor;
@@ -133,6 +135,35 @@ public class uContext implements uiContext {
 
     @Override
 	public uiSplashProvider getSplashProvider() { return splashProvider; }
+
+    /** An object that implements the viewProvider interface (Silver tier) */
+    private uiViewProvider viewProvider;
+
+    /**
+     * Gets the view provider for card-based view management.
+     * <p>
+     * In Silver tier and above, a DefaultViewProvider is automatically created
+     * if no custom provider is set.
+     *
+     * @return The view provider, or null if not yet initialized
+     * @since Silver Tier
+     */
+    public uiViewProvider getViewProvider() {
+        return viewProvider;
+    }
+
+    /**
+     * Sets a custom view provider for card-based view management.
+     * <p>
+     * This should be set before calling Foundation.init() if you want to
+     * customize the view management behavior.
+     *
+     * @param viewProvider The custom view provider
+     * @since Silver Tier
+     */
+    public void setViewProvider(org.jwellman.foundation.interfaces.uiViewProvider viewProvider) {
+        this.viewProvider = viewProvider;
+    }
 
     /** A title for the desktop frame */
     private String desktopTitle;
@@ -488,10 +519,10 @@ public class uContext implements uiContext {
     // ========================================================================
 
     /** The plugins directory path (defaults to "./plugins") */
-    private java.io.File pluginsDirectory = new java.io.File("./plugins");
+    private File pluginsDirectory = new java.io.File("./plugins");
 
     /** The plugin configuration directory path (defaults to "./config") */
-    private java.io.File pluginConfigDirectory = new java.io.File("./config");
+    private File pluginConfigDirectory = new java.io.File("./config");
 
     /** Whether to auto-discover plugins during initPlugins() (defaults to true) */
     private boolean autoDiscoverPlugins = true;
