@@ -32,25 +32,47 @@ public class Silver extends Bronze {
     /** Flag to track if plugin system has been initialized */
     private boolean pluginSystemInitialized = false;
 
-    protected void _launch(uiContext ctx) {
-        super._launch(ctx);
-    }
-
     /**
-     * Silver tier initialization - auto-creates view provider if not set.
+     * Silver tier initialization.
+     * <p>
+     * Calls parent initialization (Bronze -> Stone) then performs Silver-specific setup.
+     * This maintains the critical polymorphic initialization chain.
      *
      * @param c The application context
      * @return The initialized context
      */
+    @Override
     protected uiContext _init(uiContext c) {
+        // CRITICAL: Call parent initialization first (Bronze -> Stone)
+        super._init(c);
+
+        // Silver-specific initialization goes here (if any beyond the hook)
+
+        return c;
+    }
+
+    /**
+     * Hook called after LAF initialization but before window display.
+     * <p>
+     * Silver tier uses this to create the view provider at the correct time:
+     * - After LAF is initialized (so Swing components can be created safely)
+     * - Before windows/splash are displayed (so view provider is available)
+     */
+    @Override
+    protected void afterLookAndFeelInitialization() {
+        // Call parent hook first (Bronze -> Stone)
+        super.afterLookAndFeelInitialization();
+
         // Auto-create DefaultViewProvider if not explicitly set (Silver tier feature)
-        if (c.getViewProvider() == null) {
-            c.setViewProvider(new DefaultViewProvider());
+        if (masterContext.getViewProvider() == null) {
+            masterContext.setViewProvider(new DefaultViewProvider());
             log.debug("Auto-created DefaultViewProvider for Silver tier");
         }
+    }
 
-        // Call parent initialization
-        return super._init(c);
+    @Override
+    protected void _launch(uiContext ctx) {
+        super._launch(ctx);
     }
 
     /**

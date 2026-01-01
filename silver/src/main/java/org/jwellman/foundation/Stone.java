@@ -180,6 +180,10 @@ public class Stone {
             this.setExternalFrame(new XFrame(title));
             externalFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+            // Hook for tiers to perform initialization after LAF but before window display
+            // This allows Silver tier to create view provider at the correct time
+            this.afterLookAndFeelInitialization();
+
             // Show the initial window (with splash if splash provider exists, otherwise empty)
             // This centralizes all frame display logic in one place
             this._initializeAndShowWindow(c);
@@ -188,6 +192,21 @@ public class Stone {
 
         return c;
     } // end method
+
+	/**
+     * Hook method called after Look and Feel initialization but before window display.
+     * <p>
+     * This allows higher tiers to perform initialization that:
+     * <ul>
+     * <li>Requires LAF to be initialized (creates Swing components)</li>
+     * <li>Must happen before windows/splash are displayed</li>
+     * </ul>
+     * <p>
+     * Stone provides empty implementation. Silver overrides this to create the view provider.
+     */
+    protected void afterLookAndFeelInitialization() {
+        // Empty in Stone - higher tiers can override
+    }
 
 	/**
      * Shows the splash screen if a splash provider exists.
@@ -227,8 +246,11 @@ public class Stone {
             // Desktop mode: Show external frame, then launch master panel
 
             // Show external frame if not already visible
-            if (this.getExternalFrame() == null || !this.getExternalFrame().isVisible()) {
+            boolean frameWasNotVisible = (this.getExternalFrame() == null || !this.getExternalFrame().isVisible());
+            if (frameWasNotVisible) {
                 showExternalFrameSynchronously();
+                // Attach menu bar after creating frame (no-splash case, LAUNCH phase)
+                attachMenuBarToExternalFrame();
             }
 
             // Launch the master panel as internal frame
@@ -328,15 +350,8 @@ public class Stone {
                 externalFrame.setContentPane(desktop);
             }
 
-            // Add menu bar if provider supplies one
-            uiDesktopProvider provider = masterContext.getDesktopProvider();
-            javax.swing.JMenuBar menuBar = provider.createMenuBar();
-            if (menuBar != null) {
-                externalFrame.setJMenuBar(menuBar);
-            }
-
             // Store provider reference for post-initialization callback
-            final uiDesktopProvider finalProvider = provider;
+            final uiDesktopProvider finalProvider = masterContext.getDesktopProvider();
             final JDesktopPane finalDesktop = desktop;
 
             // Call onDesktopInitialized after the window is shown
@@ -375,6 +390,42 @@ public class Stone {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Attaches the menu bar to the external frame.
+     * <p>
+     * This is called during the LAUNCH phase (not INIT) to ensure the menu bar
+     * appears only when the application is fully initialized, not during splash.
+     * <p>
+     * In desktop mode, the menu bar is provided by the desktop provider.
+     */
+    protected void attachMenuBarToExternalFrame() {
+        if (externalFrame == null) {
+            log.warn("Cannot attach menu bar - external frame does not exist");
+            return;
+        }
+
+        if (!isDesktop()) {
+            return; // Menu bar only applies to desktop mode
+        }
+
+        uiDesktopProvider provider = masterContext.getDesktopProvider();
+        if (provider == null) {
+            return; // No provider, no menu bar
+        }
+
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                javax.swing.JMenuBar menuBar = provider.createMenuBar();
+                if (menuBar != null) {
+                    externalFrame.setJMenuBar(menuBar);
+                    externalFrame.revalidate();
+                    log.debug("Menu bar attached to external frame during launch phase");
+                }
+            }
+        });
     }
 
     /**
@@ -806,6 +857,11 @@ public class Stone {
                     this.closeSplashScreen(ctx);
                 }
                 // If user-dismissable, splash remains visible until user clicks dismiss button
+            }
+
+            // Attach menu bar to external frame (LAUNCH phase, not INIT phase)
+            if (isDesktop() && externalFrame != null) {
+                attachMenuBarToExternalFrame();
             }
 
             // Always show master panel during launch

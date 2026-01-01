@@ -768,6 +768,21 @@ public class Bronze extends Stone {
     }
 
     /**
+     * Hook called after LAF initialization but before window display.
+     * <p>
+     * Bronze tier provides empty implementation - higher tiers can override
+     * to perform initialization that requires LAF but must happen before
+     * window/splash display.
+     */
+    @Override
+    protected void afterLookAndFeelInitialization() {
+        // Call parent hook (Stone)
+        super.afterLookAndFeelInitialization();
+
+        // Bronze-specific hook logic goes here (currently none)
+    }
+
+    /**
      * Shows the splash screen if a splash provider exists.
      * Called from Stone._initializeAndShowWindow() during init() if splash provider exists.
      * <p>
