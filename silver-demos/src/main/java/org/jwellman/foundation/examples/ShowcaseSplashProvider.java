@@ -186,8 +186,8 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
         progressBar.setForeground(ACCENT_GREEN);
         progressBar.setBackground(new Color(30, 50, 90));
 
-        // Dismiss button (initially disabled until initialization completes)
-        dismissButton = new JButton("Click to Continue");
+        // Dismiss button (initially hidden until initialization completes)
+        dismissButton = new JButton("Click to Launch");
         dismissButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         dismissButton.setPreferredSize(new Dimension(200, 35));
         dismissButton.setMaximumSize(new Dimension(200, 35));
@@ -197,7 +197,7 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
         dismissButton.setFocusPainted(false);
         dismissButton.setBorderPainted(false);
         dismissButton.setOpaque(true);
-        dismissButton.setEnabled(false); // Disabled until progress reaches 100%
+        dismissButton.setVisible(false); // Hidden until progress reaches 100%
 
         // Wire button to dismiss splash by showing "main" card
         dismissButton.addActionListener(e -> {
@@ -274,10 +274,12 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
                     }
                 }
 
-                // Enable dismiss button when initialization completes
+                // Show dismiss button when initialization completes
                 if (percent >= 100 && dismissButton != null) {
-                    dismissButton.setEnabled(true);
+                    dismissButton.setVisible(true);
                     dismissButton.requestFocusInWindow(); // Give button focus for keyboard accessibility
+                    splashPanel.revalidate(); // Trigger layout recalculation
+                    splashPanel.repaint();    // Ensure visual update
                 }
             });
         }

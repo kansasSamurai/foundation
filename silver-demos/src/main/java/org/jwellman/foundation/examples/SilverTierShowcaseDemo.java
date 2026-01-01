@@ -234,7 +234,7 @@ public class SilverTierShowcaseDemo {
         context.registerMasterPanel(controlPanel);
 
         // Launch and show all panels - splash screen will close
-        updateProgressWithDelay(splashProvider, 100, "Initialization complete | Launching showcase");
+        updateProgressWithDelay(splashProvider, 100, "Initialization Complete | Click below to launch the app...");
         Foundation.launch(context);
         controlPanel.show();
         eventLogPanel.show();
