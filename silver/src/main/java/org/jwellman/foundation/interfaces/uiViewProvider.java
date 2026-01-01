@@ -69,4 +69,20 @@ public interface uiViewProvider {
      * @return true if the card exists, false otherwise
      */
     boolean hasCard(String cardName);
+
+    /**
+     * Adds a listener that will be notified when a specific card is shown.
+     * <p>
+     * This allows framework components and applications to react to card transitions,
+     * such as attaching menu bars when the main application card is displayed.
+     * <p>
+     * Listeners are called in the order they were registered. If the same listener
+     * is registered multiple times for the same card, it will be called multiple times.
+     *
+     * @param cardName The name of the card to listen for
+     * @param listener The callback to invoke when the card is shown
+     * @throws IllegalArgumentException if cardName or listener is null
+     * @since Silver Tier
+     */
+    void addCardListener(String cardName, Runnable listener);
 }

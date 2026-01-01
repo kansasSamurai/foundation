@@ -2,7 +2,11 @@ package org.jwellman.foundation.provider;
 
 import java.awt.CardLayout;
 import java.awt.Component;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JPanel;
@@ -38,6 +42,9 @@ public class DefaultViewProvider implements uiViewProvider {
     /** Set of card names that have been added */
     private final Set<String> cardNames;
 
+    /** Listeners for card show events, keyed by card name */
+    private final Map<String, List<Runnable>> cardListeners;
+
     /**
      * Creates a new DefaultViewProvider with an empty CardLayout container.
      */
@@ -46,6 +53,7 @@ public class DefaultViewProvider implements uiViewProvider {
         this.container = new JPanel(cardLayout);
         this.currentCard = null;
         this.cardNames = new HashSet<>();
+        this.cardListeners = new HashMap<>();
 
         log.debug("DefaultViewProvider created");
     }
@@ -90,6 +98,19 @@ public class DefaultViewProvider implements uiViewProvider {
         cardLayout.show(container, cardName);
         currentCard = cardName;
         log.debug("Showing card: {}", cardName);
+
+        // Notify listeners for this card
+        List<Runnable> listeners = cardListeners.get(cardName);
+        if (listeners != null && !listeners.isEmpty()) {
+            log.debug("Notifying {} listener(s) for card: {}", listeners.size(), cardName);
+            for (Runnable listener : listeners) {
+                try {
+                    listener.run();
+                } catch (Exception e) {
+                    log.error("Error in card listener for card '{}': {}", cardName, e.getMessage(), e);
+                }
+            }
+        }
     }
 
     @Override
@@ -109,5 +130,18 @@ public class DefaultViewProvider implements uiViewProvider {
         }
 
         return cardNames.contains(cardName);
+    }
+
+    @Override
+    public void addCardListener(String cardName, Runnable listener) {
+        if (cardName == null || cardName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Card name cannot be null or empty");
+        }
+        if (listener == null) {
+            throw new IllegalArgumentException("Listener cannot be null");
+        }
+
+        cardListeners.computeIfAbsent(cardName, k -> new ArrayList<>()).add(listener);
+        log.debug("Added listener for card: {}", cardName);
     }
 }
