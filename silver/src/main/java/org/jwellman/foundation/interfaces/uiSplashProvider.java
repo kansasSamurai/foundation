@@ -85,4 +85,31 @@ public interface uiSplashProvider {
      */
     int getMinimumDisplayTime();
 
+    /**
+     * Indicates whether the splash screen is user-dismissable.
+     * <p>
+     * When true, the splash screen will remain visible until the user explicitly
+     * dismisses it (typically via a button click that calls showCard("main")).
+     * The framework will not automatically close the splash screen.
+     * <p>
+     * When false (default), the framework automatically closes the splash screen
+     * during the launch phase after the minimum display time has elapsed.
+     * <p>
+     * User-dismissable splash screens are useful for:
+     * <ul>
+     *   <li>Allowing users to read initialization messages at their own pace</li>
+     *   <li>Multi-step initialization where user action is required</li>
+     *   <li>Wizard-style startup flows</li>
+     * </ul>
+     * <p>
+     * Note: User-dismissable splash screens require a view provider (Silver tier)
+     * to support card-based view switching.
+     *
+     * @return true if splash should wait for user dismissal, false for automatic dismissal
+     * @since Silver Tier
+     */
+    default boolean isUserDismissable() {
+        return false;
+    }
+
 }

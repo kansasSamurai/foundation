@@ -297,13 +297,26 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
      * Returns the minimum display time for the splash screen.
      * <p>
      * Set to 0 milliseconds because this splash is user-dismissable.
-     * The user controls when to dismiss the splash by clicking the "Click to Continue" button.
+     * The user controls when to dismiss the splash by clicking the "Click to Launch" button.
      *
      * @return 0 milliseconds (user-controlled dismissal)
      */
     @Override
     public int getMinimumDisplayTime() {
         return 0;
+    }
+
+    /**
+     * Indicates this splash screen is user-dismissable.
+     * <p>
+     * The splash remains visible until the user clicks the "Click to Launch" button,
+     * allowing them to read initialization messages at their own pace.
+     *
+     * @return true (user must dismiss splash screen)
+     */
+    @Override
+    public boolean isUserDismissable() {
+        return true;
     }
 
 }

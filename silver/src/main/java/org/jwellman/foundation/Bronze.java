@@ -411,13 +411,13 @@ public class Bronze extends Stone {
     protected void _launch(uiContext ctx) {
 
         // Close splash screen if it exists (before showing the main application)
-        // UNLESS it's user-dismissable (view provider + minimum display time = 0)
+        // UNLESS it's user-dismissable
         if (ctx == masterContext) {
             uiViewProvider viewProvider = ctx.getViewProvider();
             uiSplashProvider splashProvider = ctx.getSplashProvider();
 
             boolean isUserDismissable = (viewProvider != null && splashProvider != null
-                && splashProvider.getMinimumDisplayTime() == 0);
+                && splashProvider.isUserDismissable());
 
             if (!isUserDismissable) {
                 closeSplashScreen(ctx);

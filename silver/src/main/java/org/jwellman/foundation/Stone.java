@@ -858,12 +858,12 @@ public class Stone {
             // Show the master panel (closing splash first if it exists)
 
             if (hasSplash) {
-                // Check if using user-dismissable splash (view provider + minimum display time = 0)
+                // Check if using user-dismissable splash
                 uiViewProvider viewProvider = ctx.getViewProvider();
                 uiSplashProvider splashProvider = ctx.getSplashProvider();
 
                 boolean isUserDismissable = (viewProvider != null && splashProvider != null
-                    && splashProvider.getMinimumDisplayTime() == 0);
+                    && splashProvider.isUserDismissable());
 
                 if (!isUserDismissable) {
                     // Auto-dismiss splash (legacy behavior)
