@@ -65,6 +65,9 @@ public class Stone {
 	/** Set to false after the first call to _initializeAndShowWindow() */
     private boolean isFirstCall = true; // (externalFrame == null || !externalFrame.isVisible());
 
+    /** Tracks whether menu bar has been attached to external frame */
+    private boolean menuBarAttached = false;
+
     /** The "controlling" JFrame; either mode always has an externalFrame */
 	protected XFrame externalFrame;
 
@@ -249,8 +252,8 @@ public class Stone {
             boolean frameWasNotVisible = (this.getExternalFrame() == null || !this.getExternalFrame().isVisible());
             if (frameWasNotVisible) {
                 showExternalFrameSynchronously();
-                // Attach menu bar after creating frame (no-splash case, LAUNCH phase)
-                attachMenuBarToExternalFrame();
+                // Menu bar is now attached via card listener when "main" card is shown
+                // (no longer directly called here)
             }
 
             // Launch the master panel as internal frame
@@ -395,12 +398,21 @@ public class Stone {
     /**
      * Attaches the menu bar to the external frame.
      * <p>
-     * This is called during the LAUNCH phase (not INIT) to ensure the menu bar
-     * appears only when the application is fully initialized, not during splash.
+     * This method is idempotent - it will only attach the menu bar once,
+     * even if called multiple times.
+     * <p>
+     * Typically called via a card listener when the "main" card is shown,
+     * ensuring the menu bar appears only when the main application is visible
+     * (not during splash screen).
      * <p>
      * In desktop mode, the menu bar is provided by the desktop provider.
      */
     protected void attachMenuBarToExternalFrame() {
+        if (menuBarAttached) {
+            log.debug("Menu bar already attached - skipping");
+            return;
+        }
+
         if (externalFrame == null) {
             log.warn("Cannot attach menu bar - external frame does not exist");
             return;
@@ -422,7 +434,8 @@ public class Stone {
                 if (menuBar != null) {
                     externalFrame.setJMenuBar(menuBar);
                     externalFrame.revalidate();
-                    log.debug("Menu bar attached to external frame during launch phase");
+                    menuBarAttached = true;
+                    log.debug("Menu bar attached to external frame when main card shown");
                 }
             }
         });
@@ -859,10 +872,8 @@ public class Stone {
                 // If user-dismissable, splash remains visible until user clicks dismiss button
             }
 
-            // Attach menu bar to external frame (LAUNCH phase, not INIT phase)
-            if (isDesktop() && externalFrame != null) {
-                attachMenuBarToExternalFrame();
-            }
+            // Menu bar is now attached via card listener when "main" card is shown
+            // (no longer directly called here)
 
             // Always show master panel during launch
             this.showMasterPanel(ctx);
@@ -942,8 +953,24 @@ public class Stone {
                 "Foundation must be initialized (call init()) before calling launch()");
         }
 
+        // Hook for upper tiers to prepare for launch (e.g., register listeners)
+        prepareLaunch();
+
         // For Stone tier: Show the main window
         _initializeAndShowWindow(ctx);
+    }
+
+    /**
+     * Hook method called during launch before the main window is displayed.
+     * <p>
+     * This allows upper tiers to perform setup tasks that must happen during
+     * the launch phase, such as registering listeners or preparing resources.
+     * <p>
+     * Stone tier provides empty implementation. Upper tiers can override to
+     * add tier-specific launch preparation logic.
+     */
+    protected void prepareLaunch() {
+        // Empty in Stone - higher tiers can override
     }
 
     protected Boolean isDesktop() {

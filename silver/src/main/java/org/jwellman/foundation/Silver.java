@@ -2,6 +2,7 @@ package org.jwellman.foundation;
 
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiPluginManager;
+import org.jwellman.foundation.interfaces.uiViewProvider;
 import org.jwellman.foundation.plugin.PluginManager;
 import org.jwellman.foundation.provider.DefaultViewProvider;
 import org.slf4j.Logger;
@@ -67,6 +68,32 @@ public class Silver extends Bronze {
         if (masterContext.getViewProvider() == null) {
             masterContext.setViewProvider(new DefaultViewProvider());
             log.debug("Auto-created DefaultViewProvider for Silver tier");
+        }
+    }
+
+    /**
+     * Hook called during launch before the main window is displayed.
+     * <p>
+     * Silver tier uses this to register a card listener that attaches the menu bar
+     * when the "main" card is shown. This ensures the menu bar appears synchronized
+     * with the main application content, not during splash screen display.
+     */
+    @Override
+    protected void prepareLaunch() {
+        // Call parent hook first (Bronze -> Stone)
+        super.prepareLaunch();
+
+        // Register listener to attach menu bar when "main" card is shown
+        // This ensures menu bar only appears when main app is visible (not during splash)
+        uiViewProvider viewProvider = masterContext.getViewProvider();
+        if (viewProvider != null && isDesktop()) {
+            viewProvider.addCardListener("main", new Runnable() {
+                @Override
+                public void run() {
+                    attachMenuBarToExternalFrame();
+                }
+            });
+            log.debug("Registered menu bar attachment listener for 'main' card");
         }
     }
 

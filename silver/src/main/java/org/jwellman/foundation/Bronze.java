@@ -783,6 +783,20 @@ public class Bronze extends Stone {
     }
 
     /**
+     * Hook called during launch before the main window is displayed.
+     * <p>
+     * Bronze tier provides empty implementation - higher tiers can override
+     * to perform launch preparation tasks such as registering listeners.
+     */
+    @Override
+    protected void prepareLaunch() {
+        // Call parent hook (Stone)
+        super.prepareLaunch();
+
+        // Bronze-specific hook logic goes here (currently none)
+    }
+
+    /**
      * Shows the splash screen if a splash provider exists.
      * Called from Stone._initializeAndShowWindow() during init() if splash provider exists.
      * <p>

@@ -57,7 +57,9 @@ Foundation.init(context)
 
 ### Purpose
 
-Hook methods allow tiers to inject behavior at specific points in the initialization sequence **without breaking the chain**.
+Hook methods allow tiers to inject behavior at specific points in the initialization and launch sequences **without breaking the chain** and **without contaminating lower tiers with upper tier concepts**.
+
+**Critical Design Principle:** Lower tiers must NEVER reference concepts from upper tiers. Hook methods solve this by providing injection points where upper tiers can add behavior without modifying lower tier code.
 
 ### Pattern for Hook Methods
 
@@ -75,7 +77,7 @@ protected void someHook() {
 }
 ```
 
-### Example: afterLookAndFeelInitialization()
+### Example 1: afterLookAndFeelInitialization()
 
 This hook is called AFTER LAF initialization but BEFORE window display.
 
@@ -107,6 +109,57 @@ protected void afterLookAndFeelInitialization() {
     }
 }
 ```
+
+### Example 2: prepareLaunch()
+
+This hook is called during launch BEFORE the main window is displayed. It demonstrates how to avoid contaminating lower tiers with upper tier concepts.
+
+**Problem it solves:** Menu bar attachment needs to be synchronized with card switching (a Silver tier feature). If we put `uiViewProvider` references in Stone._launch(), Stone tier becomes dependent on Silver tier concepts and cannot be backported.
+
+**Solution:** Hook method in Stone that Silver overrides.
+
+**Stone (base implementation):**
+```java
+protected void prepareLaunch() {
+    // Empty in Stone - higher tiers can override
+}
+
+protected void _launch(uiContext ctx) {
+    prepareLaunch(); // Hook for upper tiers
+    _initializeAndShowWindow(ctx);
+}
+```
+
+**Bronze (pass-through):**
+```java
+@Override
+protected void prepareLaunch() {
+    super.prepareLaunch(); // Call Stone
+    // Bronze has no specific logic here (yet)
+}
+```
+
+**Silver (registers card listener):**
+```java
+@Override
+protected void prepareLaunch() {
+    super.prepareLaunch(); // Call Bronze → Stone
+
+    // Register listener to attach menu bar when "main" card is shown
+    uiViewProvider viewProvider = masterContext.getViewProvider();
+    if (viewProvider != null && isDesktop()) {
+        viewProvider.addCardListener("main", () -> {
+            attachMenuBarToExternalFrame();
+        });
+    }
+}
+```
+
+**Benefits:**
+- Stone tier has NO knowledge of `uiViewProvider` (can be backported to stone project)
+- Bronze tier has NO knowledge of `uiViewProvider` (can be backported to bronze project)
+- Silver tier adds the behavior where it belongs
+- Polymorphic chain is maintained
 
 ## Critical Timing Requirements
 
@@ -251,7 +304,9 @@ When adding a new feature to any tier:
 This applies to:
 - `_init()` methods
 - `_launch()` methods
-- All hook methods
+- All hook methods (`afterLookAndFeelInitialization()`, `prepareLaunch()`, etc.)
 - Any polymorphic method in the tier hierarchy
+
+**Critical Design Principle:** Lower tiers must NEVER reference concepts from upper tiers. Use hook methods to inject upper tier behavior without contaminating lower tier code. This ensures all tiers remain independently backportable.
 
 When in doubt, follow the pattern in existing code. Every tier follows this pattern without exception.
