@@ -16,6 +16,7 @@ import org.jwellman.foundation.framework.WindowPosition;
 import org.jwellman.foundation.framework.uUtility;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
+import org.jwellman.foundation.interfaces.uiViewProvider;
 import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.swing.IWindow;
 import org.jwellman.foundation.swing.XFrame;
@@ -410,8 +411,23 @@ public class Bronze extends Stone {
     protected void _launch(uiContext ctx) {
 
         // Close splash screen if it exists (before showing the main application)
+        // UNLESS it's user-dismissable (view provider + minimum display time = 0)
         if (ctx == masterContext) {
-            closeSplashScreen(ctx);
+            boolean isUserDismissable = false;
+            if (ctx instanceof org.jwellman.foundation.uContext) {
+                org.jwellman.foundation.uContext uCtx = (org.jwellman.foundation.uContext) ctx;
+                uiViewProvider viewProvider = uCtx.getViewProvider();
+                uiSplashProvider splashProvider = ctx.getSplashProvider();
+
+                if (viewProvider != null && splashProvider != null && splashProvider.getMinimumDisplayTime() == 0) {
+                    isUserDismissable = true;
+                }
+            }
+
+            if (!isUserDismissable) {
+                closeSplashScreen(ctx);
+            }
+            // If user-dismissable, splash remains visible until user clicks dismiss button
         }
 
         super._launch(ctx);
@@ -775,41 +791,60 @@ public class Bronze extends Stone {
         }
 
         uiSplashProvider splasher = ctx.getSplashProvider();
+        JPanel splashContent = splasher.createSplashContent();
 
-        if (this.isDesktop()) {
-            // Desktop mode: Create splash as an internal frame
+        // Check if we're using card-based view management (Silver tier)
+        uiViewProvider viewProvider = null;
+        if (ctx instanceof org.jwellman.foundation.uContext) {
+            viewProvider = ((org.jwellman.foundation.uContext) ctx).getViewProvider();
+        }
 
-            // Create splash screen as a FrameDescriptor (just like any other panel)
-            JPanel splashContent = splasher.createSplashContent();
-            XPanel splashPanel = new XPanel(splashContent);
+        if (viewProvider != null) {
+            // Silver tier: Card-based splash - add as "splash" card BEFORE "main" card
+            // This must happen before the "main" card is added by showExternalFrameSynchronously()
+            // or showFrameWithContent()
+            viewProvider.addCard("splash", splashContent);
+            viewProvider.showCard("splash");
 
-            // Register in the context so we can find it later to close it
-            // Use CENTER positioning to center the splash on the desktop
-            FrameDescriptor splashReg = ctx.registerUI(
-                    "splash",
-                    splashPanel,
-                    WindowPosition.center()
-            );
-            splashReg.setWindowTitle("Loading...");
+            log.debug("Splash screen added as 'splash' card");
 
-            // Create the internal frame (adds to desktop, applies positioning)
-            createInternalFrameForPanel(splashReg);
-            XInternalFrame iframe = splashReg.getInternalFrame();
-            iframe.setIconifiable(false);
-            iframe.setResizable(false);
-            iframe.setClosable(false);
-            iframe.setMaximizable(false);
-
-            // Show it (makes visible and brings to front)
-            splashReg.show();
+            // Note: No separate window/frame needed - splash is a card in the CardLayout container
 
         } else {
-            // Window mode: Set splash content as frame's content pane
+            // Legacy behavior (Stone/Bronze without view provider)
 
-            JPanel splashContent = splasher.createSplashContent();
+            if (this.isDesktop()) {
+                // Desktop mode: Create splash as an internal frame
 
-            // Show frame with splash content (sets content pane, packs, centers, shows)
-            showFrameWithContent(splashContent);
+                // Create splash screen as a FrameDescriptor (just like any other panel)
+                XPanel splashPanel = new XPanel(splashContent);
+
+                // Register in the context so we can find it later to close it
+                // Use CENTER positioning to center the splash on the desktop
+                FrameDescriptor splashReg = ctx.registerUI(
+                        "splash",
+                        splashPanel,
+                        WindowPosition.center()
+                );
+                splashReg.setWindowTitle("Loading...");
+
+                // Create the internal frame (adds to desktop, applies positioning)
+                createInternalFrameForPanel(splashReg);
+                XInternalFrame iframe = splashReg.getInternalFrame();
+                iframe.setIconifiable(false);
+                iframe.setResizable(false);
+                iframe.setClosable(false);
+                iframe.setMaximizable(false);
+
+                // Show it (makes visible and brings to front)
+                splashReg.show();
+
+            } else {
+                // Window mode: Set splash content as frame's content pane
+
+                // Show frame with splash content (sets content pane, packs, centers, shows)
+                showFrameWithContent(splashContent);
+            }
         }
     }
 
@@ -817,8 +852,8 @@ public class Bronze extends Stone {
      * Closes the splash screen if it exists.
      * <p>
      * This method:
-     * - Finds the splash screen panel registration (system:splash)
-     * - Closes and removes it from the registry
+     * - In Silver tier with view provider: Switches from "splash" card to "main" card
+     * - In legacy mode: Finds and closes the splash panel registration
      * - Calls the splash provider's onSplashClosed() callback
      *
      * @param ctx The context to search for the splash screen
@@ -828,15 +863,34 @@ public class Bronze extends Stone {
             return; // No splash provider, nothing to close
         }
 
-        // Find the splash panel registration
-        FrameDescriptor splashReg = ctx.getFrameDescriptor("splash");
-        if (splashReg != null) {
-            // Close the panel (fires onClose event, closes window, removes from registry)
-            closePanel(ctx, splashReg);
-
-            // Notify the splash provider
-            ctx.getSplashProvider().onSplashClosed();
+        // Check if we're using card-based view management (Silver tier)
+        uiViewProvider viewProvider = null;
+        if (ctx instanceof org.jwellman.foundation.uContext) {
+            viewProvider = ((org.jwellman.foundation.uContext) ctx).getViewProvider();
         }
+
+        if (viewProvider != null) {
+            // Silver tier: Card-based splash - switch from "splash" to "main"
+            if ("splash".equals(viewProvider.getCurrentCard())) {
+                viewProvider.showCard("main");
+                log.debug("Switched from splash card to main card");
+            }
+
+            // No frame/panel to close - splash is just a card
+
+        } else {
+            // Legacy behavior (Stone/Bronze without view provider)
+
+            // Find the splash panel registration
+            FrameDescriptor splashReg = ctx.getFrameDescriptor("splash");
+            if (splashReg != null) {
+                // Close the panel (fires onClose event, closes window, removes from registry)
+                closePanel(ctx, splashReg);
+            }
+        }
+
+        // Notify the splash provider that splash is closed
+        ctx.getSplashProvider().onSplashClosed();
     }
 
     /**

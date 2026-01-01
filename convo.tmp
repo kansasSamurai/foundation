@@ -1,0 +1,1015 @@
+None at this time - I am just preparing to work on an application that is expected to work with 3rd party api's and applications and wanted to verify if java handled conflicts natively somehow but this verifies that it does not.  i.e. I think the only safe way to use 3rd party apps in the same jvm is to implement a classloader strategy for isolation.
+
+You're absolutely correct! Java does not natively handle version conflicts - it uses a "first class wins" model where whichever version of a class is loaded first is the one used throughout the JVM.
+
+Your assessment is spot on:
+
+For true isolation when integrating 3rd party applications with potentially conflicting dependencies, custom classloaders are indeed the proper solution.
+
+Classloader isolation strategies:
+
+1. Parent-Last (Child-First) ClassLoader:
+
+Load classes from the child classloader before delegating to parent:
+
+java
+public class IsolatedClassLoader extends URLClassLoader {
+    public IsolatedClassLoader(URL[] urls, ClassLoader parent) {
+        super(urls, parent);
+    }
+    
+    @Override
+    public Class<?> loadClass(String name) throws ClassNotFoundException {
+        // Check if already loaded
+        Class<?> c = findLoadedClass(name);
+        if (c != null) {
+            return c;
+        }
+        
+        // Try to load from this classloader first (child-first)
+        // Skip java.* and javax.* which must come from parent
+        if (!name.startsWith("java.") && !name.startsWith("javax.")) {
+            try {
+                return findClass(name);
+            } catch (ClassNotFoundException e) {
+                // Fall through to parent
+            }
+        }
+        
+        // Delegate to parent
+        return super.loadClass(name);
+    }
+}
+2. Isolated Plugin Architecture:
+
+java
+public class PluginManager {
+    private Map<String, ClassLoader> pluginLoaders = new HashMap<>();
+    
+    public void loadPlugin(String pluginName, File jarFile) throws Exception {
+        URL[] urls = { jarFile.toURI().toURL() };
+        
+        // Create isolated classloader for this plugin
+        ClassLoader pluginLoader = new URLClassLoader(
+            urls,
+            getClass().getClassLoader().getParent() // Skip application classloader
+        );
+        
+        pluginLoaders.put(pluginName, pluginLoader);
+    }
+    
+    public Object createPluginInstance(String pluginName, String className) 
+            throws Exception {
+        ClassLoader loader = pluginLoaders.get(pluginName);
+        Class<?> clazz = loader.loadClass(className);
+        return clazz.getDeclaredConstructor().newInstance();
+    }
+}
+3. OSGi Framework (industry standard):
+
+OSGi provides sophisticated classloader isolation out of the box:
+
+xml
+<dependency>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>org.apache.felix.framework</artifactId>
+    <version>7.0.5</version>
+</dependency>
+Each OSGi bundle runs in its own classloader with explicit import/export declarations.
+
+4. Java 9+ Module System (JPMS):
+
+Java Platform Module System provides some isolation:
+
+java
+// module-info.java
+module my.plugin {
+    requires transitive some.api;
+    exports my.plugin.api;
+}
+But it's not as flexible as custom classloaders for your use case.
+
+Real-world example - Plugin with isolated dependencies:
+
+java
+public class Application {
+    public void runIsolatedPlugin(File pluginJar) throws Exception {
+        // Create isolated classloader
+        URL[] urls = { pluginJar.toURI().toURL() };
+        URLClassLoader pluginLoader = new URLClassLoader(urls, null); // null parent = bootstrap only
+        
+        // Load and run plugin class
+        Class<?> pluginClass = pluginLoader.loadClass("com.thirdparty.Plugin");
+        Object plugin = pluginClass.getDeclaredConstructor().newInstance();
+        
+        // Invoke plugin method via reflection
+        Method runMethod = pluginClass.getMethod("run");
+        runMethod.invoke(plugin);
+        
+        // Clean up
+        pluginLoader.close();
+    }
+}
+Challenges with classloader isolation:
+
+Shared interfaces - If plugins need to communicate, you need a shared API in the parent classloader
+Serialization - Objects from different classloaders aren't directly compatible
+Static state - Static variables are per-classloader, not per-JVM
+Native libraries - Can only be loaded once per JVM
+Thread context classloaders - Need careful management
+When to use classloader isolation:
+
+✅ Yes - use classloaders when:
+
+Integrating multiple 3rd party applications with conflicting dependencies
+Building plugin architectures
+Running untrusted code
+Need true version isolation
+❌ No - dependency management sufficient when:
+
+You control all the code
+Dependencies are compatible
+Simple library conflicts (use exclusions/dependencyManagement)
+Your conclusion is correct: For your scenario (integrating 3rd party apps), classloader isolation is the professional, robust solution. Maven dependency management only works when you have compatible versions or can control the dependencies.
+
+Recommended approach for your use case:
+
+Either:
+
+Custom classloader strategy (full control, more work)
+OSGi framework (battle-tested, steeper learning curve)
+Separate JVM processes (ultimate isolation, IPC overhead)
+Which direction are you leaning for your architecture?
+
+In the long run, all three actually.  In the short term, probably a combination of #1 and #3.  I am developing a pseudo-desktop that can both launch external processes (java or native) as well as hopefully host some java apps within the same jvm.  I am currently using java 8 so that might rule out osgi? (although I will be forced in the coming year or two to make this java9+ compliant)  my initial research led me to the 3rd party api called PF4J (https://github.com/pf4j/pf4j) which does seem promising but it requires your plugins to be built with/around that framework - that requirement is a bit more than I was initially wanting since my "perfect world" goal is that I can simply download 3rd party .jars/.zips and use them as-is.
+
+Great architecture vision! Your assessment is solid. Let me address your points:
+
+OSGi and Java 8: OSGi absolutely works with Java 8 - Apache Felix, Eclipse Equinox, etc. all support Java 8. However, OSGi has the same issue as PF4J: it requires bundles to be OSGi-aware with manifest metadata, so it doesn't meet your "use as-is" requirement.
+
+The "use arbitrary JARs as-is" challenge:
+
+This is the fundamental tension - true plugin frameworks require cooperation from the plugin, but you want to treat any JAR as a plugin without modification.
+
+Strategies for "as-is" JAR usage:
+
+1. Convention-based discovery with isolated classloaders:
+
+java
+public class AsIsPluginLoader {
+    
+    public LoadedPlugin loadJar(File jarFile) throws Exception {
+        // Create isolated classloader
+        URL[] urls = { jarFile.toURI().toURL() };
+        URLClassLoader loader = new URLClassLoader(urls, 
+            ClassLoader.getSystemClassLoader().getParent());
+        
+        // Convention: look for Main-Class in manifest
+        JarFile jar = new JarFile(jarFile);
+        Manifest manifest = jar.getManifest();
+        String mainClass = manifest.getMainAttributes()
+            .getValue("Main-Class");
+        
+        if (mainClass != null) {
+            Class<?> clazz = loader.loadClass(mainClass);
+            return new LoadedPlugin(loader, clazz);
+        }
+        
+        // Alternative: scan for classes implementing known interface
+        // or just expose the classloader for manual usage
+        return new LoadedPlugin(loader, null);
+    }
+    
+    public static class LoadedPlugin {
+        private final URLClassLoader classLoader;
+        private final Class<?> entryPoint;
+        
+        public LoadedPlugin(URLClassLoader classLoader, Class<?> entryPoint) {
+            this.classLoader = classLoader;
+            this.entryPoint = entryPoint;
+        }
+        
+        public void run(String[] args) throws Exception {
+            if (entryPoint != null) {
+                Method main = entryPoint.getMethod("main", String[].class);
+                main.invoke(null, (Object) args);
+            }
+        }
+        
+        public URLClassLoader getClassLoader() {
+            return classLoader;
+        }
+    }
+}
+2. Wrapper approach - JAR stays untouched:
+
+java
+// User creates a tiny descriptor file alongside the JAR
+// plugins/thirdparty-app/plugin.properties:
+jar=thirdparty-app.jar
+mainClass=com.vendor.Application
+classpath=lib/dependency1.jar,lib/dependency2.jar
+
+// Your loader reads this and sets up classloader
+public class DescriptorBasedLoader {
+    public LoadedPlugin load(File pluginDir) throws Exception {
+        Properties props = new Properties();
+        props.load(new FileInputStream(
+            new File(pluginDir, "plugin.properties")));
+        
+        // Build classpath from descriptor
+        List<URL> urls = new ArrayList<>();
+        urls.add(new File(pluginDir, props.getProperty("jar"))
+            .toURI().toURL());
+        
+        String classpath = props.getProperty("classpath", "");
+        for (String cp : classpath.split(",")) {
+            if (!cp.trim().isEmpty()) {
+                urls.add(new File(pluginDir, cp.trim())
+                    .toURI().toURL());
+            }
+        }
+        
+        URLClassLoader loader = new URLClassLoader(
+            urls.toArray(new URL[0]),
+            ClassLoader.getSystemClassLoader().getParent());
+        
+        String mainClass = props.getProperty("mainClass");
+        return new LoadedPlugin(loader, 
+            loader.loadClass(mainClass));
+    }
+}
+3. Hybrid: Process by default, in-JVM when safe:
+
+java
+public class PluginLauncher {
+    
+    public void launch(File jarFile, boolean isolated) throws Exception {
+        if (isolated) {
+            // Launch in separate JVM process
+            ProcessBuilder pb = new ProcessBuilder(
+                "java", "-jar", jarFile.getAbsolutePath());
+            Process process = pb.start();
+            // Handle process I/O, lifecycle
+        } else {
+            // Load in same JVM with isolated classloader
+            AsIsPluginLoader loader = new AsIsPluginLoader();
+            LoadedPlugin plugin = loader.loadJar(jarFile);
+            plugin.run(new String[0]);
+        }
+    }
+}
+```
+
+**4. Your pseudo-desktop architecture suggestion:**
+```
+MyDesktop/
+├── core/                          # Your desktop framework
+│   ├── PluginRegistry
+│   ├── ProcessManager            # For external processes
+│   └── IsolatedClassLoaderManager # For in-JVM
+│
+├── plugins/                       # Plugin directory
+│   ├── app1/
+│   │   ├── app1.jar              # As-is 3rd party JAR
+│   │   ├── plugin.meta           # Optional: your metadata
+│   │   └── lib/                  # Dependencies
+│   │
+│   └── app2/
+│       └── app2.jar
+│
+└── native/                        # Native executables
+    └── some-app.exe
+Practical hybrid strategy:
+
+java
+public class DesktopPluginManager {
+    
+    public enum LaunchMode {
+        EXTERNAL_PROCESS,    // Always separate JVM
+        IN_JVM_ISOLATED,     // Same JVM, isolated classloader
+        IN_JVM_SHARED,       # Same JVM, shared classloader (risky)
+        AUTO                 // Detect and choose
+    }
+    
+    public Application launch(File pluginPath, LaunchMode mode) 
+            throws Exception {
+        
+        // Auto-detect
+        if (mode == LaunchMode.AUTO) {
+            mode = detectBestMode(pluginPath);
+        }
+        
+        switch (mode) {
+            case EXTERNAL_PROCESS:
+                return launchExternalProcess(pluginPath);
+            
+            case IN_JVM_ISOLATED:
+                return launchIsolated(pluginPath);
+            
+            case IN_JVM_SHARED:
+                return launchShared(pluginPath);
+            
+            default:
+                throw new IllegalArgumentException("Unknown mode");
+        }
+    }
+    
+    private LaunchMode detectBestMode(File pluginPath) {
+        // Check for known conflict indicators
+        // Check size/complexity
+        // Check if native code present
+        // Default to EXTERNAL_PROCESS for safety
+        return LaunchMode.EXTERNAL_PROCESS;
+    }
+    
+    private Application launchExternalProcess(File jarFile) 
+            throws Exception {
+        ProcessBuilder pb = new ProcessBuilder(
+            System.getProperty("java.home") + "/bin/java",
+            "-jar", jarFile.getAbsolutePath()
+        );
+        Process process = pb.start();
+        return new ExternalApplication(process);
+    }
+    
+    private Application launchIsolated(File jarFile) 
+            throws Exception {
+        URL[] urls = { jarFile.toURI().toURL() };
+        URLClassLoader loader = new URLClassLoader(urls, null);
+        
+        // Convention-based discovery
+        JarFile jar = new JarFile(jarFile);
+        String mainClass = jar.getManifest()
+            .getMainAttributes().getValue("Main-Class");
+        
+        Class<?> clazz = loader.loadClass(mainClass);
+        return new InJvmApplication(loader, clazz);
+    }
+}
+Recommendation for your use case:
+
+Since you want "as-is" JARs without modification:
+
+Start simple: External process by default (safest, zero conflicts)
+Add isolated classloader support for JARs you trust/test
+Use conventions rather than frameworks:
+Discover Main-Class from manifest
+Optional .desktop or .plugin metadata file for hints
+User can specify launch mode via UI
+Manual classification: Let users mark apps as "safe for in-JVM" after testing
+Skip PF4J/OSGi for now - they're great for controlled plugin ecosystems, but don't meet your "arbitrary JAR" requirement. You can always add framework support later for plugins that opt-in.
+
+Your short-term path:
+
+External process launcher (easy, works for everything)
+Isolated classloader for cooperative JARs (more work, better integration)
+Simple conventions (Main-Class, optional metadata)
+This gives you the flexibility to evolve toward OSGi/PF4J later if you build a plugin ecosystem, while supporting arbitrary JARs today.
+
+Does this align with your vision?
+
+Yes, it does actually - very well.  In fact, I was already leaning toward the "wrapper + descriptor" approach (with some discovery) as follows:
+1) wrapper + descriptor : this would be the fundamental algorithm used by the application.  I want the user to be in full control of which applications are integrated into the desktop environment.  The descriptor is key to a human readable config file and offers future feature expansion opportunities.  
+2) discovery : for convenience, the desktop environment could scan the pre-defined "plugins" directory for plugins it does not already recognize (which requires yet another config file that we have not discussed yet).  While not strictly necessary, this feature enhances user experience and helps control the "onboarding" of new applications by providing a user interface to help guide the user in proper setup.
+
+Excellent! Your two-tier approach is very sound. Let me sketch out a structure that supports both:
+
+Configuration architecture:
+
+MyDesktop/
+├── config/
+│   └── registry.json              # Known/registered plugins
+│
+├── plugins/                        # Plugin discovery directory
+│   ├── app1/
+│   │   ├── app1.jar
+│   │   ├── plugin.properties      # Plugin descriptor
+│   │   └── lib/
+│   │
+│   └── app2/
+│       └── app2.jar               # No descriptor yet (unregistered)
+│
+└── ...
+1. Plugin Descriptor (plugin.properties):
+
+properties
+# Plugin metadata
+name=My Application
+version=1.0.0
+vendor=Third Party Inc.
+description=A sample application
+
+# Launch configuration
+jar=app.jar
+mainClass=com.vendor.app.Main
+launchMode=ISOLATED_JVM  # or EXTERNAL_PROCESS, SHARED_JVM
+
+# Classpath (relative to plugin directory)
+classpath=lib/dependency1.jar,lib/dependency2.jar
+
+# JVM arguments (for external process mode)
+jvmArgs=-Xmx512m,-Dapp.mode=production
+
+# Application arguments
+appArgs=--config,config.xml
+
+# UI Integration (optional)
+icon=icon.png
+windowTitle=My Application
+
+# Feature flags
+allowMultipleInstances=false
+2. Registry file (registry.json):
+
+json
+{
+  "version": "1.0",
+  "plugins": [
+    {
+      "id": "app1",
+      "name": "My Application",
+      "pluginDir": "plugins/app1",
+      "registered": "2025-01-15T10:30:00Z",
+      "enabled": true,
+      "launchMode": "ISOLATED_JVM",
+      "userPreferences": {
+        "autoStart": false,
+        "position": { "x": 100, "y": 100 }
+      }
+    },
+    {
+      "id": "app2",
+      "name": "Another App",
+      "pluginDir": "plugins/app2",
+      "registered": "2025-01-20T14:15:00Z",
+      "enabled": false,
+      "launchMode": "EXTERNAL_PROCESS"
+    }
+  ]
+}
+3. Discovery and Registration Flow:
+
+java
+public class PluginDiscoveryService {
+    
+    private final File pluginsDir;
+    private final PluginRegistry registry;
+    
+    public List<UnregisteredPlugin> scanForNewPlugins() {
+        List<UnregisteredPlugin> discovered = new ArrayList<>();
+        
+        File[] pluginDirs = pluginsDir.listFiles(File::isDirectory);
+        if (pluginDirs == null) return discovered;
+        
+        for (File pluginDir : pluginDirs) {
+            String pluginId = pluginDir.getName();
+            
+            // Check if already registered
+            if (registry.isRegistered(pluginId)) {
+                continue;
+            }
+            
+            // Try to discover plugin
+            UnregisteredPlugin plugin = discoverPlugin(pluginDir);
+            if (plugin != null) {
+                discovered.add(plugin);
+            }
+        }
+        
+        return discovered;
+    }
+    
+    private UnregisteredPlugin discoverPlugin(File pluginDir) {
+        // Strategy 1: Look for plugin.properties descriptor
+        File descriptor = new File(pluginDir, "plugin.properties");
+        if (descriptor.exists()) {
+            return loadFromDescriptor(pluginDir, descriptor);
+        }
+        
+        // Strategy 2: Look for single JAR file
+        File[] jars = pluginDir.listFiles((dir, name) -> 
+            name.endsWith(".jar"));
+        if (jars != null && jars.length == 1) {
+            return discoverFromJar(pluginDir, jars[0]);
+        }
+        
+        // Strategy 3: Look for manifest or convention
+        // ...
+        
+        return null;
+    }
+    
+    private UnregisteredPlugin loadFromDescriptor(
+            File pluginDir, File descriptor) {
+        try {
+            Properties props = new Properties();
+            props.load(new FileInputStream(descriptor));
+            
+            return new UnregisteredPlugin(
+                pluginDir.getName(),
+                props.getProperty("name"),
+                props.getProperty("version"),
+                props.getProperty("description"),
+                pluginDir,
+                props
+            );
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    
+    private UnregisteredPlugin discoverFromJar(
+            File pluginDir, File jarFile) {
+        try {
+            JarFile jar = new JarFile(jarFile);
+            Manifest manifest = jar.getManifest();
+            
+            if (manifest != null) {
+                Attributes attrs = manifest.getMainAttributes();
+                String mainClass = attrs.getValue("Main-Class");
+                
+                if (mainClass != null) {
+                    // Create minimal properties from JAR
+                    Properties props = new Properties();
+                    props.setProperty("jar", jarFile.getName());
+                    props.setProperty("mainClass", mainClass);
+                    props.setProperty("name", 
+                        attrs.getValue("Implementation-Title") 
+                        != null ? attrs.getValue("Implementation-Title") 
+                        : jarFile.getName());
+                    
+                    return new UnregisteredPlugin(
+                        pluginDir.getName(),
+                        props.getProperty("name"),
+                        attrs.getValue("Implementation-Version"),
+                        null,
+                        pluginDir,
+                        props
+                    );
+                }
+            }
+            jar.close();
+        } catch (IOException e) {
+            // Ignore
+        }
+        
+        return null;
+    }
+}
+4. Registration UI/Wizard:
+
+java
+public class PluginRegistrationWizard {
+    
+    public void showWizard(UnregisteredPlugin plugin) {
+        // Step 1: Show discovered information
+        JDialog dialog = new JDialog();
+        dialog.setTitle("Register New Plugin");
+        
+        JPanel panel = new JPanel(new BorderLayout());
+        
+        // Show what was discovered
+        JTextArea info = new JTextArea();
+        info.setText(
+            "Discovered Plugin:\\n" +
+            "Name: " + plugin.getName() + "\\n" +
+            "Version: " + plugin.getVersion() + "\\n" +
+            "Location: " + plugin.getPluginDir() + "\\n\\n" +
+            "Would you like to register this plugin?"
+        );
+        info.setEditable(false);
+        panel.add(new JScrollPane(info), BorderLayout.CENTER);
+        
+        // Configuration options
+        JPanel configPanel = new JPanel(new GridLayout(0, 2));
+        
+        JComboBox<LaunchMode> launchMode = new JComboBox<>(
+            LaunchMode.values());
+        configPanel.add(new JLabel("Launch Mode:"));
+        configPanel.add(launchMode);
+        
+        JCheckBox enabled = new JCheckBox("Enable plugin", true);
+        configPanel.add(new JLabel("Status:"));
+        configPanel.add(enabled);
+        
+        panel.add(configPanel, BorderLayout.SOUTH);
+        
+        // Buttons
+        JPanel buttons = new JPanel();
+        JButton register = new JButton("Register");
+        register.addActionListener(e -> {
+            registerPlugin(plugin, launchMode.getItemAt(
+                launchMode.getSelectedIndex()), enabled.isSelected());
+            dialog.dispose();
+        });
+        
+        JButton cancel = new JButton("Cancel");
+        cancel.addActionListener(e -> dialog.dispose());
+        
+        buttons.add(register);
+        buttons.add(cancel);
+        panel.add(buttons, BorderLayout.NORTH);
+        
+        dialog.add(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+    }
+    
+    private void registerPlugin(UnregisteredPlugin plugin, 
+                                LaunchMode mode, boolean enabled) {
+        PluginRegistration registration = new PluginRegistration(
+            plugin.getId(),
+            plugin.getName(),
+            plugin.getPluginDir(),
+            mode,
+            enabled
+        );
+        
+        registry.register(registration);
+        registry.save();
+    }
+}
+5. Complete Plugin Manager:
+
+java
+public class PluginManager {
+    
+    private final PluginRegistry registry;
+    private final PluginDiscoveryService discovery;
+    private final Map<String, LoadedPlugin> loadedPlugins;
+    
+    public PluginManager(File configDir, File pluginsDir) {
+        this.registry = new PluginRegistry(
+            new File(configDir, "registry.json"));
+        this.discovery = new PluginDiscoveryService(
+            pluginsDir, registry);
+        this.loadedPlugins = new HashMap<>();
+    }
+    
+    public void initialize() {
+        // Load registry
+        registry.load();
+        
+        // Discover new plugins
+        List<UnregisteredPlugin> newPlugins = 
+            discovery.scanForNewPlugins();
+        
+        if (!newPlugins.isEmpty()) {
+            // Show UI to register new plugins
+            for (UnregisteredPlugin plugin : newPlugins) {
+                PluginRegistrationWizard wizard = 
+                    new PluginRegistrationWizard();
+                wizard.showWizard(plugin);
+            }
+        }
+    }
+    
+    public LoadedPlugin launchPlugin(String pluginId) 
+            throws Exception {
+        PluginRegistration reg = registry.getPlugin(pluginId);
+        if (reg == null || !reg.isEnabled()) {
+            throw new IllegalStateException(
+                "Plugin not registered or disabled");
+        }
+        
+        PluginDescriptor descriptor = 
+            PluginDescriptor.load(reg.getPluginDir());
+        
+        PluginLauncher launcher = new PluginLauncher();
+        LoadedPlugin loaded = launcher.launch(
+            descriptor, reg.getLaunchMode());
+        
+        loadedPlugins.put(pluginId, loaded);
+        return loaded;
+    }
+    
+    public List<PluginRegistration> getRegisteredPlugins() {
+        return registry.getAllPlugins();
+    }
+}
+6. Supporting Classes:
+
+java
+public class UnregisteredPlugin {
+    private final String id;
+    private final String name;
+    private final String version;
+    private final String description;
+    private final File pluginDir;
+    private final Properties properties;
+    
+    // Constructor, getters...
+}
+
+public class PluginRegistration {
+    private String id;
+    private String name;
+    private File pluginDir;
+    private LaunchMode launchMode;
+    private boolean enabled;
+    private LocalDateTime registered;
+    private Map<String, Object> userPreferences;
+    
+    // Constructor, getters, setters...
+}
+
+public class PluginDescriptor {
+    private final Properties properties;
+    private final File pluginDir;
+    
+    public static PluginDescriptor load(File pluginDir) 
+            throws IOException {
+        File descriptorFile = 
+            new File(pluginDir, "plugin.properties");
+        Properties props = new Properties();
+        
+        if (descriptorFile.exists()) {
+            props.load(new FileInputStream(descriptorFile));
+        } else {
+            // Create minimal descriptor from discovery
+            props = createDefaultDescriptor(pluginDir);
+        }
+        
+        return new PluginDescriptor(props, pluginDir);
+    }
+    
+    public File getJarFile() {
+        String jar = properties.getProperty("jar");
+        return new File(pluginDir, jar);
+    }
+    
+    public String getMainClass() {
+        return properties.getProperty("mainClass");
+    }
+    
+    public List<File> getClasspath() {
+        // Parse classpath property...
+    }
+    
+    // Other getters...
+}
+User Experience Flow:
+
+User drops myapp.jar into plugins/myapp/ directory
+On next startup, desktop scans and discovers it
+Desktop shows wizard: "New plugin found: MyApp. Register?"
+User configures launch mode, enables/disables
+Desktop saves to registry.json
+Plugin appears in desktop's application menu
+User can launch, manage, update settings
+Benefits of this approach:
+
+✅ User in full control (manual descriptor if desired)
+✅ Convenience (auto-discovery for quick setup)
+✅ Flexible (works with or without descriptors)
+✅ Extensible (registry supports user preferences, metadata)
+✅ User-friendly (wizard guides setup)
+
+Does this match what you had in mind?
+
+Yes, very much.  However, to rewind a bit before we proceed - I suppose a drawback to isolated plugins is the extra memory consumption for independent classloaders?
+
+Yes, absolutely - that's a real consideration, though the impact varies significantly depending on what you're loading.
+
+Memory overhead breakdown:
+
+1. ClassLoader object itself:
+
+Minimal (few KB per classloader)
+Not a concern even with dozens of plugins
+2. Loaded classes (the real cost):
+
+Each class definition: ~1-2 KB minimum + method bytecode
+Class metadata (Method/Field objects, etc.)
+This is where duplication hurts
+3. What gets duplicated across classloaders:
+
+If Plugin A and Plugin B both use Apache Commons Lang:
+
+Shared classloader approach:
+├── commons-lang3.jar (500 KB, ~100 classes loaded)
+└── Total: 500 KB
+
+Isolated classloader approach:
+├── Plugin A ClassLoader
+│   └── commons-lang3.jar (500 KB, ~100 classes)
+├── Plugin B ClassLoader
+│   └── commons-lang3.jar (500 KB, ~100 classes)
+└── Total: 1 MB (duplicated!)
+Real-world impact examples:
+
+Small plugin (simple utility):
+
+JAR: 50 KB
+Typical classes loaded: 20-30
+Memory overhead: ~100-200 KB per instance
+Impact: Negligible
+Medium plugin (Swing app with some libraries):
+
+JAR + dependencies: 2-5 MB
+Typical classes loaded: 500-1000
+Memory overhead: ~5-10 MB per instance
+Impact: Noticeable with many plugins
+Large plugin (complex app with many dependencies):
+
+JAR + dependencies: 20-50 MB
+Typical classes loaded: 3000-5000+
+Memory overhead: ~30-60 MB per instance
+Impact: Significant
+Critical factor - shared dependencies:
+
+The real multiplier is common libraries:
+
+Spring Framework
+Apache Commons
+Logging frameworks (Log4j, SLF4J)
+JSON/XML parsers
+Guava, etc.
+If 5 plugins all include Guava (2.5 MB), you're paying 12.5 MB instead of 2.5 MB.
+
+Mitigation strategies:
+
+Strategy 1: Shared library classloader (hybrid approach):
+
+java
+public class SharedLibraryClassLoader extends URLClassLoader {
+    private static final Set<String> SHARED_LIBRARIES = Set.of(
+        "org.apache.commons",
+        "com.google.guava",
+        "org.slf4j",
+        "com.fasterxml.jackson"
+        // etc.
+    );
+    
+    public SharedLibraryClassLoader(URL[] urls, 
+                                    ClassLoader parent,
+                                    ClassLoader sharedLibs) {
+        super(urls, parent);
+        this.sharedLibs = sharedLibs;
+    }
+    
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) 
+            throws ClassNotFoundException {
+        // Check if this is a shared library class
+        for (String prefix : SHARED_LIBRARIES) {
+            if (name.startsWith(prefix)) {
+                return sharedLibs.loadClass(name);
+            }
+        }
+        
+        // Otherwise use isolated loading
+        return super.loadClass(name, resolve);
+    }
+}
+
+// Usage:
+URLClassLoader sharedLibsLoader = new URLClassLoader(
+    new URL[] {
+        new File("shared-libs/guava.jar").toURI().toURL(),
+        new File("shared-libs/commons-lang3.jar").toURI().toURL()
+    }
+);
+
+// Each plugin uses shared libs for common dependencies
+ClassLoader pluginLoader = new SharedLibraryClassLoader(
+    pluginUrls, 
+    null, 
+    sharedLibsLoader
+);
+Strategy 2: Lazy loading:
+
+Only load plugins when actually used:
+
+java
+public class LazyPlugin {
+    private File pluginDir;
+    private ClassLoader loader;
+    private boolean loaded = false;
+    
+    public void launch() {
+        if (!loaded) {
+            loader = createClassLoader(pluginDir);
+            loaded = true;
+        }
+        // Use plugin...
+    }
+    
+    public void unload() {
+        if (loaded) {
+            loader = null; // Allow GC
+            loaded = false;
+        }
+    }
+}
+Strategy 3: Preference external processes for heavy apps:
+
+java
+public LaunchMode determineBestLaunchMode(PluginDescriptor desc) {
+    long totalSize = calculateTotalSize(desc);
+    
+    if (totalSize > 20_000_000) { // 20 MB
+        return LaunchMode.EXTERNAL_PROCESS;
+    }
+    
+    if (hasNativeLibraries(desc)) {
+        return LaunchMode.EXTERNAL_PROCESS;
+    }
+    
+    return LaunchMode.ISOLATED_JVM;
+}
+Strategy 4: Plugin unloading:
+
+java
+public void closePlugin(String pluginId) {
+    LoadedPlugin plugin = loadedPlugins.remove(pluginId);
+    if (plugin != null) {
+        plugin.close(); // Close classloader
+        System.gc(); // Suggest GC (not guaranteed)
+    }
+}
+Practical recommendations for your desktop:
+
+For lightweight plugins (< 5 MB):
+
+✅ Use isolated classloaders
+Memory cost is acceptable
+Isolation benefits outweigh overhead
+For medium plugins (5-20 MB):
+
+✅ Consider shared library classloader for common deps
+Balance isolation vs. efficiency
+User can choose via launch mode
+For heavy plugins (> 20 MB) or many simultaneous plugins:
+
+✅ Default to external process
+Much cleaner memory isolation
+OS handles lifecycle
+Monitoring approach:
+
+java
+public class PluginMemoryMonitor {
+    public void reportMemoryUsage() {
+        Runtime runtime = Runtime.getRuntime();
+        long usedMemory = runtime.totalMemory() - runtime.freeMemory();
+        
+        System.out.println("Memory usage: " + 
+            (usedMemory / 1_000_000) + " MB");
+        System.out.println("Loaded plugins: " + 
+            loadedPlugins.size());
+    }
+}
+```
+
+**Real-world numbers (approximate):**
+```
+Desktop app baseline: 50-100 MB
++ 3 small isolated plugins: +300-600 KB (negligible)
++ 2 medium isolated plugins: +10-20 MB (noticeable)
++ 1 large isolated plugin: +30-60 MB (significant)
+
+vs. External processes:
+Desktop app: 50-100 MB
++ 3 small external processes: +150-300 MB (3x overhead each)
++ 2 medium external processes: +200-400 MB
++ 1 large external process: +100-200 MB
+The tradeoff:
+
+Isolated classloaders: Lower absolute memory, but duplicated classes
+External processes: Higher absolute memory (full JVM each), but cleaner isolation
+My recommendation for your architecture:
+
+java
+public enum LaunchMode {
+    EXTERNAL_PROCESS,    // Heavy apps, maximum isolation
+    ISOLATED_JVM,        // Light-medium apps, good isolation
+    SHARED_LIBS_JVM,     // Medium apps with common deps
+    SHARED_JVM           // Trusted lightweight apps only
+}
+Allow user to choose, but suggest:
+
+Small plugins (< 2 MB): ISOLATED_JVM
+Medium (2-10 MB): SHARED_LIBS_JVM or ISOLATED_JVM
+Large (> 10 MB): EXTERNAL_PROCESS
+Multiple instances of same plugin: SHARED_LIBS_JVM
+Bottom line: Yes, there's overhead, but it's manageable for small-to-medium plugins. The hybrid approach (shared libs + isolation) gives you the best of both worlds for your use case.
+
+Does this help you decide on your default strategy?
+
+yes, that is very useful and aligns with my pre-conceptions.  it also reminds me that most plugins would actually be lazy loaded; i.e. since they represent "apps in a desktop", we initially only need to provide a way to launch the plugin (icon, menu, etc.) and would want to defer the actual loading until the user wants to use the plugin/app. (no need to generate code about launching/user interface - I will be covering that later).
+
+Perfect! Yes, exactly - lazy loading is a natural fit for your desktop metaphor. The desktop only needs to:
+
+At startup: Read registry, show icons/menu items (lightweight metadata only)
+On user action: Actually load and launch the plugin
+This keeps your desktop's initial memory footprint minimal and scales well as users add more plugins.
+
+Key insight: With lazy loading, even the "memory overhead" discussion becomes less critical since you're only paying the cost for plugins the user actually launches, not all registered plugins.
+
+This also means you have more flexibility with the isolated classloader approach since you're not loading dozens of plugins simultaneously at startup.
+
+Sounds like you have a solid architecture plan. Let me know when you want to dive into the launching/UI aspects or any other part of the system!
+
+

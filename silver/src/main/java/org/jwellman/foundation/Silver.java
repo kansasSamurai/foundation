@@ -3,6 +3,7 @@ package org.jwellman.foundation;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiPluginManager;
 import org.jwellman.foundation.plugin.PluginManager;
+import org.jwellman.foundation.provider.DefaultViewProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,23 @@ public class Silver extends Bronze {
         super._launch(ctx);
     }
 
+    /**
+     * Silver tier initialization - auto-creates view provider if not set.
+     *
+     * @param c The application context
+     * @return The initialized context
+     */
     protected uiContext _init(uiContext c) {
+        // Auto-create DefaultViewProvider if not explicitly set (Silver tier feature)
+        if (c instanceof org.jwellman.foundation.uContext) {
+            org.jwellman.foundation.uContext context = (org.jwellman.foundation.uContext) c;
+            if (context.getViewProvider() == null) {
+                context.setViewProvider(new DefaultViewProvider());
+                log.debug("Auto-created DefaultViewProvider for Silver tier");
+            }
+        }
+
+        // Call parent initialization
         return super._init(c);
     }
 

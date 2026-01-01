@@ -11,11 +11,13 @@ import java.awt.RenderingHints;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 
+import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiSplashProvider;
 
 /**
@@ -27,6 +29,7 @@ import org.jwellman.foundation.interfaces.uiSplashProvider;
  * <li>Silver tier logo/badge</li>
  * <li>Progress bar for initialization phases</li>
  * <li>Real-time status messages during plugin discovery</li>
+ * <li>User-dismissable via button (demonstrates card-based view management)</li>
  * <li>Showcase demo color scheme (blues and greens)</li>
  * </ul>
  *
@@ -34,10 +37,12 @@ import org.jwellman.foundation.interfaces.uiSplashProvider;
  */
 public class ShowcaseSplashProvider implements uiSplashProvider {
 
+    private final uiContext context;
     private JPanel splashPanel;
     private JLabel messageLabel;
     private JLabel statusLabel;
     private JProgressBar progressBar;
+    private JButton dismissButton;
 
     // Showcase color scheme
     private static final Color GRADIENT_START = new Color(25, 45, 85);
@@ -46,6 +51,15 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
     private static final Color ACCENT_BLUE = new Color(70, 130, 180);
     private static final Color TEXT_PRIMARY = Color.WHITE;
     private static final Color TEXT_SECONDARY = new Color(200, 220, 255);
+
+    /**
+     * Creates a new ShowcaseSplashProvider.
+     *
+     * @param context The application context (needed to access view provider for dismissal)
+     */
+    public ShowcaseSplashProvider(uiContext context) {
+        this.context = context;
+    }
 
     /**
      * Creates the showcase splash screen content with custom branding.
@@ -115,7 +129,7 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
         // Silver tier badge
         JLabel tierLabel = new JLabel("◆ SILVER TIER ◆");
         tierLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-        tierLabel.setForeground(ACCENT_GREEN);
+        tierLabel.setForeground(new Color(230, 230, 240)); // Almost white with slight blue tint
         tierLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
 
         // Subtitle
@@ -142,7 +156,7 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
     }
 
     /**
-     * Creates the progress panel with status messages and progress bar.
+     * Creates the progress panel with status messages, progress bar, and dismiss button.
      */
     private JPanel createProgressPanel() {
         JPanel progressPanel = new JPanel();
@@ -172,11 +186,36 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
         progressBar.setForeground(ACCENT_GREEN);
         progressBar.setBackground(new Color(30, 50, 90));
 
+        // Dismiss button (initially disabled until initialization completes)
+        dismissButton = new JButton("Click to Continue");
+        dismissButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        dismissButton.setPreferredSize(new Dimension(200, 35));
+        dismissButton.setMaximumSize(new Dimension(200, 35));
+        dismissButton.setAlignmentX(JButton.CENTER_ALIGNMENT);
+        dismissButton.setForeground(Color.WHITE);
+        dismissButton.setBackground(ACCENT_GREEN);
+        dismissButton.setFocusPainted(false);
+        dismissButton.setBorderPainted(false);
+        dismissButton.setOpaque(true);
+        dismissButton.setEnabled(false); // Disabled until progress reaches 100%
+
+        // Wire button to dismiss splash by showing "main" card
+        dismissButton.addActionListener(e -> {
+            if (context instanceof org.jwellman.foundation.uContext) {
+                org.jwellman.foundation.uContext ctx = (org.jwellman.foundation.uContext) context;
+                if (ctx.getViewProvider() != null) {
+                    ctx.getViewProvider().showCard("main");
+                }
+            }
+        });
+
         progressPanel.add(messageLabel);
         progressPanel.add(Box.createVerticalStrut(8));
         progressPanel.add(statusLabel);
         progressPanel.add(Box.createVerticalStrut(12));
         progressPanel.add(progressBar);
+        progressPanel.add(Box.createVerticalStrut(15));
+        progressPanel.add(dismissButton);
 
         return progressPanel;
     }
@@ -214,6 +253,8 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
      * <pre>
      * updateProgress(50, "Discovering plugins | Found 3 plugins")
      * </pre>
+     * <p>
+     * When progress reaches 100%, the dismiss button is enabled.
      *
      * @param percent Progress percentage (0-100)
      * @param message Status message (can include " | " separator for dual-line status)
@@ -235,6 +276,12 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
                         statusLabel.setText(" ");
                     }
                 }
+
+                // Enable dismiss button when initialization completes
+                if (percent >= 100 && dismissButton != null) {
+                    dismissButton.setEnabled(true);
+                    dismissButton.requestFocusInWindow(); // Give button focus for keyboard accessibility
+                }
             });
         }
     }
@@ -250,13 +297,14 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
     /**
      * Returns the minimum display time for the splash screen.
      * <p>
-     * Set to 2 seconds to ensure users see the branding and initialization progress.
+     * Set to 0 milliseconds because this splash is user-dismissable.
+     * The user controls when to dismiss the splash by clicking the "Click to Continue" button.
      *
-     * @return 2000 milliseconds
+     * @return 0 milliseconds (user-controlled dismissal)
      */
     @Override
     public int getMinimumDisplayTime() {
-        return 2000;
+        return 0;
     }
 
 }

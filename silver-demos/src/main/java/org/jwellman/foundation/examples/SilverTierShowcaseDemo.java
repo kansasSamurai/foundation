@@ -118,13 +118,15 @@ public class SilverTierShowcaseDemo {
         // Use custom desktop provider that integrates DefaultDesktopUI
         context.setDesktopProvider(new ShowcaseDesktopProvider());
 
-        // Use custom splash screen provider for showcase demo
-        ShowcaseSplashProvider splashProvider = new ShowcaseSplashProvider();
+        // Use custom splash screen provider for showcase demo (pass context for user dismissal)
+        ShowcaseSplashProvider splashProvider = new ShowcaseSplashProvider(context);
+
         context.setSplashProvider(splashProvider);
 
         // Initialize framework - splash screen appears
-        updateProgressWithDelay(splashProvider, 10, "Initializing framework | Setting up Look and Feel");
         Foundation.init(context);
+
+        updateProgressWithDelay(splashProvider, 10, "Initializing framework | Setting up Look and Feel");
         updateProgressWithDelay(splashProvider, 30, "Framework initialized | Loading plugin system");
 
         // Initialize plugin system (Silver tier feature)

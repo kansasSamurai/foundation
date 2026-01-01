@@ -20,6 +20,8 @@ import org.jwellman.foundation.framework.LAFDiscovery;
 import org.jwellman.foundation.framework.uUtility;
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiDesktopProvider;
+import org.jwellman.foundation.interfaces.uiSplashProvider;
+import org.jwellman.foundation.interfaces.uiViewProvider;
 import org.jwellman.foundation.model.FrameDescriptor;
 import org.jwellman.foundation.provider.DefaultDesktopProvider;
 import org.jwellman.foundation.swing.IWindow;
@@ -313,8 +315,21 @@ public class Stone {
         // Set up desktop mode if needed
         if (isDesktop()) {
             // Desktop should already be created by _init()
-            // Framework sets desktop as content pane
-            externalFrame.setContentPane(desktop);
+
+            // Check if we're using view provider (Silver tier)
+            uiViewProvider viewProvider = null;
+            if (masterContext instanceof org.jwellman.foundation.uContext) {
+                viewProvider = ((org.jwellman.foundation.uContext) masterContext).getViewProvider();
+            }
+
+            if (viewProvider != null) {
+                // Silver tier: Use CardLayout container with desktop as "main" card
+                viewProvider.addCard("main", desktop);
+                externalFrame.setContentPane((JPanel) viewProvider.getContainer());
+            } else {
+                // Legacy behavior: Set desktop directly as content pane
+                externalFrame.setContentPane(desktop);
+            }
 
             // Add menu bar if provider supplies one
             uiDesktopProvider provider = masterContext.getDesktopProvider();
@@ -385,10 +400,26 @@ public class Stone {
             throw new IllegalStateException("External frame has not been created yet");
         }
 
+        // Check if we're using view provider (Silver tier)
+        uiViewProvider viewProvider = null;
+        if (masterContext instanceof org.jwellman.foundation.uContext) {
+            viewProvider = ((org.jwellman.foundation.uContext) masterContext).getViewProvider();
+        }
+
+        final uiViewProvider finalViewProvider = viewProvider;
+
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                externalFrame.setContentPane(content);
+                if (finalViewProvider != null) {
+                    // Silver tier: Use CardLayout container with content as "main" card
+                    finalViewProvider.addCard("main", content);
+                    externalFrame.setContentPane((JPanel) finalViewProvider.getContainer());
+                } else {
+                    // Legacy behavior: Set content directly as content pane
+                    externalFrame.setContentPane(content);
+                }
+
                 externalFrame.pack();
                 externalFrame.setLocationRelativeTo(null); // Center on screen
                 externalFrame.setVisible(true);
@@ -770,8 +801,23 @@ public class Stone {
             // Show the master panel (closing splash first if it exists)
 
             if (hasSplash) {
-                // Close splash screen first
-                this.closeSplashScreen(ctx);
+                // Check if using user-dismissable splash (view provider + minimum display time = 0)
+                boolean isUserDismissable = false;
+                if (ctx instanceof org.jwellman.foundation.uContext) {
+                    org.jwellman.foundation.uContext uCtx = (org.jwellman.foundation.uContext) ctx;
+                    uiViewProvider viewProvider = uCtx.getViewProvider();
+                    uiSplashProvider splashProvider = ctx.getSplashProvider();
+
+                    if (viewProvider != null && splashProvider != null && splashProvider.getMinimumDisplayTime() == 0) {
+                        isUserDismissable = true;
+                    }
+                }
+
+                if (!isUserDismissable) {
+                    // Auto-dismiss splash (legacy behavior)
+                    this.closeSplashScreen(ctx);
+                }
+                // If user-dismissable, splash remains visible until user clicks dismiss button
             }
 
             // Always show master panel during launch
