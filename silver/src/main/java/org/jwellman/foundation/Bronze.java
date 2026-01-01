@@ -413,16 +413,11 @@ public class Bronze extends Stone {
         // Close splash screen if it exists (before showing the main application)
         // UNLESS it's user-dismissable (view provider + minimum display time = 0)
         if (ctx == masterContext) {
-            boolean isUserDismissable = false;
-            if (ctx instanceof org.jwellman.foundation.uContext) {
-                org.jwellman.foundation.uContext uCtx = (org.jwellman.foundation.uContext) ctx;
-                uiViewProvider viewProvider = uCtx.getViewProvider();
-                uiSplashProvider splashProvider = ctx.getSplashProvider();
+            uiViewProvider viewProvider = ctx.getViewProvider();
+            uiSplashProvider splashProvider = ctx.getSplashProvider();
 
-                if (viewProvider != null && splashProvider != null && splashProvider.getMinimumDisplayTime() == 0) {
-                    isUserDismissable = true;
-                }
-            }
+            boolean isUserDismissable = (viewProvider != null && splashProvider != null
+                && splashProvider.getMinimumDisplayTime() == 0);
 
             if (!isUserDismissable) {
                 closeSplashScreen(ctx);
@@ -794,10 +789,7 @@ public class Bronze extends Stone {
         JPanel splashContent = splasher.createSplashContent();
 
         // Check if we're using card-based view management (Silver tier)
-        uiViewProvider viewProvider = null;
-        if (ctx instanceof org.jwellman.foundation.uContext) {
-            viewProvider = ((org.jwellman.foundation.uContext) ctx).getViewProvider();
-        }
+        uiViewProvider viewProvider = ctx.getViewProvider();
 
         if (viewProvider != null) {
             // Silver tier: Card-based splash - add as "splash" card BEFORE "main" card
@@ -864,10 +856,7 @@ public class Bronze extends Stone {
         }
 
         // Check if we're using card-based view management (Silver tier)
-        uiViewProvider viewProvider = null;
-        if (ctx instanceof org.jwellman.foundation.uContext) {
-            viewProvider = ((org.jwellman.foundation.uContext) ctx).getViewProvider();
-        }
+        uiViewProvider viewProvider = ctx.getViewProvider();
 
         if (viewProvider != null) {
             // Silver tier: Card-based splash - switch from "splash" to "main"

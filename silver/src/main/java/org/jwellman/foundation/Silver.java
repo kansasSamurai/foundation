@@ -44,12 +44,9 @@ public class Silver extends Bronze {
      */
     protected uiContext _init(uiContext c) {
         // Auto-create DefaultViewProvider if not explicitly set (Silver tier feature)
-        if (c instanceof org.jwellman.foundation.uContext) {
-            org.jwellman.foundation.uContext context = (org.jwellman.foundation.uContext) c;
-            if (context.getViewProvider() == null) {
-                context.setViewProvider(new DefaultViewProvider());
-                log.debug("Auto-created DefaultViewProvider for Silver tier");
-            }
+        if (c.getViewProvider() == null) {
+            c.setViewProvider(new DefaultViewProvider());
+            log.debug("Auto-created DefaultViewProvider for Silver tier");
         }
 
         // Call parent initialization

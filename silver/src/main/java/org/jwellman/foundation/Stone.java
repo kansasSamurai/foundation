@@ -317,10 +317,7 @@ public class Stone {
             // Desktop should already be created by _init()
 
             // Check if we're using view provider (Silver tier)
-            uiViewProvider viewProvider = null;
-            if (masterContext instanceof org.jwellman.foundation.uContext) {
-                viewProvider = ((org.jwellman.foundation.uContext) masterContext).getViewProvider();
-            }
+            uiViewProvider viewProvider = masterContext.getViewProvider();
 
             if (viewProvider != null) {
                 // Silver tier: Use CardLayout container with desktop as "main" card
@@ -401,11 +398,7 @@ public class Stone {
         }
 
         // Check if we're using view provider (Silver tier)
-        uiViewProvider viewProvider = null;
-        if (masterContext instanceof org.jwellman.foundation.uContext) {
-            viewProvider = ((org.jwellman.foundation.uContext) masterContext).getViewProvider();
-        }
-
+        uiViewProvider viewProvider = masterContext.getViewProvider();
         final uiViewProvider finalViewProvider = viewProvider;
 
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -802,16 +795,11 @@ public class Stone {
 
             if (hasSplash) {
                 // Check if using user-dismissable splash (view provider + minimum display time = 0)
-                boolean isUserDismissable = false;
-                if (ctx instanceof org.jwellman.foundation.uContext) {
-                    org.jwellman.foundation.uContext uCtx = (org.jwellman.foundation.uContext) ctx;
-                    uiViewProvider viewProvider = uCtx.getViewProvider();
-                    uiSplashProvider splashProvider = ctx.getSplashProvider();
+                uiViewProvider viewProvider = ctx.getViewProvider();
+                uiSplashProvider splashProvider = ctx.getSplashProvider();
 
-                    if (viewProvider != null && splashProvider != null && splashProvider.getMinimumDisplayTime() == 0) {
-                        isUserDismissable = true;
-                    }
-                }
+                boolean isUserDismissable = (viewProvider != null && splashProvider != null
+                    && splashProvider.getMinimumDisplayTime() == 0);
 
                 if (!isUserDismissable) {
                     // Auto-dismiss splash (legacy behavior)

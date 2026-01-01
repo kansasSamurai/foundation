@@ -201,11 +201,8 @@ public class ShowcaseSplashProvider implements uiSplashProvider {
 
         // Wire button to dismiss splash by showing "main" card
         dismissButton.addActionListener(e -> {
-            if (context instanceof org.jwellman.foundation.uContext) {
-                org.jwellman.foundation.uContext ctx = (org.jwellman.foundation.uContext) context;
-                if (ctx.getViewProvider() != null) {
-                    ctx.getViewProvider().showCard("main");
-                }
+            if (context.getViewProvider() != null) {
+                context.getViewProvider().showCard("main");
             }
         });
 

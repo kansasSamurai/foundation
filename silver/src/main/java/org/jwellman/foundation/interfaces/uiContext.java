@@ -99,6 +99,28 @@ public interface uiContext {
     void setSplashProvider(uiSplashProvider splashProvider);
 
     /**
+     * Get the view provider for card-based view management.
+     * <p>
+     * In Silver tier and above, a DefaultViewProvider is automatically created
+     * if no custom provider is set.
+     *
+     * @return The view provider, or null if not yet initialized
+     * @since Silver Tier
+     */
+    uiViewProvider getViewProvider();
+
+    /**
+     * Set a custom view provider for card-based view management.
+     * <p>
+     * This should be set before calling Foundation.init() if you want to
+     * customize the view management behavior.
+     *
+     * @param viewProvider The custom view provider
+     * @since Silver Tier
+     */
+    void setViewProvider(uiViewProvider viewProvider);
+
+    /**
      * Get the desktop title.
      *
      * @return The desktop title string, or null if not set

@@ -139,29 +139,13 @@ public class uContext implements uiContext {
     /** An object that implements the viewProvider interface (Silver tier) */
     private uiViewProvider viewProvider;
 
-    /**
-     * Gets the view provider for card-based view management.
-     * <p>
-     * In Silver tier and above, a DefaultViewProvider is automatically created
-     * if no custom provider is set.
-     *
-     * @return The view provider, or null if not yet initialized
-     * @since Silver Tier
-     */
+    @Override
     public uiViewProvider getViewProvider() {
         return viewProvider;
     }
 
-    /**
-     * Sets a custom view provider for card-based view management.
-     * <p>
-     * This should be set before calling Foundation.init() if you want to
-     * customize the view management behavior.
-     *
-     * @param viewProvider The custom view provider
-     * @since Silver Tier
-     */
-    public void setViewProvider(org.jwellman.foundation.interfaces.uiViewProvider viewProvider) {
+    @Override
+    public void setViewProvider(uiViewProvider viewProvider) {
         this.viewProvider = viewProvider;
     }
 
