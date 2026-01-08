@@ -909,6 +909,13 @@ public class Bronze extends Stone {
 
         // Notify the splash provider that splash is closed
         ctx.getSplashProvider().onSplashClosed();
+
+        // Silver tier: Check if we should maximize window after splash dismissal
+        maximizeAfterSplashDismissal(ctx);
+    }
+
+    protected void maximizeAfterSplashDismissal(uiContext ctx) {
+        // noop in bronze - might backport default silver behavior (w/o preferences) later
     }
 
     /**

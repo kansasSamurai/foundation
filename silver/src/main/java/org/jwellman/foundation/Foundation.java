@@ -7,6 +7,8 @@ import javax.swing.JPanel;
 
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiPluginManager;
+import org.jwellman.foundation.interfaces.uiPreferenceProvider;
+import org.jwellman.foundation.preferences.PreferenceManager;
 
 /**
  * A micro-framework for Swing applications.
@@ -34,6 +36,9 @@ public class Foundation extends Platinum {
 
     /** The singleton instance - never exposed outside this class */
     private static Foundation instance;
+
+    /** The preference manager (initialized during init()) */
+    private PreferenceManager preferenceManager;
 
     /**
      * Create a context for a Foundation application using a class name as namespace.
@@ -94,6 +99,10 @@ public class Foundation extends Platinum {
      * <p>
      * The provided context becomes the "master" context - it controls overall application
      * lifecycle including shutdown behavior.
+     * <p>
+     * <strong>Silver+ Tier:</strong> This method also loads user preferences from
+     * {@code config/foundation.json}. If the file is missing or malformed, the application
+     * will be terminated with an error dialog.
      *
      * @param c The context (MUST NOT be null - use no-args init() for default context)
      * @return The same instance that was passed in
@@ -109,8 +118,15 @@ public class Foundation extends Platinum {
         // Ensure singleton exists
         ensureInstance();
 
-        // Delegate to tier implementation
-        return instance._init(c);
+        // Delegate to tier implementation (LAF, window/desktop, splash)
+        uiContext result = instance._init(c);
+
+        // Load preferences (Silver+ requirement)
+        // This happens AFTER _init() but BEFORE returning from init()
+        // If config file is missing or malformed, this will terminate the app
+        instance.preferenceManager = new PreferenceManager();
+
+        return result;
     }
 
     /**
@@ -211,6 +227,39 @@ public class Foundation extends Platinum {
             return null;
         }
         return instance._getPluginManager();
+    }
+
+    // ========================================================================
+    // PREFERENCE SYSTEM (Silver Tier)
+    // ========================================================================
+
+    /**
+     * Gets the preference provider (Silver tier feature).
+     * <p>
+     * Use the returned preference provider to access user preferences from
+     * {@code config/foundation.json}. The preference system supports:
+     * <ul>
+     *   <li>Global preferences - Apply to all namespaces</li>
+     *   <li>Namespace overrides - Per-tool/application preferences</li>
+     *   <li>Flexible fallback strategies - Choose between fallback, namespace-only, or global-only</li>
+     * </ul>
+     * <p>
+     * Example usage:
+     * <pre>
+     * uiPreferenceProvider prefs = Foundation.getPreferences();
+     * boolean maximize = prefs.getBooleanWithFallback(namespace, "splash.maximizeOnDismiss", true);
+     * </pre>
+     *
+     * @return the preference provider
+     * @throws IllegalStateException if init() has not been called
+     * @since Silver Tier
+     */
+    public static uiPreferenceProvider getPreferences() {
+        if (instance == null) {
+            throw new IllegalStateException(
+                "Foundation must be initialized (call init()) before accessing preferences");
+        }
+        return instance.preferenceManager;
     }
 
     /**

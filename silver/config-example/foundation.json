@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "global": {
+    "splash": {
+      "maximizeOnDismiss": true
+    }
+  },
+  "namespaces": {
+    "example.tool": {
+      "splash": {
+        "maximizeOnDismiss": false
+      }
+    }
+  }
+}

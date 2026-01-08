@@ -2,6 +2,7 @@ package org.jwellman.foundation;
 
 import org.jwellman.foundation.interfaces.uiContext;
 import org.jwellman.foundation.interfaces.uiPluginManager;
+import org.jwellman.foundation.interfaces.uiPreferenceProvider;
 import org.jwellman.foundation.interfaces.uiViewProvider;
 import org.jwellman.foundation.plugin.PluginManager;
 import org.jwellman.foundation.provider.DefaultViewProvider;
@@ -170,6 +171,59 @@ public class Silver extends Bronze {
      */
     public boolean isPluginSystemInitialized() {
         return pluginSystemInitialized;
+    }
+
+    /**
+     * Maximizes the desktop frame after splash dismissal if configured to do so.
+     * <p>
+     * This method checks the user preference {@code splash.maximizeOnDismiss}:
+     * - First checks namespace-specific preference (if context has namespace)
+     * - Falls back to global preference
+     * - Defaults to true if preference not found
+     * <p>
+     * Only applies in desktop mode. In window mode, this is a no-op.
+     * <p>
+     * Configuration (config/foundation.json):
+     * <pre>
+     * {
+     *   "global": {
+     *     "splash": {
+     *       "maximizeOnDismiss": true
+     *     }
+     *   }
+     * }
+     * </pre>
+     *
+     * @param ctx The context (used to get namespace for preference lookup)
+     * @since Silver Tier
+     */
+    @Override
+    protected void maximizeAfterSplashDismissal(uiContext ctx) {
+        // Only apply in desktop mode
+        if (!isDesktop()) {
+            return;
+        }
+
+        // Get preference with fallback: namespace → global → default (true)
+        uiPreferenceProvider prefs = Foundation.getPreferences();
+        String namespace = ctx.getNamespace();
+        boolean shouldMaximize = prefs.getBooleanWithFallback(
+                namespace,
+                "splash.maximizeOnDismiss",
+                true // Default to true
+        );
+
+        if (shouldMaximize) {
+            // Maximize the external frame (desktop container)
+            if (getExternalFrame() != null) {
+                getExternalFrame().setExtendedState(
+                        getExternalFrame().getExtendedState() | java.awt.Frame.MAXIMIZED_BOTH
+                );
+                log.info("Maximized desktop frame after splash dismissal (namespace: {})", namespace);
+            }
+        } else {
+            log.debug("Skipped maximizing desktop frame (preference disabled for namespace: {})", namespace);
+        }
     }
 
 }

@@ -85,7 +85,8 @@ Stone (base class)
 
 - **Stone** (src/main/java/org/jwellman/foundation/Stone.java:35) - Core initialization logic, Look and Feel setup, and basic window/desktop management
 - **Bronze** (src/main/java/org/jwellman/foundation/Bronze.java:26) - Multi-panel registry with namespace:panelId identification, lifecycle events, window positioning, and dynamic visibility management
-- **Silver/Gold/Platinum** - Reserved for future tiered functionality (currently empty)
+- **Silver** (src/main/java/org/jwellman/foundation/Silver.java:26) - Preference system with JSON configuration, plugin system, view providers, and card-based UI management
+- **Gold/Platinum** - Reserved for future tiered functionality (currently empty)
 - **Foundation** - The singleton public API entry point
 
 This tiered design allows for potential future expansion with different feature sets at each tier.
@@ -97,9 +98,9 @@ Foundation's tiered architecture supports a **build-once, deploy-at-complexity**
 **Tier JARs:**
 - `foundation-stone.jar` - Minimal framework (single window/desktop, basic LAF)
 - `foundation-bronze.jar` - Includes Stone + multi-panel registration
-- `foundation-silver.jar` - Includes Bronze + [future: enhanced desktop manager]
+- `foundation-silver.jar` - Includes Bronze + preference system, plugin system, view providers
 - `foundation-gold.jar` - Includes Silver + [future: advanced window management]
-- `foundation-platinum.jar` - Includes Gold + [future: plugin system, docking]
+- `foundation-platinum.jar` - Includes Gold + [future: docking system]
 - `foundation.jar` (full) - Complete feature set
 
 **Key Principles:**
@@ -117,7 +118,8 @@ Foundation's tiered architecture supports a **build-once, deploy-at-complexity**
 **Example Use Cases:**
 - Simple calculator app → `foundation-stone.jar` (minimal footprint)
 - Multi-tool desktop → `foundation-bronze.jar` (panel registration)
-- IDE-style environment → `foundation-platinum.jar` (docking, plugins, advanced desktop)
+- Plugin-based application → `foundation-silver.jar` (plugins, preferences, view management)
+- IDE-style environment → `foundation-platinum.jar` (docking, advanced desktop)
 
 This model balances simplicity for basic apps with power for complex applications, letting users pay (in JAR size/complexity) only for features they use.
 
@@ -342,12 +344,158 @@ The old hardcoded LAF constants (`LAF_NIMBUS`, `LAF_WEB`, etc.) in Stone.java ar
 
 This aligns with Foundation's philosophy of interface-based, pluggable architecture.
 
+### Preference System (Silver Tier)
+
+**Overview:**
+Silver tier introduces a comprehensive JSON-based preference system for user configuration. The system supports hierarchical preferences with global defaults and per-namespace overrides, enabling fine-grained control over application behavior.
+
+**Configuration File Requirements (Silver+ Tier):**
+- **File location:** `config/foundation.json` (relative to application root)
+- **Directory requirement:** `config/` directory MUST exist
+- **File requirement:** `config/foundation.json` MUST exist and be well-formed JSON
+- **Validation:** If file is missing or malformed, application terminates with error dialog
+- **Version:** Configuration file must specify version "1.0"
+
+**Minimal Valid Configuration:**
+```json
+{
+  "version": "1.0",
+  "global": {}
+}
+```
+
+**Full Configuration Example:**
+```json
+{
+  "version": "1.0",
+  "global": {
+    "splash": {
+      "maximizeOnDismiss": true
+    },
+    "window": {
+      "rememberPositions": false
+    }
+  },
+  "namespaces": {
+    "tool.calculator": {
+      "splash": {
+        "maximizeOnDismiss": false
+      }
+    },
+    "tool.editor": {
+      "window": {
+        "rememberPositions": true
+      }
+    }
+  }
+}
+```
+
+**uiPreferenceProvider Interface:**
+The preference system is accessed via the `uiPreferenceProvider` interface, obtained through `Foundation.getPreferences()`.
+
+**Three Lookup Strategies:**
+
+1. **WithFallback** - Checks namespace → global → default value
+   - Use when per-tool customization should fall back to global setting
+   - Example: splash.maximizeOnDismiss (most tools use global, some override)
+
+2. **Namespace** - Checks namespace → default value (no global fallback)
+   - Use when preference is inherently tool-specific
+   - Example: window position (each tool has its own position, no global default makes sense)
+
+3. **Global** - Checks global → default value (no namespace override)
+   - Use when preference should be application-wide
+   - Example: theme.defaultLAF (consistent across all tools)
+
+**Usage Examples:**
+
+```java
+// Get preference provider (available after Foundation.init())
+uiPreferenceProvider prefs = Foundation.getPreferences();
+
+// Fallback strategy: namespace → global → default
+boolean maximize = prefs.getBooleanWithFallback(namespace, "splash.maximizeOnDismiss", true);
+
+// Namespace-only: no global fallback (tool-specific preference)
+int x = prefs.getNamespaceInt(namespace, "window.position.x", 100);
+int y = prefs.getNamespaceInt(namespace, "window.position.y", 100);
+
+// Global-only: no namespace override (application-wide setting)
+String theme = prefs.getGlobalString("theme.defaultLAF", "Nimbus");
+
+// All type variants available
+boolean flag = prefs.getBooleanWithFallback(ns, "path", false);
+String text = prefs.getStringWithFallback(ns, "path", "default");
+int num = prefs.getIntWithFallback(ns, "path", 0);
+double val = prefs.getDoubleWithFallback(ns, "path", 0.0);
+```
+
+**Path Format:**
+Preferences use dot-separated paths that map to nested JSON structure:
+- Path: `"splash.maximizeOnDismiss"` → JSON: `{"splash": {"maximizeOnDismiss": true}}`
+- Path: `"window.position.x"` → JSON: `{"window": {"position": {"x": 100}}}`
+
+**Architecture:**
+
+**Interface:** `org.jwellman.foundation.interfaces.uiPreferenceProvider`
+- Public API for accessing preferences
+- Follows Foundation's interface-first design philosophy
+
+**Implementation Package:** `org.jwellman.foundation.preferences`
+- `PreferenceManager` - Implements uiPreferenceProvider, handles lookups
+- `PreferenceLoader` - Loads and validates config/foundation.json
+- `PreferenceData` - JSON data structure (Jackson-based)
+
+**Initialization Flow:**
+1. `Foundation.init(uContext)` called
+2. Parent `_init()` runs (LAF, window, splash)
+3. `PreferenceManager` loads config/foundation.json
+4. If config invalid, shows error dialog and terminates app
+5. Preferences available via `Foundation.getPreferences()`
+
+**Built-in Preferences:**
+
+**splash.maximizeOnDismiss** (boolean, default: true)
+- Controls whether desktop frame maximizes when splash screen closes
+- Only applies in desktop mode (no-op in window mode)
+- Supports fallback: namespace override → global → default
+- Example: Most tools want maximized desktop, but settings panel might prefer smaller window
+
+**Design Principles:**
+- **Fail fast** - Invalid config terminates app immediately (Silver+ requirement)
+- **Explicit configuration** - No silent fallbacks to missing files
+- **Deployment requirement** - Applications must ship with valid config/foundation.json
+- **Type safety** - Preference methods return specific types (boolean, String, int, double)
+- **Immutable after load** - Preferences loaded once at startup (no runtime reloading)
+- **Extensible** - Easy to add new preferences without framework changes
+
+**Separation from Plugin Registry:**
+The preference system (`config/foundation.json`) is intentionally separate from the plugin registry (`config/registry.json`):
+- **foundation.json** - User preferences, framework configuration (relatively static, user-edited)
+- **registry.json** - Plugin lifecycle state (dynamic, programmatically updated)
+- **Isolation** - Buggy plugin corrupting registry.json doesn't affect core preferences
+- **Clear separation** - "What do I want?" vs "What's installed?"
+
+**Example Deployment:**
+```
+myapp/
+├── config/
+│   ├── foundation.json    # Required for Silver+ tier
+│   └── registry.json       # Optional (plugin system)
+├── lafs/
+│   └── foundation.properties
+├── myapp.jar
+└── README.md
+```
+
 ### Package Structure
 
 **Framework Modules:**
 - `stone/` - Stone tier (minimal framework, no dependencies)
 - `bronze/` - Bronze tier (multi-panel registry, lifecycle, SLF4J API)
-- `silver/`, `gold/`, `platinum/` - Future tier enhancements
+- `silver/` - Silver tier (preference system, plugin system, view providers, Jackson JSON)
+- `gold/`, `platinum/` - Future tier enhancements
 
 **Demo Modules:**
 - `bronze-demos/` - Bronze tier demo applications (depends on bronze + slf4j-simple)
@@ -356,10 +504,12 @@ This aligns with Foundation's philosophy of interface-based, pluggable architect
 - `org.jwellman.foundation` - Core Foundation API and tiered classes
 - `org.jwellman.foundation.beans` - PropertyChange support utilities
 - `org.jwellman.foundation.extend` - Base classes for applications (AbstractSimpleApp, AbstractSimpleMain)
-- `org.jwellman.foundation.interfaces` - Provider interfaces (uiThemeProvider, uiDesktopProvider, uiPanelLifecycleListener)
+- `org.jwellman.foundation.interfaces` - Provider interfaces (uiThemeProvider, uiDesktopProvider, uiPanelLifecycleListener, uiPreferenceProvider, uiPluginManager, uiViewProvider)
 - `org.jwellman.foundation.swing` - Enhanced Swing components (XFrame, XPanel, XButton, etc.) and custom layouts
 - `org.jwellman.foundation.utility` - Drag-and-drop and moveable component utilities
-- `org.jwellman.foundation.provider` - Example provider implementations (CompanyBrandedDesktopProvider, etc.)
+- `org.jwellman.foundation.provider` - Example provider implementations (CompanyBrandedDesktopProvider, DefaultViewProvider, etc.)
+- `org.jwellman.foundation.preferences` - Preference system implementation (PreferenceManager, PreferenceLoader, PreferenceData)
+- `org.jwellman.foundation.plugin` - Plugin system implementation (PluginManager, PluginRegistry, PluginRegistration)
 
 ### Desktop vs Window Mode
 
